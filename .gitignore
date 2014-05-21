@@ -1,0 +1,7 @@
+*.swp
+*.ropeproject
+*MANIFEST
+*deb_dist
+*dist
+*.gz
+*.pyc
