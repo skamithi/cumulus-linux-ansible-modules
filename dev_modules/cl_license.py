@@ -29,12 +29,12 @@ licenses on Cumulus Linux
 
     tasks:
     - name: install license using http url
-      cl_license: url='http://10.1.1.1/license.txt'
+      cl_license: src='http://10.1.1.1/license.txt'
 
     - name: install license from local filesystem
-      cl_license: url='/home/nfsshare/license.txt'
+      cl_license: src='/home/nfsshare/license.txt'
 '''
-LICENSE_PATH = '/mnt/persist/etc/cumulus/.license.txt'
+LICENSE_PATH = '/etc/cumulus/.license.txt'
 
 
 def run_cl_cmd(module, cmd, check_rc=True):
@@ -49,17 +49,17 @@ def run_cl_cmd(module, cmd, check_rc=True):
 
 def license_installed(module):
     if os.path.exists(LICENSE_PATH) is True:
-        module.exit_json(changed=False, msg="license installed")
+        module.exit_json(changed=False, msg="license already installed")
 
 
 def check_for_switchd_run_ready():
     count = 30
-    while (count >= 0):
+    while count >= 0:
         if os.path.exists('var/run/switchd.ready'):
             return True
         count -= 1
         time.sleep(1)
-    return False
+    module.fail_json(msg = 'license updated/installed. switchd failed to restart')
 
 
 def restart_switchd_now(module):
@@ -80,14 +80,14 @@ def check_license_url(module, license_url):
 def main():
     module = AnsibleModule(
         argument_spec=dict(
-            url=dict(required=True, type='str'),
+            src=dict(required=True, type='str'),
             restart_switchd=dict(default='no', choices=["yes", "no"])
         ),
     )
 
     license_installed(module)
 
-    license_url = module.params.get('url')
+    license_url = module.params.get('src')
     restart_switchd = module.params.get('restart_switchd')
 
     cl_license_path = '/usr/cumulus/bin/cl-license'
@@ -97,14 +97,16 @@ def main():
     check_license_url(module, license_url)
 
     cl_lic_cmd = ('%s -i %s') % (cl_license_path, license_url)
-    _msg = run_cl_cmd(module, cl_lic_cmd)
+    run_cl_cmd(module, cl_lic_cmd)
+    _msg = 'license updated/installed. no request to restart switchd'
     if restart_switchd == 'yes':
         if restart_switchd_now(module):
             _changed = True
             _msg = 'license updated/installed. switchd restarted'
-    else:
-        _changed = True
-        _msg = 'license updated/installed'
+        else:
+            _msg = 'license updated/installed. switchd failed to restart'
+            module.fail_json(msg=_msg)
+    _changed = True
     module.exit_json(changed=_changed, msg=_msg)
 
 
