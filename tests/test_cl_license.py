@@ -92,3 +92,18 @@ def test_run_main_restart_switchd_yes_doesn_fail(mock_restart_switchd, mock_ansi
     assert_equals(instance.fail_json.call_count, 0)
     instance.exit_json.assert_called_with(
         msg='license updated/installed. switchd restarted', changed=True)
+
+@mock.patch('dev_modules.cl_license.AnsibleModule')
+@mock.patch('dev_modules.cl_license.time.sleep')
+@mock.patch('dev_modules.cl_license.os.path.exists')
+def test_check_for_switch_running(mock_os_path_exists,
+                                  mock_time,
+                                  mock_module):
+    """
+    Test to check that it iterates for 30 seconds before failing\
+    when checking for switchd startup
+    """
+    mock_os_path_exists.return_value = False
+    check_for_switchd_run_ready(mock_module)
+    assert_equals(mock_time.call_count, 30)
+    mock_os_path_exists.assert_called_with('/var/run/switchd.ready')

@@ -52,10 +52,10 @@ def license_installed(module):
         module.exit_json(changed=False, msg="license already installed")
 
 
-def check_for_switchd_run_ready():
-    count = 30
+def check_for_switchd_run_ready(module):
+    count = 29
     while count >= 0:
-        if os.path.exists('var/run/switchd.ready'):
+        if os.path.exists('/var/run/switchd.ready'):
             return True
         count -= 1
         time.sleep(1)
@@ -64,7 +64,7 @@ def check_for_switchd_run_ready():
 
 def restart_switchd_now(module):
     run_cl_cmd(module, 'service switchd restart')
-    return check_for_switchd_run_ready()
+    return check_for_switchd_run_ready(module)
 
 
 def check_license_url(module, license_url):
