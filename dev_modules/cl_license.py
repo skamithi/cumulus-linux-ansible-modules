@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 #
 # Copyright (C) 2014, Cumulus Networks www.cumulusnetworks.com
 #
@@ -9,10 +8,8 @@ DOCUMENTATION = '''
 module: cl_license
 author: Sean Cavanaugh & Stanley Karunditu
 short_description: install Cumulus Linux license
-requirements:
-    - CL 1.5 or later
 description:
-    - Install Cumulus Linux License
+    - install Cumulus Linux license
 options:
     src:
         description:
@@ -20,12 +17,12 @@ options:
         required: true
     restart_switchd:
         description:
-            - restart switchd process after
-            installing the license. Can be yes/no. Default is no
+            - restart switchd process after installing the license
+        choices: ['yes', 'no']
+        default: 'no'
 notes:
-    - License Documentation: http://cumulusnetworks.com/docs/2.0/
-    quick-start/quick-start.html#installing-the-license
-    - Contact Us @ http://cumulusnetworks.com/contact/
+    - License Documentation - http://cumulusnetworks.com/docs/2.0/quick-start/quick-start.html
+    - Contact Cumulus Networks @ http://cumulusnetworks.com/contact/
 '''
 EXAMPLES = '''
 Example playbook entries using the cl_license module to manage
@@ -37,6 +34,9 @@ licenses on Cumulus Linux
 
     - name: install license from local filesystem
       cl_license: src='/home/nfsshare/license.txt'
+
+    - name: install license from local filesystem restart switchd
+      cl_license: src='/home/nfsshare/licence.txt' restart_switchd=yes
 '''
 LICENSE_PATH = '/etc/cumulus/.license.txt'
 
