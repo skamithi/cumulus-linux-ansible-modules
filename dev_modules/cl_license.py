@@ -48,11 +48,11 @@ def run_cl_cmd(module, cmd, check_rc=True):
         module.fail_json(msg=e.strerror)
     # trim last line as it is always empty
     ret = out.splitlines()
-    return ret[0:len(ret)-1]
+    return ret[:-1]
 
 
 def license_installed(module):
-    if os.path.exists(LICENSE_PATH) is True:
+    if os.path.exists(LICENSE_PATH):
         module.exit_json(changed=False, msg="license already installed")
 
 
