@@ -14,10 +14,14 @@ requirements:
 description:
     - Install Cumulus Linux License
 options:
-    url:
+    src:
         description:
             - full path to the license. Can be local path or http url
         required: true
+    restart_switchd:
+        description:
+            - restart switchd process after
+            installing the license. Can be yes/no. Default is no
 notes:
     - License Documentation: http://cumulusnetworks.com/docs/2.0/
     quick-start/quick-start.html#installing-the-license
@@ -59,7 +63,8 @@ def check_for_switchd_run_ready(module):
             return True
         count -= 1
         time.sleep(1)
-    module.fail_json(msg = 'license updated/installed. switchd failed to restart')
+    module.fail_json(
+        msg='license updated/installed. switchd failed to restart')
 
 
 def restart_switchd_now(module):

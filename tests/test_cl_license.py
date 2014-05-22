@@ -1,6 +1,4 @@
 import mock
-import sys
-from time import time
 from mock import MagicMock
 from nose.tools import set_trace
 from dev_modules.cl_license import license_installed, main, \
@@ -55,9 +53,11 @@ def test_run_main_restart_switchd_no(mock_ansible_module):
     _msg = 'license updated/installed. no request to restart switchd'
     instance.exit_json.assert_called_with(msg=_msg, changed=True)
 
+
 @mock.patch('dev_modules.cl_license.AnsibleModule')
 @mock.patch('dev_modules.cl_license.restart_switchd_now')
-def test_run_main_restart_switchd_yes(mock_restart_switchd, mock_ansible_module):
+def test_run_main_restart_switchd_yes(mock_restart_switchd,
+                                      mock_ansible_module):
     """
     Test correct cl_licence file execution when restart_switchd_is_yes\
     and switchd fails to start.
@@ -76,7 +76,8 @@ def test_run_main_restart_switchd_yes(mock_restart_switchd, mock_ansible_module)
 
 @mock.patch('dev_modules.cl_license.AnsibleModule')
 @mock.patch('dev_modules.cl_license.restart_switchd_now')
-def test_run_main_restart_switchd_yes_doesn_fail(mock_restart_switchd, mock_ansible_module):
+def test_run_main_restart_switchd_yes_doesn_fail(mock_restart_switchd,
+                                                 mock_ansible_module):
     """
     Test correct cl_licence file execution when restart_switchd_is_yes\
     and switchd starts properly
@@ -93,6 +94,7 @@ def test_run_main_restart_switchd_yes_doesn_fail(mock_restart_switchd, mock_ansi
     instance.exit_json.assert_called_with(
         msg='license updated/installed. switchd restarted', changed=True)
 
+
 @mock.patch('dev_modules.cl_license.AnsibleModule')
 @mock.patch('dev_modules.cl_license.time.sleep')
 @mock.patch('dev_modules.cl_license.os.path.exists')
@@ -107,3 +109,20 @@ def test_check_for_switch_running(mock_os_path_exists,
     check_for_switchd_run_ready(mock_module)
     assert_equals(mock_time.call_count, 30)
     mock_os_path_exists.assert_called_with('/var/run/switchd.ready')
+
+
+@mock.patch('dev_modules.cl_license.AnsibleModule')
+def test_check_license_url(mock_module):
+    """
+    Test to see that license url is properly defined
+    """
+    src = 'http://10.1.1.1/license.txt'
+    assert_equals(check_license_url(mock_module, src), True)
+    assert_equals(mock_module.fail_json.call_count, 0)
+    src = '/home/my/file.txt'
+    assert_equals(check_license_url(mock_module, src),  True)
+    assert_equals(mock_module.fail_json.call_count, 0)
+    src = 'https://sdfdf.txt'
+    check_license_url(mock_module, src)
+    mock_module.fail_json.assert_called_with(
+        msg='License URL. Wrong Format https://sdfdf.txt')
