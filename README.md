@@ -6,7 +6,7 @@ cumulus-linux-ansible-modules
 * dev_modules : contains ansible modules with a suffix of .py for
   easier testing with nose.
 * tests: contains tests for each ansible module
-* library: contains ansible modules with the .py suffix.
+* library: contains ansible modules without the .py suffix and are ready to be called by ``ansible`` or ``ansible-playbook``.
 
 ##Development
 
