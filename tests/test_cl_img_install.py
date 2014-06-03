@@ -69,9 +69,9 @@ def test_img_install(mock_module, mock_run_cl_cmd):
     Test install image
     """
     instance = mock_module.return_value
-    instance.params.get.side_effect
+    instance.params.get.side_effect = mod_args
     install_img(instance)
-    cmd = '/usr/cumulus/bin/cl-img-install'
+    cmd = '/usr/cumulus/bin/cl-img-install %s' % (mod_args('src'))
     mock_run_cl_cmd.assert_called_with(instance, cmd)
 
 @mock.patch('dev_modules.cl_img_install.run_cl_cmd')
