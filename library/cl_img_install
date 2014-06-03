@@ -73,7 +73,7 @@ def get_sw_version():
 
 def install_img(module):
     src = module.params.get('src')
-    app_path = '/usr/cumulus/bin/cl-img-install %s' % (src)
+    app_path = '/usr/cumulus/bin/cl-img-install -f %s' % (src)
     run_cl_cmd(module, app_path)
 
 
