@@ -43,6 +43,7 @@ Example playbook entries using the cl_img_install module
       cl_img_install: version=2.0.1 src=/root/image.bin switch_slots=yes'
 '''
 
+
 def check_url(module, url):
     parsed_url = urlparse(url)
     if len(parsed_url.path) > 0:
@@ -70,16 +71,18 @@ def get_sw_version():
             return line.split('=')[1].strip()
 
 
-
 def install_img(module):
-    app_path = '/usr/cumulus/bin/cl-img-install'
+    src = module.params.get('src')
+    app_path = '/usr/cumulus/bin/cl-img-install %s' % (src)
     run_cl_cmd(module, app_path)
+
 
 def switch_slots(module):
     _switch_slots = module.params.get('switch_slots')
     if _switch_slots == 'yes':
         app_path = '/usr/cumulus/bin/cl-img-select -s'
         run_cl_cmd(module, app_path)
+
 
 def check_sw_version(module, _version):
     if _version == get_sw_version():
@@ -111,7 +114,7 @@ def main():
 
     _changed = True
     _msg = "Cumulus Linux Version " + _version + " successfully" + \
-                " installed in alternate slot"
+        " installed in alternate slot"
     module.exit_json(changed=_changed, msg=_msg)
 
 
