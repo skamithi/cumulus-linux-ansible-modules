@@ -50,11 +50,23 @@ def run_cl_cmd(module, cmd, check_rc=True):
     ret = out.splitlines()
     return ret[:-1]
 
-def get_switch_version():
+
+def get_sw_version():
+    release_file = open('/etc/lsb-release').readlines()
+    for line in release_file:
+        if re.search('DISTRIB_RELEASE', line):
+            return line.split('=')[1].strip()
+
+
 
 def install_img(module):
+    pass
+
 
 def reboot_switch(module):
+    pass
+
+
 def main():
     module = AnsibleModule(
         argument_spec=dict(
@@ -68,11 +80,10 @@ def main():
     reboot_switch(module)
 
 
-
-
 # import module snippets
 from ansible.module_utils.basic import *
 from ansible.module_utils.urls import *
+import re
 
 if __name__ == '__main__':
     main()
