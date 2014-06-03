@@ -19,9 +19,10 @@ options:
         description:
             - full path to binary image. Can be a local path, http or https URL
         required: true
-    reboot:
+    switch_slots:
         description:
-            - reboot the switch
+            - Switch slots after installing the image. Only a reboot is needed.
+            Reboot can be done as a notification.
         choices: ['yes', 'no']
         default: 'no'
 notes:
@@ -35,9 +36,11 @@ Example playbook entries using the cl_img_install module
     - name: install image using using http url
       cl_img_install: version=2.0.1 src='http://10.1.1.1/CumulusLinux-2.0.1.bin'
 
-    - name: install license from local filesystem
+    - name: install image from local filesystem
       cl_img_install: version=2.0.1 src='/root/CumulusLinux-2.0.1.bin'
 
+    - name: install image and switch slots. only reboot needed
+      cl_img_install: version=2.0.1 src=/root/image.bin switch_slots=yes'
 '''
 
 def check_url(module, url):
@@ -69,11 +72,14 @@ def get_sw_version():
 
 
 def install_img(module):
-    app_path = 'usr/cumulus/bin/cl-img-install'
+    app_path = '/usr/cumulus/bin/cl-img-install'
     run_cl_cmd(module, app_path)
 
-def reboot_switch(module):
-    pass
+def switch_slots(module):
+    _switch_slots = module.params.get('switch_slots')
+    if _switch_slots == 'yes':
+        app_path = '/usr/cumulus/bin/cl-img-select -s'
+        run_cl_cmd(module, app_path)
 
 def check_sw_version(module, _version):
     if _version == get_sw_version():
@@ -85,7 +91,7 @@ def main():
     module = AnsibleModule(
         argument_spec=dict(
             src=dict(required=True, type='str'),
-            reboot=dict(default='no', choices=["yes", "no"])
+            switch_slots=dict(default='no', choices=["yes", "no"])
         ),
     )
 
@@ -93,21 +99,20 @@ def main():
     _msg = ''
 
     _version = module.params.get('version')
-    _reboot_sw = module.params.get('reboot')
     _url = module.params.get('src')
 
     check_sw_version(module, _version)
+
     check_url(module, _url)
 
     install_img(module)
 
-    if _reboot_sw == 'yes':
-        reboot_switch(module)
-    else:
-        _changed = True
-        _msg = "Cumulus Linux Version " + _version + " successfully" + \
+    switch_slots(module)
+
+    _changed = True
+    _msg = "Cumulus Linux Version " + _version + " successfully" + \
                 " installed in alternate slot"
-        module.exit_json(changed=_changed, msg=_msg)
+    module.exit_json(changed=_changed, msg=_msg)
 
 
 # import module snippets
