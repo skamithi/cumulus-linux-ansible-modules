@@ -40,6 +40,15 @@ Example playbook entries using the cl_img_install module
 
 '''
 
+def check_url(module, url):
+    parsed_url = urlparse(url)
+    if len(parsed_url.path) > 0:
+        sch = parsed_url.scheme
+        if (sch == 'http' or sch == 'https' or len(parsed_url.scheme) == 0):
+            return True
+    module.fail_json(msg="Image Path URL. Wrong Format %s" % (url))
+    return False
+
 
 def run_cl_cmd(module, cmd, check_rc=True):
     try:
@@ -60,11 +69,16 @@ def get_sw_version():
 
 
 def install_img(module):
-    pass
-
+    app_path = 'usr/cumulus/bin/cl-img-install'
+    run_cl_cmd(module, app_path)
 
 def reboot_switch(module):
     pass
+
+def check_sw_version(module, _version):
+    if _version == get_sw_version():
+        _msg = "Version %s already installed" % (_version)
+        module.exit_json(changed=False,  msg=_msg)
 
 
 def main():
@@ -75,14 +89,31 @@ def main():
         ),
     )
 
+    _changed = False
+    _msg = ''
+
+    _version = module.params.get('version')
+    _reboot_sw = module.params.get('reboot')
+    _url = module.params.get('src')
+
+    check_sw_version(module, _version)
+    check_url(module, _url)
+
     install_img(module)
 
-    reboot_switch(module)
+    if _reboot_sw == 'yes':
+        reboot_switch(module)
+    else:
+        _changed = True
+        _msg = "Cumulus Linux Version " + _version + " successfully" + \
+                " installed in alternate slot"
+        module.exit_json(changed=_changed, msg=_msg)
 
 
 # import module snippets
 from ansible.module_utils.basic import *
 from ansible.module_utils.urls import *
+from urlparse import urlparse
 import re
 
 if __name__ == '__main__':
