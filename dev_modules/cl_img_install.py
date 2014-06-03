@@ -64,11 +64,25 @@ def run_cl_cmd(module, cmd, check_rc=True):
     return ret[:-1]
 
 
-def get_sw_version():
-    release_file = open('/etc/lsb-release').readlines()
-    for line in release_file:
-        if re.search('DISTRIB_RELEASE', line):
-            return line.split('=')[1].strip()
+def get_slots_info():
+    slot_ver_file = '/mnt/root-rw/onie/u-boot-env.txt'
+    try:
+        onie_file = open('/mnt/root-rw/onie/u-boot-env.txt').readlines()
+    except:
+        module.fail_json(
+            msg="failed to read slots detail file %s" % (slot_ver_file))
+        return None
+    slots = {}
+    for line in onie_file:
+        _match = re.match('cl.ver(\d+)=(.*)', line)
+        if _match:
+            num = _match.group(1)
+            ver = _match.group(2).split('-')[0]
+            slots[num] = {'version': ver}
+        _match = re.match('cl.active=(\d+)', line)
+        if _match:
+            slots[num] = {'primary': 'yes'}
+    return slots
 
 
 def install_img(module):
@@ -85,15 +99,30 @@ def switch_slots(module):
 
 
 def check_sw_version(module, _version):
-    if _version == get_sw_version():
-        _msg = "Version %s already installed" % (_version)
-        module.exit_json(changed=False,  msg=_msg)
+    slots = get_slots_info()
+    for _num in slotvers.keys():
+        slot = slots[_num]
+        if slot['version'] == _version:
+            try:
+                slot['primary']
+                _msg = "Version %s already installed on existing slot" \
+                    % (_version)
+                module.exit_json(changed=False,  msg=_msg)
+            except:
+                switch_slots = module.params.get('switch_slots')
+                if switch_slots:
+                    run_switch_slots()
+                else:
+                    _msg = "Version " + _version + \
+                        "is installed on the alternate slot"
+                    module.exit_json(changed=False, msg=_msg)
 
 
 def main():
     module = AnsibleModule(
         argument_spec=dict(
             src=dict(required=True, type='str'),
+            version=dict(required=True, type='str'),
             switch_slots=dict(default='no', choices=["yes", "no"])
         ),
     )

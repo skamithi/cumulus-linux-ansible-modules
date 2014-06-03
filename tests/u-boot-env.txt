@@ -1,0 +1,65 @@
+baudrate=115200
+bootcmd=run check_boot_reason; run nos_bootcmd; run onie_bootcmd
+check_boot_reason=if test -n $onie_boot_reason; then setenv onie_bootargs boot_reason=$onie_boot_reason; run onie_bootcmd; fi;
+consoledev=ttyS0
+dhcp_user-class=powerpc-dni_7448-r0_uboot
+dhcp_vendor-class-identifier=powerpc-dni_7448-r0
+ethact=eth0
+ethaddr=44:38:39:00:25:d7
+ethprime=eth0
+hostname=dni-7448-unknown
+loadaddr=0x08000000
+loads_echo=1
+onie_args=run onie_initargs onie_platformargs
+onie_bootcmd=echo Loading Open Network Install Environment ...; echo Platform: $onie_platform ; echo Version : $onie_version ; cp.b $onie_start $loadaddr ${onie_sz.b} && run onie_args && bootm ${loadaddr}#$platform
+onie_dropbear_dss_host_key=begin-base64@600@d#AAAAB3NzaC1kc3MAAACBAN5B2nfZPYUS7kXet1qJdqIb4XPOgZoEDXiBplys#eomKdgDKV+Oy2cNh5yqBzee2JUOvyRffkFTPogoNzq0w8Q4aCGS2mLxlAnH4#KRkz8vgcmu5STq+bcHD2Q8KV0sYYpmXmfbpy67KTsdlshWmQrIqj1VYyVBho#Nxx+SLVCi8ktAAAAFQDWzWCZ/1FtZzpJqKXgKgUm3EFzQwAAAIAyoEHGXhbu#VMNHFtZMwRvDA8CO5bYlVGBSlAuFu8CCz0vms6grHX+0Eq593NlOehMVarMk#1ZLQRVCpZtywZk7GupRIqNGeGRnjS9cWJBM3VwyhdHF8U0uMdggD0pnhVMYe#+I/8aIf/3PEP6lD4zM0BP3T7t8r4P9TO3/AJG1hoXAAAAIAeuA7CUSqSnXKO#cJ4cLZVIZKSeFTcrtEqAV9YBy+KDvSNoIbtt7KGHW8dWLvXcPRSex1CMFYmE#FdmX86zsIy+NR91Ye5k9vDRXTjZv+PuCydlsPJ87viPLo3kbRb4pamTT7JxU#aUo15P8DboAEde/X2FYBNU24EVyNdMwT+EQHgAAAABUAozj57siiGJd1McGk#pTCQSxS2Bf8=#====#
+onie_dropbear_rsa_host_key=begin-base64@600@r#AAAAB3NzaC1yc2EAAAADAQABAAAAgnkGqbxGN9a/eddxpR7YpgPjHUCy/oEF#e9CHn7UOgGgO28kMSUmXFG0n63YEYu6hwKqyz/jogoi6cSd6sGYqSFhIfaGQ#ZsALiSfj9L+Hm3WV7o0ZB/rfyTTwT4DCNwvWug5WPkFx5jd4LwlANt+5hpmM#EJcEFSZ9CSbCLHp2FbMUOZMAAACCAnNXFn/Ze5iu7+TWMhSy79s2aWv2aUhi#JGvKmRDtGq5KVvzPsxTDDh7DzsTx9+EAlLRAL8sNcZVM2z7JuZfblSYDcdcw#uG/I5Kw8bfUDRRR2GEFe9P7MpxuCVKYiezm8JT1PrIZH1ftK7TFrkpvyC/Nx#RdANn3yb3NrcE/1sXjPhKQAAAEIAw/yVA9xN8F9PoMY1KyD+8Ae3Ugsa//Rd#C2eV6FnRB3FTTkuiymQ4gA6K0kbOSLAsA5SEpyRvmb9rPoTvC7AAgUUAAABC#AJ4V6JCuyLjpiwxdXDvW3DetzeVSyCI0Y+q/YJAGSPQ1to8l2p04sq3ryYBf#Iw+htXg41lnXLindQ9f+4jgw8YD3#====#
+onie_initargs=setenv bootargs quiet console=$consoledev,$baudrate
+onie_machine=dni_7448
+onie_machine_rev=0
+onie_platform=powerpc-dni_7448-r0
+onie_platformargs=setenv bootargs $bootargs serial_num=${serial#} eth_addr=$ethaddr $onie_bootargs $onie_debugargs 
+onie_rescue=setenv onie_boot_reason rescue && boot
+onie_start=0xefb60000
+onie_sz.b=0x00400000
+onie_uninstall=setenv onie_boot_reason uninstall && boot
+onie_update=setenv onie_boot_reason update && boot
+onie_vendor_id=5324
+onie_version="1.6.5"
+platform=dni_7448
+serial#=4NDL130820006
+ver=U-Boot 2013.01.01-g1f891da (Sep 23 2013 - 18:31:29)
+ONIE 1.6.5
+slot_state1=0
+cl.ver1=2.0.0-bb5f431-201402071259-final
+slot_state2=0
+cl.ver2=2.0.0-bb5f431-201402071259-final
+env_version=1
+nos_bootcmd=if test -n $bootsource; then run lbootcmd; else run bootorder1; fi
+lbootcmd=echo ** local boot **;if test $bootsource = flashboot; then run flashboot; else dhcp; tftpboot $bootsource && source $loadaddr; fi; sleep 1 && run bootorder1
+bootorder1=echo ** trying ${ethaddr}.img **; dhcp; tftpboot $loadaddr ${ethaddr}.img; if imi $loadaddr; then source $loadaddr || bootm ${loadaddr}#${cl.platform}; fi; sleep 1 && run bootorder2
+bootorder2=echo ** trying DHCP bootfile **; dhcp; tftpboot $loadaddr $bootfile; if imi $loadaddr; then source $loadaddr || bootm ${loadaddr}#${cl.platform}; fi; sleep 1 && run bootorder3
+bootorder3=echo ** trying ${cl.platform}.img **; tftpboot ${cl.platform}.img; if imi $loadaddr; then source $loadaddr || bootm ${loadaddr}#${cl.platform}; fi; sleep 1 && run bootorder4
+bootorder4=echo ** trying primary image **; run flashboot; sleep 1 && run bootorder5
+bootorder5=echo ** trying alternate image **; run flashboot_alt; sleep 1 && run bootorder1
+hw_boot=cp.b $active_base $loadaddr ${mtdimgsz.b} && bootm ${loadaddr}#${cl.platform}
+hw_active1=setenv active_base $mtdbase1; run hw_boot
+hw_active2=setenv active_base $mtdbase2; run hw_boot
+bootdelay=3
+autoload=no
+initargs=setenv bootargs console=$consoledev,$baudrate $lbootargs $debugargs
+set_active1=setenv bootargs ${bootargs} active=1; run hw_active1
+set_active2=setenv bootargs ${bootargs} active=2; run hw_active2
+boot_active=if test ${cl.active} = 1; then run set_active1; else run set_active2; fi
+boot_alt=if test ${cl.active} = 1; then run set_active2; else run set_active1; fi
+flashboot=echo "Booting primary image..." && run initargs boot_active
+flashboot_alt=echo "Booting alternate image..." && run initargs boot_alt
+stdin=serial
+stdout=serial
+stderr=serial
+cl.platform=dni_7448
+mtdbase1=0xe8000000
+mtdbase2=0xe8400000
+mtdimgsz.b=0x00400000
+bootsource=flashboot
+cl.active=1
