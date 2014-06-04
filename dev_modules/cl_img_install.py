@@ -43,6 +43,8 @@ Example playbook entries using the cl_img_install module
       cl_img_install: version=2.0.1 src=/root/image.bin switch_slots=yes'
 '''
 
+SLOTS = None
+
 
 def check_url(module, url):
     parsed_url = urlparse(url)
@@ -64,7 +66,23 @@ def run_cl_cmd(module, cmd, check_rc=True):
     return ret[:-1]
 
 
-def get_slots_info():
+def active_sw_version(module):
+    lsb_release = '/etc/lsb-release'
+    active_version = None
+    try:
+        lsb_file = open(lsb_release).readlines()
+    except:
+        module.fail_json(
+            msg="failed to read active version file %s" % (lsb_release))
+        return None
+    for line in lsb_file:
+        _match = re.search('DISTRIB_RELEASE=([0-9a-zA-Z.]+)', line)
+        if _match:
+            active_version = _match.group(1)
+            return active_version
+
+
+def get_slot_info(active_ver):
     slot_ver_file = '/mnt/root-rw/onie/u-boot-env.txt'
     try:
         onie_file = open('/mnt/root-rw/onie/u-boot-env.txt').readlines()
@@ -73,15 +91,21 @@ def get_slots_info():
             msg="failed to read slots detail file %s" % (slot_ver_file))
         return None
     slots = {}
+    slots['1'] = {}
+    slots['2'] = {}
+    num = None
     for line in onie_file:
         _match = re.match('cl.ver(\d+)=(.*)', line)
         if _match:
             num = _match.group(1)
             ver = _match.group(2).split('-')[0]
-            slots[num] = {'version': ver}
+            slots[num]['version'] = ver
+            if slots[num]['version'] == active_ver:
+                slots[num]['active'] = True
         _match = re.match('cl.active=(\d+)', line)
         if _match:
-            slots[num] = {'primary': 'yes'}
+            num = _match.group(1)
+            slots[num]['primary'] = True
     return slots
 
 
@@ -91,32 +115,38 @@ def install_img(module):
     run_cl_cmd(module, app_path)
 
 
-def switch_slots(module):
+def switch_slots(module, slotnum):
     _switch_slots = module.params.get('switch_slots')
     if _switch_slots == 'yes':
-        app_path = '/usr/cumulus/bin/cl-img-select -s'
+        app_path = '/usr/cumulus/bin/cl-img-select %s' % (slotnum)
         run_cl_cmd(module, app_path)
 
 
 def check_sw_version(module, _version):
-    slots = get_slots_info()
-    for _num in slotvers.keys():
-        slot = slots[_num]
+    SLOTS = get_slot_info()
+    for _num in SLOTS.keys():
+        slot = SLOTS[_num]
         if slot['version'] == _version:
-            try:
-                slot['primary']
-                _msg = "Version %s already installed on existing slot" \
+            if 'active' in slot:
+                _msg = "Version %s is installed in the active slot" \
                     % (_version)
                 module.exit_json(changed=False,  msg=_msg)
-            except:
-                switch_slots = module.params.get('switch_slots')
-                if switch_slots:
-                    run_switch_slots()
-                else:
+            else:
+                perform_switch_slots = module.params.get('switch_slots')
+                if 'primary' not in slot:
                     _msg = "Version " + _version + \
-                        "is installed on the alternate slot"
-                    module.exit_json(changed=False, msg=_msg)
-
+                            " is installed in the alternate slot. "
+                    print perform_switch_slots
+                    if perform_switch_slots == 'yes':
+                        switch_slots(module, _num)
+                        _msg = _msg + \
+                            "Next reboot, switch will load " + _version + "."
+                        module.exit_json(changed=True, msg=_msg)
+                    else:
+                        _msg = _msg + \
+                            "Next reboot will not load " + _version + ". " + \
+                            "switch_slots keyword set to 'no'."
+                        module.exit_json(changed=False, msg=_msg)
 
 def main():
     module = AnsibleModule(

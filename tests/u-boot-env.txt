@@ -18,7 +18,7 @@ onie_initargs=setenv bootargs quiet console=$consoledev,$baudrate
 onie_machine=dni_7448
 onie_machine_rev=0
 onie_platform=powerpc-dni_7448-r0
-onie_platformargs=setenv bootargs $bootargs serial_num=${serial#} eth_addr=$ethaddr $onie_bootargs $onie_debugargs 
+onie_platformargs=setenv bootargs $bootargs serial_num=${serial#} eth_addr=$ethaddr $onie_bootargs $onie_debugargs
 onie_rescue=setenv onie_boot_reason rescue && boot
 onie_start=0xefb60000
 onie_sz.b=0x00400000
@@ -33,7 +33,7 @@ ONIE 1.6.5
 slot_state1=0
 cl.ver1=2.0.0-bb5f431-201402071259-final
 slot_state2=0
-cl.ver2=2.0.0-bb5f431-201402071259-final
+cl.ver2=2.0.2-bb5f431-201402071259-final
 env_version=1
 nos_bootcmd=if test -n $bootsource; then run lbootcmd; else run bootorder1; fi
 lbootcmd=echo ** local boot **;if test $bootsource = flashboot; then run flashboot; else dhcp; tftpboot $bootsource && source $loadaddr; fi; sleep 1 && run bootorder1
@@ -62,4 +62,4 @@ mtdbase1=0xe8000000
 mtdbase2=0xe8400000
 mtdimgsz.b=0x00400000
 bootsource=flashboot
-cl.active=1
+cl.active=2
