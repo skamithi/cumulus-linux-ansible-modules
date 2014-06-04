@@ -69,18 +69,19 @@ def get_slot_info(module):
     slots['1'] = {}
     slots['2'] = {}
     active_slotnum = get_active_slot(module)
-    primary_slotnum = get_primary_slotnum()
+    primary_slotnum = get_primary_slot_num(module)
     for _num in range(1, 3):
-        slot[_num]['version'] = get_slot_version(module, slot_num)
-        if _num == active_slotnum:
-            slot[_num]['active'] = True
-        if _num == primary_slotnum:
-            slot[_num]['primary'] = True
+        slot = slots[str(_num)]
+        slot['version'] = get_slot_version(module, str(_num))
+        if _num == int(active_slotnum):
+            slot['active'] = True
+        if _num == int(primary_slotnum):
+            slot['primary'] = True
     return slots
 
 
 def get_slot_version(module, slot_num):
-    if check_mnt_root_lsb_release(slot_num):
+    if not check_mnt_root_lsb_release(slot_num):
         check_fw_print_env(module, slot_num)
 
 
@@ -137,15 +138,14 @@ def switch_slots(module, slotnum):
 
 def check_sw_version(module, _version):
     slots = get_slot_info(module)
-    for _num in slots.keys():
-        slot = slots[_num]
+    perform_switch_slots = module.params.get('switch_slots')
+    for _num, slot in slots.items():
         if slot['version'] == _version:
             if 'active' in slot:
                 _msg = "Version %s is installed in the active slot" \
                     % (_version)
                 module.exit_json(changed=False,  msg=_msg)
             else:
-                perform_switch_slots = module.params.get('switch_slots')
                 _msg = "Version " + _version + \
                     " is installed in the alternate slot. "
                 if 'primary' not in slot:
