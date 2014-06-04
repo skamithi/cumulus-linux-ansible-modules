@@ -1,7 +1,9 @@
 import mock
 from nose.tools import set_trace
 from dev_modules.cl_img_install import install_img, \
-    check_url, switch_slots, get_active_slot, get_primary_slot_num
+    check_url, switch_slots, get_active_slot, get_primary_slot_num, \
+    check_mnt_root_lsb_release
+
 from asserts import assert_equals
 
 
@@ -32,6 +34,7 @@ def test_get_active_slot(mock_module):
         assert_equals(get_active_slot(instance), '2')
         mock_open.assert_called_with('/proc/cmdline')
 
+
 @mock.patch('dev_modules.cl_img_install.run_cl_cmd')
 @mock.patch('dev_modules.cl_img_install.AnsibleModule')
 def test_getting_primary_slot_num(mock_module, mock_run_cmd):
@@ -41,6 +44,24 @@ def test_getting_primary_slot_num(mock_module, mock_run_cmd):
     instance = mock_module.return_value
     mock_run_cmd.return_value = ['1']
     assert_equals(get_primary_slot_num(instance), '1')
+
+
+def test_check_mnt_root_lsb_release():
+    """
+    Test getting version from root-rw config1/2
+    """
+    slot_num = 1
+    lsb_release = open('tests/lsb-release.txt')
+    with mock.patch('__builtin__.open') as mock_open:
+        mock_open.return_value = lsb_release
+        assert_equals(check_mnt_root_lsb_release(slot_num),
+                      '2.0.3')
+        filename = '/mnt/root-rw/config%s/etc/lsb-release' % (slot_num)
+        mock_open.assert_called_with(filename)
+
+    with mock.patch('__builtin__.open') as mock_open:
+        mock_open.sideffect = Exception
+        assert_equals(check_mnt_root_lsb_release(2), None)
 
 @mock.patch('dev_modules.cl_img_install.AnsibleModule')
 def test_check_url(mock_module):
