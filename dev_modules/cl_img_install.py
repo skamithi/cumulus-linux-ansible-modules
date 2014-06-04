@@ -61,7 +61,7 @@ def run_cl_cmd(module, cmd, check_rc=True):
         module.fail_json(msg=e.strerror)
     # trim last line as it is always empty
     ret = out.splitlines()
-    return ret[:-1]
+    return ret
 
 
 def get_slot_info(module):
@@ -102,6 +102,11 @@ def check_fw_print_env(module, slot_num):
     cmd = "/usr/sbin/fw_printenv -n cl.ver%s" % (slot_num)
     (rc, output, err) = module.run_command(cmd)
     return output.split('-')[0]
+
+
+def get_primary_slot_num(module):
+    cmd = "/usr/sbin/fw_printenv -n cl.active"
+    return ''.join(run_cl_cmd(module, cmd))
 
 
 def get_active_slot(module):

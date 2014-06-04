@@ -1,7 +1,7 @@
 import mock
 from nose.tools import set_trace
 from dev_modules.cl_img_install import install_img, \
-    check_url, switch_slots, get_active_slot
+    check_url, switch_slots, get_active_slot, get_primary_slot_num
 from asserts import assert_equals
 
 
@@ -25,7 +25,6 @@ def test_get_active_slot(mock_module):
     """
     Test getting active slot information
     """
-
     instance = mock_module.return_value
     cmdline = open('tests/proc_cmdline.txt')
     with mock.patch('__builtin__.open') as mock_open:
@@ -33,6 +32,15 @@ def test_get_active_slot(mock_module):
         assert_equals(get_active_slot(instance), '2')
         mock_open.assert_called_with('/proc/cmdline')
 
+@mock.patch('dev_modules.cl_img_install.run_cl_cmd')
+@mock.patch('dev_modules.cl_img_install.AnsibleModule')
+def test_getting_primary_slot_num(mock_module, mock_run_cmd):
+    """
+    Test getting primary slot number
+    """
+    instance = mock_module.return_value
+    mock_run_cmd.return_value = ['1']
+    assert_equals(get_primary_slot_num(instance), '1')
 
 @mock.patch('dev_modules.cl_img_install.AnsibleModule')
 def test_check_url(mock_module):
