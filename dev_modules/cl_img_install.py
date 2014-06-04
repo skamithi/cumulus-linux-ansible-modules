@@ -133,13 +133,14 @@ def check_sw_version(module, _version):
                 module.exit_json(changed=False,  msg=_msg)
             else:
                 perform_switch_slots = module.params.get('switch_slots')
+                _msg = "Version " + _version + \
+                    " is installed in the alternate slot. "
                 if 'primary' not in slot:
-                    _msg = "Version " + _version + \
-                            " is installed in the alternate slot. "
-                    print perform_switch_slots
                     if perform_switch_slots == 'yes':
                         switch_slots(module, _num)
                         _msg = _msg + \
+                            "cl-img-select has made the alternate " + \
+                            "slot the primary slot. " +\
                             "Next reboot, switch will load " + _version + "."
                         module.exit_json(changed=True, msg=_msg)
                     else:
@@ -147,6 +148,11 @@ def check_sw_version(module, _version):
                             "Next reboot will not load " + _version + ". " + \
                             "switch_slots keyword set to 'no'."
                         module.exit_json(changed=False, msg=_msg)
+                else:
+                    _msg = _msg + \
+                        "Next reboot, switch will load " + _version + "."
+                    module.exit_json(changed=False, msg=_msg)
+
 
 def main():
     module = AnsibleModule(
@@ -169,7 +175,7 @@ def main():
 
     install_img(module)
 
-    switch_slots(module)
+    check_sw_version(module, _version)
 
     _changed = True
     _msg = "Cumulus Linux Version " + _version + " successfully" + \
