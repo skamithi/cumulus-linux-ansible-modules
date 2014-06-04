@@ -43,8 +43,6 @@ Example playbook entries using the cl_img_install module
       cl_img_install: version=2.0.1 src=/root/image.bin switch_slots=yes'
 '''
 
-SLOTS = None
-
 
 def check_url(module, url):
     parsed_url = urlparse(url)
@@ -66,7 +64,20 @@ def run_cl_cmd(module, cmd, check_rc=True):
     return ret[:-1]
 
 
-def active_sw_version(module):
+def active_slot(module):
+    try:
+        cmdline = open('/proc/cmdline').readlines()
+        for line in cmdline:
+            _match = re.search('active=(\d+)', line)
+            if _match:
+                return _match.group(1)
+        return None
+    except:
+        module.fail_json(msg='Failed to open /proc/cmdline. ' +
+                         'Unable to determine active slot')
+
+
+def active_sw_version(module, slots):
     lsb_release = '/etc/lsb-release'
     active_version = None
     try:
@@ -79,10 +90,14 @@ def active_sw_version(module):
         _match = re.search('DISTRIB_RELEASE=([0-9a-zA-Z.]+)', line)
         if _match:
             active_version = _match.group(1)
-            return active_version
+    if active_version:
+        slotnum = active_slot(module)
+        if slotnum:
+            slot[slotnum]['active'] = True
+            slot[slotnum]['version'] = active_version
 
 
-def get_slot_info(active_ver):
+def get_slot_info(module):
     slot_ver_file = '/mnt/root-rw/onie/u-boot-env.txt'
     try:
         onie_file = open('/mnt/root-rw/onie/u-boot-env.txt').readlines()
@@ -100,8 +115,6 @@ def get_slot_info(active_ver):
             num = _match.group(1)
             ver = _match.group(2).split('-')[0]
             slots[num]['version'] = ver
-            if slots[num]['version'] == active_ver:
-                slots[num]['active'] = True
         _match = re.match('cl.active=(\d+)', line)
         if _match:
             num = _match.group(1)
@@ -123,9 +136,10 @@ def switch_slots(module, slotnum):
 
 
 def check_sw_version(module, _version):
-    SLOTS = get_slot_info(_version)
-    for _num in SLOTS.keys():
-        slot = SLOTS[_num]
+    slots = get_slot_info(module)
+    active_sw_version(module, slots)
+    for _num in slots.keys():
+        slot = slots[_num]
         if slot['version'] == _version:
             if 'active' in slot:
                 _msg = "Version %s is installed in the active slot" \
