@@ -33,9 +33,12 @@ EXAMPLES = '''
 Example playbook entries using the cl_img_install module
 
     tasks:
-    - name: install image using using http url
-      cl_img_install: version=2.0.1 src='http://10.1.1.1/CumulusLinux-2.0.1.bin'
+    - name: install image using using http url. Use notify to reboot switch
+      cl_img_install: version=2.0.1 src='http://10.1.1.1/CumulusLinux-2.0.1.bin' switch_slot=yes
+      notify: reboot_switch
 
+    - name: download cumulus linux to local system
+      get_url: src=ftp://cumuluslinux.bin dest=/root/CumulusLinux-2.0.1.bin
     - name: install image from local filesystem
       cl_img_install: version=2.0.1 src='/root/CumulusLinux-2.0.1.bin'
 
