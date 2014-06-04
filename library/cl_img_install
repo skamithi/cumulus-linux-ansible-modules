@@ -123,7 +123,7 @@ def switch_slots(module, slotnum):
 
 
 def check_sw_version(module, _version):
-    SLOTS = get_slot_info(active_sw_version(module))
+    SLOTS = get_slot_info(_version)
     for _num in SLOTS.keys():
         slot = SLOTS[_num]
         if slot['version'] == _version:
