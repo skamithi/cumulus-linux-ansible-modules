@@ -100,8 +100,8 @@ def check_mnt_root_lsb_release(slot_num):
 
 def check_fw_print_env(module, slot_num):
     cmd = "/usr/sbin/fw_printenv -n cl.ver%s" % (slot_num)
-    (rc, output, err) = module.run_command(cmd)
-    return output.split('-')[0]
+    output = run_cl_cmd(module, cmd)
+    return output[0].split('-')[0]
 
 
 def get_primary_slot_num(module):

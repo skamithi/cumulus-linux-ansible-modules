@@ -2,7 +2,7 @@ import mock
 from nose.tools import set_trace
 from dev_modules.cl_img_install import install_img, \
     check_url, switch_slots, get_active_slot, get_primary_slot_num, \
-    check_mnt_root_lsb_release
+    check_mnt_root_lsb_release, check_fw_print_env
 
 from asserts import assert_equals
 
@@ -62,6 +62,16 @@ def test_check_mnt_root_lsb_release():
     with mock.patch('__builtin__.open') as mock_open:
         mock_open.sideffect = Exception
         assert_equals(check_mnt_root_lsb_release(2), None)
+
+@mock.patch('dev_modules.cl_img_install.run_cl_cmd')
+@mock.patch('dev_modules.cl_img_install.AnsibleModule')
+def test_check_fw_print_env(mock_module, mock_run_cmd):
+    slot_num = '1'
+    instance = mock_module.return_value
+    mock_run_cmd.return_value = ['2.0.2-a8ec422-201404161914-final']
+    assert_equals(check_fw_print_env(instance, slot_num), '2.0.2')
+    cmd = '/usr/sbin/fw_printenv -n cl.ver%s' % (slot_num)
+    mock_run_cmd.assert_called_with(instance, cmd)
 
 @mock.patch('dev_modules.cl_img_install.AnsibleModule')
 def test_check_url(mock_module):
