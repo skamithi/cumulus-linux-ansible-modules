@@ -68,7 +68,7 @@ def get_slot_info(module):
     slots = {}
     slots['1'] = {}
     slots['2'] = {}
-    active_slotnum = get_active_slot()
+    active_slotnum = get_active_slot(module)
     primary_slotnum = get_primary_slotnum()
     for _num in range(1, 3):
         slot[_num]['version'] = get_slot_version(module, slot_num)
@@ -104,7 +104,7 @@ def check_fw_print_env(module, slot_num):
     return output.split('-')[0]
 
 
-def active_slot(module):
+def get_active_slot(module):
     try:
         cmdline = open('/proc/cmdline').readline()
     except:
