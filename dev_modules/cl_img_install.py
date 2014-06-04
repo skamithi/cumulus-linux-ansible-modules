@@ -64,62 +64,57 @@ def run_cl_cmd(module, cmd, check_rc=True):
     return ret[:-1]
 
 
+def get_slot_info(module):
+    slots = {}
+    slots['1'] = {}
+    slots['2'] = {}
+    active_slotnum = get_active_slot()
+    primary_slotnum = get_primary_slotnum()
+    for _num in range(1, 3):
+        slot[_num]['version'] = get_slot_version(module, slot_num)
+        if _num == active_slotnum:
+            slot[_num]['active'] = True
+        if _num == primary_slotnum:
+            slot[_num]['primary'] = True
+    return slots
+
+
+def get_slot_version(module, slot_num):
+    if check_mnt_root_lsb_release(slot_num):
+        check_fw_print_env(slot_num)
+
+
+def check_mnt_root_lsb_release(slot_num):
+    _path = '/mnt/root-rw/config%s/etc/lsb-release' % (slot_num)
+    try:
+        lsb_release = open(_path)
+        lines = lsb_release.readlines()
+        for line in lines:
+            _match = re.search('DISTRIB_RELEASE=([0-9a-zA-Z.]+)', line)
+            if _match:
+                return _match.group(1).split('-')[0]
+    except:
+        pass
+    return None
+
+
+def check_fw_print_env(module, slot_num):
+    cmd = "/usr/sbin/fw_printenv -n cl.ver%s" % (slot_num)
+    (rc, output, err) = module.run_command(cmd)
+    return output.split('-')[0]
+
+
 def active_slot(module):
     try:
-        cmdline = open('/proc/cmdline').readlines()
-        for line in cmdline:
-            _match = re.search('active=(\d+)', line)
-            if _match:
-                return _match.group(1)
-        return None
+        cmdline = open('/proc/cmdline').readline()
     except:
         module.fail_json(msg='Failed to open /proc/cmdline. ' +
                          'Unable to determine active slot')
 
-
-def active_sw_version(module, slots):
-    lsb_release = '/etc/lsb-release'
-    active_version = None
-    try:
-        lsb_file = open(lsb_release).readlines()
-    except:
-        module.fail_json(
-            msg="failed to read active version file %s" % (lsb_release))
-        return None
-    for line in lsb_file:
-        _match = re.search('DISTRIB_RELEASE=([0-9a-zA-Z.]+)', line)
-        if _match:
-            active_version = _match.group(1)
-    if active_version:
-        slotnum = active_slot(module)
-        if slotnum:
-            slot[slotnum]['active'] = True
-            slot[slotnum]['version'] = active_version
-
-
-def get_slot_info(module):
-    slot_ver_file = '/mnt/root-rw/onie/u-boot-env.txt'
-    try:
-        onie_file = open('/mnt/root-rw/onie/u-boot-env.txt').readlines()
-    except:
-        module.fail_json(
-            msg="failed to read slots detail file %s" % (slot_ver_file))
-        return None
-    slots = {}
-    slots['1'] = {}
-    slots['2'] = {}
-    num = None
-    for line in onie_file:
-        _match = re.match('cl.ver(\d+)=(.*)', line)
-        if _match:
-            num = _match.group(1)
-            ver = _match.group(2).split('-')[0]
-            slots[num]['version'] = ver
-        _match = re.match('cl.active=(\d+)', line)
-        if _match:
-            num = _match.group(1)
-            slots[num]['primary'] = True
-    return slots
+    _match = re.search('active=(\d+)', cmdline)
+    if _match:
+        return _match.group(1)
+    return None
 
 
 def install_img(module):
@@ -137,7 +132,6 @@ def switch_slots(module, slotnum):
 
 def check_sw_version(module, _version):
     slots = get_slot_info(module)
-    active_sw_version(module, slots)
     for _num in slots.keys():
         slot = slots[_num]
         if slot['version'] == _version:
@@ -188,8 +182,6 @@ def main():
     check_url(module, _url)
 
     install_img(module)
-
-    check_sw_version(module, _version)
 
     _changed = True
     _msg = "Cumulus Linux Version " + _version + " successfully" + \
