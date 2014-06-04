@@ -81,8 +81,11 @@ def get_slot_info(module):
 
 
 def get_slot_version(module, slot_num):
-    if not check_mnt_root_lsb_release(slot_num):
-        check_fw_print_env(module, slot_num)
+    lsb_release = check_mnt_root_lsb_release(slot_num)
+    if lsb_release:
+        return lsb_release
+    else:
+        return check_fw_print_env(module, slot_num)
 
 
 def check_mnt_root_lsb_release(slot_num):

@@ -76,11 +76,12 @@ def test_get_slot_version(mock_from_onie,
                           mock_module):
     instance = mock_module.return_value
     mock_from_etc.return_value = '2.0.2'
-    get_slot_version(instance, '1')
+    mock_from_onie.return_value = '2.0.10'
+    assert_equals(get_slot_version(instance, '1'), '2.0.2')
     assert_equals(mock_from_onie.call_count, 0)
 
     mock_from_etc.return_value = None
-    get_slot_version(instance, '1')
+    assert_equals(get_slot_version(instance, '1'), '2.0.10')
     assert_equals(mock_from_onie.call_count, 1)
 
 
