@@ -49,14 +49,15 @@ def test_sw_version_switch_slots_no_ver_on_active_slot(mock_slot_info,
                                                        mock_module,
                                                        mock_active_sw):
     "Check if software is installed, switch slots no, version on active slot"
-    mock_active_sw.return_value = '2.0.0'
+    ver = '2.0.0'
+    mock_active_sw.return_value = ver
     instance = mock_module.return_value
     instance.params.get.return_value = 'no'
     mock_slot_info.return_value = slot_info()
-    ver = '2.0.0'
     check_sw_version(instance, ver)
     _msg = 'Version %s is installed in the active slot' % (ver)
     instance.exit_json.assert_called_with(msg=_msg, changed=False)
+    mock_slot_info.assert_called_with(ver)
 
 
 @mock.patch('dev_modules.cl_img_install.AnsibleModule')
