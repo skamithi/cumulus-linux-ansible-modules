@@ -51,6 +51,23 @@ cl_interface: name=br0 bondmems=['swp1', 'swp2'] ipv4='10.1.1.1/24'
 '''
 
 
+def get_iface_type(module):
+    if module.params.get('bridgemems'):
+        return 'bridge'
+    elif module.params.get('bondmems'):
+        return 'bond'
+    elif module.params.get('name') == 'lo':
+        return 'loopback'
+    elif re.match('^eth', module.params.get('name')):
+        return 'mgmt'
+    elif re.match('^swp', module.params.get('name')):
+        return 'swp'
+    else:
+        _name = module.params.get('name')
+        _msg = 'unable to determine interface type %s' % (_name)
+        module.fail_json(msg=_msg)
+
+
 def main():
     module = AnsibleModule(
         argument_spec=dict(
@@ -65,6 +82,7 @@ def main():
         ]
     )
 
+    ifacetype = get_iface_type(module)
 
 # import module snippets
 from ansible.module_utils.basic import *
