@@ -68,6 +68,31 @@ def get_iface_type(module):
         module.fail_json(msg=_msg)
 
 
+def add_ipv4(module, iface):
+    addrs = module.params.get('ipv4')
+    if not 'config' in iface:
+        iface['config'] = {}
+    if not 'address' in iface['config']:
+        iface['config']['address'] = None
+    iface['config']['address'] = addrs
+
+
+def sortdict(od):
+    res = {}
+    for k, v in sorted(od.items()):
+        if isinstance(v, dict):
+            res[k] = sortdict(v)
+        elif isinstance(v, list):
+            res[k] = sorted(v)
+        else:
+            res[k] = v
+    return res
+
+def config_lo_iface(module, iface):
+    add_ipv4(module, iface)
+#    add_ipv6(module, iface)
+#    generate_config(iface)
+
 def main():
     module = AnsibleModule(
         argument_spec=dict(
@@ -82,7 +107,10 @@ def main():
         ]
     )
 
-    ifacetype = get_iface_type(module)
+    _ifacetype = get_iface_type(module)
+    iface = { ifacetype: _ifacetype }
+    if ifacetype == 'lo':
+        config_lo_iface(module, iface)
 
 # import module snippets
 from ansible.module_utils.basic import *
