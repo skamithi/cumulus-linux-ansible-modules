@@ -209,6 +209,7 @@ def test_modify_switch_config(mock_module):
     with mock.patch('__builtin__.open') as mock_open:
         mock_open.return_value = testwrite
         modify_switch_config(instance, iface)
+        mock_open.assert_called_with('/etc/network/ansible/lo', 'w')
 
     fstr = 'auto lo\n'
     fstr += 'iface lo inet loopback\n'
