@@ -51,6 +51,32 @@ cl_interface: name=br0 bondmems=['swp1', 'swp2'] ipv4='10.1.1.1/24'
 '''
 
 
+def exec_commandl(cmdl, cmdenv=None):
+    """ executes command. Copied from ifupdown2 project """
+    cmd_returncode = 0
+    cmdout = ''
+    try:
+        ch = subprocess.Popen(cmdl,
+                              stdout=subprocess.PIPE,
+                              shell=False, env=cmdenv,
+                              stderr=subprocess.STDOUT,
+                              close_fds=True)
+        cmdout = ch.communicate()[0]
+        cmd_returncode = ch.wait()
+    except OSError, e:
+        raise Exception('failed to execute cmd \'%s\' (%s)'
+                        % (' '.join(cmdl), str(e)))
+    if cmd_returncode != 0:
+        raise Exception('failed to execute cmd \'%s\''
+                        % ' '.join(cmdl) + '(' + cmdout.strip('\n ') + ')')
+    return cmdout
+
+
+def exec_command(cmd, cmdenv=None):
+    """ executes command given as string in the argument cmd """
+    return exec_commandl(cmd.split(), cmdenv)
+
+
 def get_iface_type(module):
     if module.params.get('bridgemems'):
         return 'bridge'
@@ -103,6 +129,30 @@ def add_ipv6(module, iface):
         elif isinstance(addrs, list):
             iface['config']['address'] =  addr_attr + addrs
 
+def config_changed(module, a_iface):
+    a_iface['name'] = module.params.get('name')
+    if a_iface['ifacetype'] == 'loopback':
+       a_iface['addr_method'] = 'loopback'
+       a_iface['addr_family'] = 'inet'
+    else:
+        a_iface['addr_method'] = None
+        a_iface['addr_family'] = None
+    a_iface['auto'] = True
+    del a_iface['ifacetype']
+    a_iface = sortdict(a_iface)
+    c_iface = None
+    try:
+        cmd = '/sbin/ifquery --format json %s' % (a_iface['name'])
+        c_iface = sortdict(json.loads(exec_command(cmd))[0])
+    except:
+        module.fail_json(msg="Unable to get current config using /sbin/ifquery")
+        return False
+    if a_iface == c_iface:
+        _msg = "no change in interface %s configuration" % (a_iface['name'])
+        module.exit_json(msg=_msg, changed=False)
+        return False
+    else:
+        return True
 
 def sortdict(od):
     res = {}
@@ -136,7 +186,7 @@ def main():
 
     _ifacetype = get_iface_type(module)
     iface = { ifacetype: _ifacetype }
-    if ifacetype == 'lo':
+    if ifacetype == 'loopback':
         config_lo_iface(module, iface)
 
 # import module snippets

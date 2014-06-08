@@ -1,7 +1,7 @@
 import mock
 from nose.tools import set_trace
 from dev_modules.cl_interface import get_iface_type, add_ipv4, \
-    add_ipv6
+    add_ipv6, config_changed
 from asserts import assert_equals
 
 
@@ -48,7 +48,7 @@ def mod_args_unknown(arg):
     return values[arg]
 
 
-@mock.patch('dev_modules.cl_img_install.AnsibleModule')
+@mock.patch('dev_modules.cl_interface.AnsibleModule')
 def test_get_iface_type(mock_module):
     """
     Test getting interface type
@@ -81,7 +81,7 @@ def test_get_iface_type(mock_module):
         msg='unable to determine interface type gibberish')
 
 
-@mock.patch('dev_modules.cl_img_install.AnsibleModule')
+@mock.patch('dev_modules.cl_interface.AnsibleModule')
 def test_add_ipv4(mock_module):
     addr = '10.1.1.1/24'
     instance = mock_module.return_value
@@ -96,7 +96,7 @@ def test_add_ipv4(mock_module):
     assert_equals(iface['config']['address'], addr)
 
 
-@mock.patch('dev_modules.cl_img_install.AnsibleModule')
+@mock.patch('dev_modules.cl_interface.AnsibleModule')
 def test_add_ipv6(mock_module):
     addr = '10:1:1::1/127'
     instance = mock_module.return_value
@@ -143,3 +143,62 @@ def test_add_ipv6(mock_module):
     assert_equals(iface['config']['address'],
                   ['10.1.1.1/24',
                    '10:1:1::1/127'])
+
+@mock.patch('dev_modules.cl_interface.exec_command')
+@mock.patch('dev_modules.cl_interface.AnsibleModule')
+def test_config_changed_lo_config_different(mock_module,
+                                            mock_exec):
+    """
+    Test config changed loopback config is different
+    """
+    instance = mock_module.return_value
+    instance.params.get.return_value = 'lo'
+    iface = {
+        'ifacetype': 'loopback',
+        'config': {
+            'address': "10.3.3.4/32",
+            'speed': '1000'
+        }
+    }
+    mock_exec.return_value = ''.join(open('tests/lo.txt').readlines())
+    assert_equals(config_changed(instance, iface), True)
+
+@mock.patch('dev_modules.cl_interface.exec_command')
+@mock.patch('dev_modules.cl_interface.AnsibleModule')
+def test_config_changed_lo_config_same(mock_module, mock_exec):
+    """ Test config change loopback config the same"""
+    instance = mock_module.return_value
+    instance.params.get.return_value = 'lo'
+    mock_exec.return_value = ''.join(open('tests/lo.txt').readlines())
+    iface = {
+        'ifacetype': 'loopback',
+        'config': {
+            'address': ["10:3:3::3/128",
+                        "10.3.3.3/32"]
+        }
+    }
+    assert_equals(config_changed(instance, iface), False)
+    _msg = 'no change in interface lo configuration'
+    instance.exit_json.assert_called_with(
+        msg=_msg, changed=False)
+
+@mock.patch('dev_modules.cl_interface.exec_command')
+@mock.patch('dev_modules.cl_interface.AnsibleModule')
+def test_config_changed_ifquery_missing(mock_module, mock_exec):
+    """
+    Test config_changed if ifquery is missing
+    """
+    instance = mock_module.return_value
+    instance.params.get.return_value = 'lo'
+    mock_exec.side_effect = Exception
+    iface = {
+        'ifacetype': 'loopback',
+        'config': {
+            'address': ["10:3:3::3/128",
+                        "10.3.3.3/32"]
+        }
+    }
+    config_changed(instance, iface)
+    _msg = 'Unable to get current config using /sbin/ifquery'
+    instance.fail_json.assert_called_with(msg=_msg)
+
