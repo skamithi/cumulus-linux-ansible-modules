@@ -67,14 +67,41 @@ def get_iface_type(module):
         _msg = 'unable to determine interface type %s' % (_name)
         module.fail_json(msg=_msg)
 
+def create_config_dict(iface):
+    if not 'config' in iface:
+        iface['config'] = {}
+
+def create_config_addr_attr(iface):
+    try:
+        if not 'address' in iface['config']:
+            iface['config']['address'] = None
+    except:
+        pass
 
 def add_ipv4(module, iface):
     addrs = module.params.get('ipv4')
-    if not 'config' in iface:
-        iface['config'] = {}
-    if not 'address' in iface['config']:
-        iface['config']['address'] = None
+    create_config_dict(iface)
+    create_config_addr_attr(iface)
     iface['config']['address'] = addrs
+
+
+def add_ipv6(module, iface):
+    addrs = module.params.get('ipv6')
+    create_config_dict(iface)
+    create_config_addr_attr(iface)
+    addr_attr = iface['config']['address']
+    if addr_attr is None:
+        iface['config']['address'] = addrs
+    elif isinstance(addr_attr, str):
+        if isinstance(addrs, str):
+            iface['config']['address'] =  [addr_attr, addrs]
+        elif isinstance(addrs, list):
+            iface['config']['address'] = addrs + [addr_attr]
+    elif isinstance(addr_attr, list):
+        if isinstance(addrs, str):
+            iface['config']['address']  = addr_attr + [addrs]
+        elif isinstance(addrs, list):
+            iface['config']['address'] =  addr_attr + addrs
 
 
 def sortdict(od):

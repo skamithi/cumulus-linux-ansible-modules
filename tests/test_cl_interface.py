@@ -1,6 +1,7 @@
 import mock
 from nose.tools import set_trace
-from dev_modules.cl_interface import get_iface_type, add_ipv4
+from dev_modules.cl_interface import get_iface_type, add_ipv4, \
+    add_ipv6
 from asserts import assert_equals
 
 
@@ -95,3 +96,50 @@ def test_add_ipv4(mock_module):
     assert_equals(iface['config']['address'], addr)
 
 
+@mock.patch('dev_modules.cl_img_install.AnsibleModule')
+def test_add_ipv6(mock_module):
+    addr = '10:1:1::1/127'
+    instance = mock_module.return_value
+
+    ## iface addr is None ipv6 is None
+    instance.params.get.return_value = None
+    iface = {'config': {'address': None }}
+    add_ipv6(instance, iface)
+    assert_equals(iface['config']['address'], None)
+
+    ## iface addr is None ipv6 is not None
+    instance.params.get.return_value = addr
+    add_ipv6(instance, iface)
+    assert_equals(iface['config']['address'], addr)
+
+    ## iface addr is str ipv6 is str
+    instance.params.get.return_value = addr
+    iface = {'config': {'address': '10.1.1.1/24' }}
+    add_ipv6(instance, iface)
+    assert_equals(iface['config']['address'],
+                  ['10.1.1.1/24',
+                   '10:1:1::1/127'])
+
+    ## iface addr is str ipv6 is list
+    instance.params.get.return_value = [addr]
+    iface = {'config': {'address': '10.1.1.1/24' }}
+    add_ipv6(instance, iface)
+    assert_equals(iface['config']['address'],
+                  ['10:1:1::1/127',
+                   '10.1.1.1/24'])
+
+    ## iface addr is list ipv6 is str
+    instance.params.get.return_value = addr
+    iface = {'config': {'address': ['10.1.1.1/24'] }}
+    add_ipv6(instance, iface)
+    assert_equals(iface['config']['address'],
+                  ['10.1.1.1/24',
+                   '10:1:1::1/127'])
+
+    # iface addr is list ipv6 is list
+    instance.params.get.return_value = [addr]
+    iface = {'config': {'address': ['10.1.1.1/24'] }}
+    add_ipv6(instance, iface)
+    assert_equals(iface['config']['address'],
+                  ['10.1.1.1/24',
+                   '10:1:1::1/127'])
