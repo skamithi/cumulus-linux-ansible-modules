@@ -1,9 +1,8 @@
 import mock
 from nose.tools import set_trace
 from dev_modules.cl_interface import get_iface_type, add_ipv4, \
-    add_ipv6, config_changed
+    add_ipv6, config_changed, modify_switch_config
 from asserts import assert_equals
-
 
 def mod_args_bridgemems(arg):
     values = {'bridgemems': '2.0.0'}
@@ -163,6 +162,18 @@ def test_config_changed_lo_config_different(mock_module,
     mock_exec.return_value = ''.join(open('tests/lo.txt').readlines())
     assert_equals(config_changed(instance, iface), True)
 
+def loop_iface():
+    iface = {
+        'name' : 'lo',
+        'ifacetype': 'loopback',
+        'config': {
+            'address': ["10:3:3::3/128",
+                        "10.3.3.3/32"]
+        }
+    }
+    return iface
+
+
 @mock.patch('dev_modules.cl_interface.exec_command')
 @mock.patch('dev_modules.cl_interface.AnsibleModule')
 def test_config_changed_lo_config_same(mock_module, mock_exec):
@@ -170,13 +181,7 @@ def test_config_changed_lo_config_same(mock_module, mock_exec):
     instance = mock_module.return_value
     instance.params.get.return_value = 'lo'
     mock_exec.return_value = ''.join(open('tests/lo.txt').readlines())
-    iface = {
-        'ifacetype': 'loopback',
-        'config': {
-            'address': ["10:3:3::3/128",
-                        "10.3.3.3/32"]
-        }
-    }
+    iface = loop_iface()
     assert_equals(config_changed(instance, iface), False)
     _msg = 'no change in interface lo configuration'
     instance.exit_json.assert_called_with(
@@ -191,14 +196,25 @@ def test_config_changed_ifquery_missing(mock_module, mock_exec):
     instance = mock_module.return_value
     instance.params.get.return_value = 'lo'
     mock_exec.side_effect = Exception
-    iface = {
-        'ifacetype': 'loopback',
-        'config': {
-            'address': ["10:3:3::3/128",
-                        "10.3.3.3/32"]
-        }
-    }
+    iface =  loop_iface()
     config_changed(instance, iface)
     _msg = 'Unable to get current config using /sbin/ifquery'
     instance.fail_json.assert_called_with(msg=_msg)
+
+@mock.patch('dev_modules.cl_interface.AnsibleModule')
+def test_modify_switch_config(mock_module):
+    instance = mock_module.return_value
+    testwrite = open('/tmp/test.me', 'w')
+    iface = loop_iface()
+    with mock.patch('__builtin__.open') as mock_open:
+        mock_open.return_value = testwrite
+        modify_switch_config(instance, iface)
+
+    fstr = 'auto lo\n'
+    fstr += 'iface lo inet loopback\n'
+    fstr += '    address 10:3:3::3/128\n'
+    fstr += '    address 10.3.3.3/32\n'
+    output = open('/tmp/test.me').readlines()
+    assert_equals(''.join(output), fstr)
+
 

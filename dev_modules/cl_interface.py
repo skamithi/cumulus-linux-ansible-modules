@@ -138,6 +138,7 @@ def config_changed(module, a_iface):
         a_iface['addr_method'] = None
         a_iface['addr_family'] = None
     a_iface['auto'] = True
+    _ifacetype = a_iface['ifacetype']
     del a_iface['ifacetype']
     a_iface = sortdict(a_iface)
     c_iface = None
@@ -152,6 +153,7 @@ def config_changed(module, a_iface):
         module.exit_json(msg=_msg, changed=False)
         return False
     else:
+        a_iface['ifacetype'] = _ifacetype
         return True
 
 def sortdict(od):
@@ -167,8 +169,25 @@ def sortdict(od):
 
 def config_lo_iface(module, iface):
     add_ipv4(module, iface)
-#    add_ipv6(module, iface)
-#    generate_config(iface)
+    add_ipv6(module, iface)
+
+def modify_switch_config(module, iface):
+    filestr = "auto %s\n" % (iface['name'])
+    if iface['ifacetype'] == 'loopback':
+        filestr += "iface %s inet loopback\n" % (iface['name'])
+    else:
+        filestr += "iface %s" % (iface['name'])
+    for k, v in iface['config'].items():
+        if isinstance(v, list):
+            for subv in v:
+                filestr += "    %s %s\n" % (k, subv)
+        else:
+            filestr += "    %s %s\n" % (k, v)
+
+    filename = "/etc/network/ansible/%s" % (iface['name'])
+    f = open(filename, 'w')
+    f.write(filestr)
+    f.close()
 
 def main():
     module = AnsibleModule(
@@ -188,6 +207,10 @@ def main():
     iface = { ifacetype: _ifacetype }
     if ifacetype == 'loopback':
         config_lo_iface(module, iface)
+
+    config_changed(module, iface)
+
+    modify_switch_config(module, iface)
 
 # import module snippets
 from ansible.module_utils.basic import *

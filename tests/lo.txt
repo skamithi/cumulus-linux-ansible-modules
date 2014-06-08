@@ -1,0 +1,14 @@
+[
+  {
+    "auto": true,
+    "config": {
+      "address": [
+        "10.3.3.3/32",
+        "10:3:3::3/128"
+      ]
+    },
+    "addr_method": "loopback",
+    "name": "lo",
+    "addr_family": "inet"
+  }
+]

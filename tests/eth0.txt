@@ -1,0 +1,9 @@
+[
+  {
+    "auto": true,
+    "config": {},
+    "addr_method": "dhcp",
+    "name": "eth0",
+    "addr_family": "inet"
+  }
+]
