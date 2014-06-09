@@ -1,8 +1,11 @@
+from mock import call
 import mock
 from nose.tools import set_trace
 from dev_modules.cl_interface import get_iface_type, add_ipv4, \
-    add_ipv6, config_changed, modify_switch_config
+    add_ipv6, config_changed, modify_switch_config, main, \
+    remove_config_from_etc_net_interfaces
 from asserts import assert_equals
+import shutil
 
 def mod_args_bridgemems(arg):
     values = {'bridgemems': '2.0.0'}
@@ -42,10 +45,37 @@ def mod_args_swp(arg):
 def mod_args_unknown(arg):
     values = {'name': 'gibberish',
               'bridgemems': None,
-              'bondmems': None
+              'bondmems': None,
               }
     return values[arg]
 
+@mock.patch('dev_modules.cl_interface.remove_config_from_etc_net_interfaces')
+@mock.patch('dev_modules.cl_interface.modify_switch_config')
+@mock.patch('dev_modules.cl_interface.config_lo_iface')
+@mock.patch('dev_modules.cl_interface.config_changed')
+@mock.patch('dev_modules.cl_interface.get_iface_type')
+@mock.patch('dev_modules.cl_interface.AnsibleModule')
+def test_module_args(mock_module,
+                     mock_get_iface_type,
+                     mock_config_changed,
+                     mock_config_lo_iface,
+                     mock_mod_sw_config,
+                     mock_remove_config):
+    """ Test module argument specs"""
+    instance = mock_module.return_value
+    instance.params.get.side_effect = mod_args_unknown
+    mock_get_iface_type.return_value = 'loopback'
+    main()
+    mock_module.assert_called_with(argument_spec=
+                                   {'bondmems': {'type': 'str'},
+                                    'ipv6': {'type': 'str'},
+                                    'ipv4': {'type': 'str'},
+                                    'applyconfig': {'type': 'str'},
+                                    'name': {'required': True,
+                                             'type': 'str'},
+                                    'bridgemems': {'type': 'str'}},
+                                   mutually_exclusive=
+                                   [['bridgemems', 'bondmems']])
 
 @mock.patch('dev_modules.cl_interface.AnsibleModule')
 def test_get_iface_type(mock_module):
@@ -218,4 +248,33 @@ def test_modify_switch_config(mock_module):
     output = open('/tmp/test.me').readlines()
     assert_equals(''.join(output), fstr)
 
+def interface_files(name, mode):
+    sdf
+    if mode == 'r':
+        open('tests/interface.txt', 'r')
+    else:
+        open('tests/interface.txt', 'w')
 
+@mock.patch('dev_modules.cl_interface.AnsibleModule')
+def test_remove_config_from_etc_net_interfaces(mock_module):
+    instance = mock_module.return_value
+    origfile = open('tests/interface.txt', 'r')
+    newfile = open('tests/output.txt','w')
+    mock_open = mock.Mock(side_effect=[origfile, newfile])
+    iface = { 'name' : 'swp2' }
+    with mock.patch('__builtin__.open', mock_open):
+        remove_config_from_etc_net_interfaces(instance, iface)
+    expected = [call('/etc/network/interfaces', 'r'), call('/etc/network/interfaces', 'w')]
+    assert_equals(mock_open.call_args_list, expected)
+    f = open('tests/output.txt')
+    output = f.readlines()
+    assert_equals(output,
+                  ['auto lo\n', 'iface lo inet loopback\n',
+                   '  address 1.1.1.1/32\n',
+                   '\n',
+                   'auto eth0\n',
+                   'iface eth0 inet dhcp\n',
+                   '\n',
+                   'auto swp1\n',
+                   'iface swp1\n',
+                   '   speed 1000\n'])
