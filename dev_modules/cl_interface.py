@@ -200,24 +200,29 @@ def remove_config_from_etc_net_interfaces(module, iface):
     config = f.readlines()
     new_config = []
     delete_line = False
+    add_source_ansible = True
+
     for k, line in enumerate(config):
         matchstr = 'auto %s' % (iface['name'])
         matchstr2 = 'auto .*'
-        match = re.match(matchstr, line)
-        match2 = re.match(matchstr2, line)
-        if match:
+        match_iface_auto = re.match(matchstr, line)
+        match_any_auto = re.match(matchstr2, line)
+        match_ansible = re.match("source\s+/etc/network/ansible", line)
+        if match_iface_auto:
             delete_line = True
-        elif delete_line and match2:
+        elif delete_line and match_any_auto:
             delete_line = False
+        elif match_ansible:
+            add_source_ansible = False
         if not delete_line:
             new_config.append(line)
 
-    match = re.match(config[-1], "source /etc/network/ansible/*\n")
-    if not match:
+    if add_source_ansible:
         addlines = ['\n',
-         '# Ansible controlled interfaces found here\n',
-         'source /etc/network/interfaces/ansible/*\n']
+         '## Ansible controlled interfaces found here\n',
+         'source /etc/network/ansible/*\n']
         new_config = new_config + addlines
+
     f2 = open('/etc/network/interfaces', 'w')
     f2.writelines(new_config)
     f2.close()
@@ -248,6 +253,8 @@ def main():
     remove_config_from_etc_net_interfaces(module, iface)
     if module.params.get('applyconfig'):
         apply_config(module, iface)
+
+
 # import module snippets
 from ansible.module_utils.basic import *
 from ansible.module_utils.urls import *

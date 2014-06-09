@@ -267,5 +267,35 @@ def test_remove_config_from_etc_net_interfaces(mock_module):
                    'iface swp1\n',
                    '   speed 1000\n',
                    '\n',
-                   '# Ansible controlled interfaces found here\n',
-                   'source /etc/network/interfaces/ansible/*\n'])
+                   '## Ansible controlled interfaces found here\n',
+                   'source /etc/network/ansible/*\n'])
+
+@mock.patch('dev_modules.cl_interface.AnsibleModule')
+def test_appending_ansible_to_etc_network_interface(mock_module):
+    instance = mock_module.return_value
+    origfile = open('tests/interface_with_ansible.txt', 'r')
+    newfile = open('tests/output.txt', 'w')
+    mock_open = mock.Mock(side_effect=[origfile, newfile])
+    iface = {'name': 'swp2'}
+    with mock.patch('__builtin__.open', mock_open):
+        remove_config_from_etc_net_interfaces(instance, iface)
+    expected = [call('/etc/network/interfaces', 'r'),
+                call('/etc/network/interfaces', 'w')]
+    assert_equals(mock_open.call_args_list, expected)
+    f = open('tests/output.txt')
+    output = f.readlines()
+    assert_equals(output,
+                  ['auto lo\n', 'iface lo inet loopback\n',
+                   '  address 1.1.1.1/32\n',
+                   '\n',
+                   'auto eth0\n',
+                   'iface eth0 inet dhcp\n',
+                   '\n',
+                   'auto swp1\n',
+                   'iface swp1\n',
+                   '   speed 1000\n',
+                   '\n',
+                   '## Ansible controlled interfaces found here\n',
+                   'source /etc/network/ansible/*\n'])
+
+
