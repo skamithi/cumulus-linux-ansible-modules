@@ -59,30 +59,14 @@ cl_interface: name=br0 bondmems=['swp1', 'swp2'] ipv4='10.1.1.1/24' apply=yes
 '''
 
 
-def exec_commandl(cmdl, cmdenv=None):
-    """ executes command. Copied from ifupdown2 project """
-    cmd_returncode = 0
-    cmdout = ''
+def run_cl_cmd(module, cmd, check_rc=True):
     try:
-        ch = subprocess.Popen(cmdl,
-                              stdout=subprocess.PIPE,
-                              shell=False, env=cmdenv,
-                              stderr=subprocess.STDOUT,
-                              close_fds=True)
-        cmdout = ch.communicate()[0]
-        cmd_returncode = ch.wait()
-    except OSError, e:
-        raise Exception('failed to execute cmd \'%s\' (%s)'
-                        % (' '.join(cmdl), str(e)))
-    if cmd_returncode != 0:
-        raise Exception('failed to execute cmd \'%s\''
-                        % ' '.join(cmdl) + '(' + cmdout.strip('\n ') + ')')
-    return cmdout
-
-
-def exec_command(cmd, cmdenv=None):
-    """ executes command given as string in the argument cmd """
-    return exec_commandl(cmd.split(), cmdenv)
+        (rc, out, err) = module.run_command(cmd, check_rc=check_rc)
+    except Exception, e:
+        module.fail_json(msg=e.strerror)
+    # trim last line as it is always empty
+    ret = out.splitlines()
+    return ret
 
 
 def get_iface_type(module):
@@ -154,13 +138,8 @@ def config_changed(module, a_iface):
     del a_iface['ifacetype']
     a_iface = sortdict(a_iface)
     c_iface = None
-    try:
-        cmd = '/sbin/ifquery --format json %s' % (a_iface['name'])
-        c_iface = sortdict(json.loads(exec_command(cmd))[0])
-    except:
-        _msg = "Unable to get current config using /sbin/ifquery"
-        module.fail_json(msg=_msg)
-        return False
+    cmd = '/sbin/ifquery --format json %s' % (a_iface['name'])
+    c_iface = sortdict(json.loads(run_cl_cmd(module, cmd))[0])
     if a_iface == c_iface:
         _msg = "no change in interface %s configuration" % (a_iface['name'])
         module.exit_json(msg=_msg, changed=False)
@@ -168,6 +147,11 @@ def config_changed(module, a_iface):
     else:
         a_iface['ifacetype'] = _ifacetype
         return True
+
+
+def apply_config(module, iface):
+    cmd = '/sbin/ifup %s'
+    run_cl_cmd(module, cmd)
 
 
 def sortdict(od):
@@ -227,6 +211,13 @@ def remove_config_from_etc_net_interfaces(module, iface):
             delete_line = False
         if not delete_line:
             new_config.append(line)
+
+    match = re.match(config[-1], "source /etc/network/ansible/*\n")
+    if not match:
+        addlines = ['\n',
+         '# Ansible controlled interfaces found here\n',
+         'source /etc/network/interfaces/ansible/*\n']
+        new_config = new_config + addlines
     f2 = open('/etc/network/interfaces', 'w')
     f2.writelines(new_config)
     f2.close()
@@ -255,7 +246,8 @@ def main():
     config_changed(module, iface)
     modify_switch_config(module, iface)
     remove_config_from_etc_net_interfaces(module, iface)
-
+    if module.params.get('applyconfig'):
+        apply_config(module, iface)
 # import module snippets
 from ansible.module_utils.basic import *
 from ansible.module_utils.urls import *

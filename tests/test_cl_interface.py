@@ -46,10 +46,12 @@ def mod_args_unknown(arg):
     values = {'name': 'gibberish',
               'bridgemems': None,
               'bondmems': None,
+              'applyconfig': 'no'
               }
     return values[arg]
 
 
+@mock.patch('dev_modules.cl_interface.apply_config')
 @mock.patch('dev_modules.cl_interface.remove_config_from_etc_net_interfaces')
 @mock.patch('dev_modules.cl_interface.modify_switch_config')
 @mock.patch('dev_modules.cl_interface.config_lo_iface')
@@ -61,7 +63,8 @@ def test_module_args(mock_module,
                      mock_config_changed,
                      mock_config_lo_iface,
                      mock_mod_sw_config,
-                     mock_remove_config):
+                     mock_remove_config,
+                     mock_apply_config):
     """ Test module argument specs"""
     instance = mock_module.return_value
     instance.params.get.side_effect = mod_args_unknown
@@ -175,7 +178,7 @@ def test_add_ipv6(mock_module):
                    '10:1:1::1/127'])
 
 
-@mock.patch('dev_modules.cl_interface.exec_command')
+@mock.patch('dev_modules.cl_interface.run_cl_cmd')
 @mock.patch('dev_modules.cl_interface.AnsibleModule')
 def test_config_changed_lo_config_different(mock_module,
                                             mock_exec):
@@ -207,7 +210,7 @@ def loop_iface():
     return iface
 
 
-@mock.patch('dev_modules.cl_interface.exec_command')
+@mock.patch('dev_modules.cl_interface.run_cl_cmd')
 @mock.patch('dev_modules.cl_interface.AnsibleModule')
 def test_config_changed_lo_config_same(mock_module, mock_exec):
     """ Test config change loopback config the same"""
@@ -219,21 +222,6 @@ def test_config_changed_lo_config_same(mock_module, mock_exec):
     _msg = 'no change in interface lo configuration'
     instance.exit_json.assert_called_with(
         msg=_msg, changed=False)
-
-
-@mock.patch('dev_modules.cl_interface.exec_command')
-@mock.patch('dev_modules.cl_interface.AnsibleModule')
-def test_config_changed_ifquery_missing(mock_module, mock_exec):
-    """
-    Test config_changed if ifquery is missing
-    """
-    instance = mock_module.return_value
-    instance.params.get.return_value = 'lo'
-    mock_exec.side_effect = Exception
-    iface = loop_iface()
-    config_changed(instance, iface)
-    _msg = 'Unable to get current config using /sbin/ifquery'
-    instance.fail_json.assert_called_with(msg=_msg)
 
 
 @mock.patch('dev_modules.cl_interface.AnsibleModule')
@@ -279,5 +267,5 @@ def test_remove_config_from_etc_net_interfaces(mock_module):
                    'iface swp1\n',
                    '   speed 1000\n',
                    '\n',
-                   '# Ansible controlled interfaces found here\n'
+                   '# Ansible controlled interfaces found here\n',
                    'source /etc/network/interfaces/ansible/*\n'])
