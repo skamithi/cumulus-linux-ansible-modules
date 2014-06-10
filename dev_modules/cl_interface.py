@@ -19,18 +19,20 @@ options:
         description:
             - list of IPv4 addresses to configure on the interface. use CIDR
             syntax.
+        default: None
     ipv6:
         description:
             - list of IPv6 addresses  to configure on the interface. use CIDR
             syntax
+        default: None
     bridgemems:
         description:
             - list ports associated with the bridge interface.
-
+        default: None
     bondmems:
         description:
             - list ports associated with the bond interface
-
+        default: None
     applyconfig:
         description:
             - apply interface change
@@ -98,14 +100,15 @@ def create_config_addr_attr(iface):
 
 def add_ipv4(module, iface):
     addrs = module.params.get('ipv4')
-    create_config_dict(iface)
-    create_config_addr_attr(iface)
-    iface['config']['address'] = addrs
+    if addrs:
+        create_config_addr_attr(iface)
+        iface['config']['address'] = addrs
 
 
 def add_ipv6(module, iface):
     addrs = module.params.get('ipv6')
-    create_config_dict(iface)
+    if not addrs:
+        return
     create_config_addr_attr(iface)
     addr_attr = iface['config']['address']
     if addr_attr is None:
@@ -240,19 +243,18 @@ def main():
     module = AnsibleModule(
         argument_spec=dict(
             name=dict(required=True, type='str'),
-            bridgemems=dict(type='str'),
-            bondmems=dict(type='str'),
-            ipv4=dict(type='list'),
-            ipv6=dict(type='str'),
+            bridgemems=dict(default=None, type='list'),
+            bondmems=dict(default=None, type='list'),
+            ipv4=dict(default=None, type='list'),
+            ipv6=dict(default=None, type='list'),
             applyconfig=dict(required=True, type='str')
-        ),
-        mutually_exclusive=[
-            ['bridgemems', 'bondmems']
-        ]
+        )
     )
+
 
     _ifacetype = get_iface_type(module)
     iface = {'ifacetype': _ifacetype}
+    create_config_dict(iface)
     if _ifacetype == 'loopback':
         config_lo_iface(module, iface)
     elif _ifacetype == 'swp':
@@ -260,7 +262,7 @@ def main():
     config_changed(module, iface)
     modify_switch_config(module, iface)
     remove_config_from_etc_net_interfaces(module, iface)
-    if module.params.get('applyconfig'):
+    if module.params.get('applyconfig') == 'yes':
         apply_config(module, iface)
     _msg = 'interface successfully configured %s' % (iface['name'])
     module.exit_json(msg=_msg, changed=True)
