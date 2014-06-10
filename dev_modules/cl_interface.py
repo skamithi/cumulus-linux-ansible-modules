@@ -126,7 +126,6 @@ def add_ipv6(module, iface):
 
 
 def config_changed(module, a_iface):
-    a_iface['name'] = module.params.get('name')
     if a_iface['ifacetype'] == 'loopback':
         a_iface['addr_method'] = 'loopback'
         a_iface['addr_family'] = 'inet'
@@ -254,6 +253,7 @@ def main():
 
     _ifacetype = get_iface_type(module)
     iface = {'ifacetype': _ifacetype}
+    iface['name'] = module.params.get('name')
     create_config_dict(iface)
     if _ifacetype == 'loopback':
         config_lo_iface(module, iface)

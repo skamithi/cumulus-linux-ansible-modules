@@ -71,14 +71,12 @@ def test_module_args(mock_module,
     mock_get_iface_type.return_value = 'loopback'
     main()
     mock_module.assert_called_with(
-        argument_spec={'bondmems': {'type': 'str'},
-                       'ipv6': {'type': 'str'},
-                       'ipv4': {'type': 'str'},
-                       'applyconfig': {'type': 'str'},
-                       'name': {'required': True,
-                                'type': 'str'},
-                       'bridgemems': {'type': 'str'}},
-        mutually_exclusive=[['bridgemems', 'bondmems']])
+        argument_spec={'bondmems': {'default': None, 'type': 'list'},
+                       'ipv6': {'default': None, 'type': 'list'},
+                       'ipv4': {'default': None, 'type': 'list'},
+                       'applyconfig': {'required': True, 'type': 'str'},
+                       'name': {'required': True, 'type': 'str'},
+                       'bridgemems': {'default': None, 'type': 'list'}})
 
 
 @mock.patch('dev_modules.cl_interface.AnsibleModule')
@@ -117,14 +115,15 @@ def test_get_iface_type(mock_module):
 @mock.patch('dev_modules.cl_interface.AnsibleModule')
 def test_add_ipv4(mock_module):
     addr = '10.1.1.1/24'
+    # addr is empty
     instance = mock_module.return_value
     instance.params.get.return_value = None
-    iface = {}
+    iface = {'config': {}}
     add_ipv4(instance, iface)
-    assert_equals(iface['config']['address'], None)
-
+    assert_equals('address' in iface['config'], False)
+    # addr is not empty
     instance.params.get.return_value = addr
-    iface = {'ifacetype': 'lo'}
+    iface = {'ifacetype': 'lo', 'config': {}}
     add_ipv4(instance, iface)
     assert_equals(iface['config']['address'], addr)
 
@@ -136,9 +135,9 @@ def test_add_ipv6(mock_module):
 
     # iface addr is None ipv6 is None
     instance.params.get.return_value = None
-    iface = {'config': {'address': None}}
+    iface = {'config': {}}
     add_ipv6(instance, iface)
-    assert_equals(iface['config']['address'], None)
+    assert_equals('address' in iface['config'], False)
 
     # iface addr is None ipv6 is not None
     instance.params.get.return_value = addr
@@ -192,7 +191,8 @@ def test_config_changed_lo_config_different(mock_module,
         'config': {
             'address': "10.3.3.4/32",
             'speed': '1000'
-        }
+        },
+        'name': 'lo'
     }
     mock_exec.return_value = ''.join(open('tests/lo.txt').readlines())
     assert_equals(config_changed(instance, iface), True)
@@ -224,9 +224,11 @@ def test_config_changed_lo_config_same(mock_module, mock_exec):
         msg=_msg, changed=False)
 
 
+@mock.patch('dev_modules.cl_interface.os')
 @mock.patch('dev_modules.cl_interface.AnsibleModule')
-def test_modify_switch_config(mock_module):
+def test_modify_switch_config(mock_module, mock_os):
     instance = mock_module.return_value
+    mock_os.path.exists.return_value = False
     testwrite = open('/tmp/test.me', 'w')
     iface = loop_iface()
     with mock.patch('__builtin__.open') as mock_open:
@@ -234,6 +236,7 @@ def test_modify_switch_config(mock_module):
         modify_switch_config(instance, iface)
         mock_open.assert_called_with('/etc/network/ansible/lo', 'w')
 
+    mock_os.path.exists.assert_called_with('/etc/network/ansible/')
     fstr = 'auto lo\n'
     fstr += 'iface lo inet loopback\n'
     fstr += '    address 10:3:3::3/128\n'
@@ -270,6 +273,7 @@ def test_remove_config_from_etc_net_interfaces(mock_module):
                    '## Ansible controlled interfaces found here\n',
                    'source /etc/network/ansible/*\n'])
 
+
 @mock.patch('dev_modules.cl_interface.AnsibleModule')
 def test_appending_ansible_to_etc_network_interface(mock_module):
     instance = mock_module.return_value
@@ -297,5 +301,3 @@ def test_appending_ansible_to_etc_network_interface(mock_module):
                    '\n',
                    '## Ansible controlled interfaces found here\n',
                    'source /etc/network/ansible/*\n'])
-
-
