@@ -3,7 +3,7 @@ import mock
 from nose.tools import set_trace
 from dev_modules.cl_interface import get_iface_type, add_ipv4, \
     add_ipv6, config_changed, modify_switch_config, main, \
-    remove_config_from_etc_net_interfaces
+    remove_config_from_etc_net_interfaces, config_swp_iface
 from asserts import assert_equals
 
 
@@ -78,6 +78,14 @@ def test_module_args(mock_module,
                        'name': {'required': True, 'type': 'str'},
                        'bridgemems': {'default': None, 'type': 'list'}})
 
+@mock.patch('dev_modules.cl_interface.add_ipv6')
+@mock.patch('dev_modules.cl_interface.add_ipv4')
+@mock.patch('dev_modules.cl_interface.AnsibleModule')
+def test_config_swp_iface(mock_module, mock_ipv4, mock_ipv6):
+    iface = { 'name': 'lo', 'ifacetype': 'swp' }
+    config_swp_iface(mock_module, iface)
+    assert_equals(mock_ipv4.call_count, 1)
+    assert_equals(mock_ipv6.call_count, 1)
 
 @mock.patch('dev_modules.cl_interface.AnsibleModule')
 def test_get_iface_type(mock_module):
