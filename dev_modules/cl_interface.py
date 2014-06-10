@@ -149,7 +149,7 @@ def config_changed(module, a_iface):
 
 
 def apply_config(module, iface):
-    cmd = '/sbin/ifup %s'
+    cmd = '/sbin/ifup %s' % (iface['name'])
     run_cl_cmd(module, cmd)
 
 
@@ -242,9 +242,9 @@ def main():
             name=dict(required=True, type='str'),
             bridgemems=dict(type='str'),
             bondmems=dict(type='str'),
-            ipv4=dict(type='str'),
+            ipv4=dict(type='list'),
             ipv6=dict(type='str'),
-            applyconfig=dict(type='str')
+            applyconfig=dict(required=True, type='str')
         ),
         mutually_exclusive=[
             ['bridgemems', 'bondmems']
