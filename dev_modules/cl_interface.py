@@ -59,11 +59,8 @@ cl_interface: name=br0 bondmems=['swp1', 'swp2'] ipv4='10.1.1.1/24' apply=yes
 '''
 
 
-def run_cl_cmd(module, cmd, check_rc=True):
-    try:
-        (rc, out, err) = module.run_command(cmd, check_rc=check_rc)
-    except Exception, e:
-        module.fail_json(msg=e.strerror)
+def run_cl_cmd(module, cmd):
+    (rc, out, err) = module.run_command(cmd, check_rc=False)
     # trim last line as it is always empty
     ret = out.splitlines()
     return ret
@@ -134,18 +131,20 @@ def config_changed(module, a_iface):
         a_iface['addr_method'] = None
         a_iface['addr_family'] = None
     a_iface['auto'] = True
-    _ifacetype = a_iface['ifacetype']
-    del a_iface['ifacetype']
     a_iface = sortdict(a_iface)
     c_iface = None
     cmd = '/sbin/ifquery --format json %s' % (a_iface['name'])
-    c_iface = sortdict(json.loads(run_cl_cmd(module, cmd))[0])
-    if a_iface == c_iface:
+    json_ifquery = run_cl_cmd(module, cmd)
+    if len(json_ifquery) == 0:
+        return True
+    c_iface = sortdict(json.loads(''.join(json_ifquery))[0])
+    a_iface_copy = copy.deepcopy(a_iface)
+    del a_iface_copy['ifacetype']
+    if a_iface_copy == c_iface:
         _msg = "no change in interface %s configuration" % (a_iface['name'])
         module.exit_json(msg=_msg, changed=False)
         return False
     else:
-        a_iface['ifacetype'] = _ifacetype
         return True
 
 
@@ -171,19 +170,28 @@ def config_lo_iface(module, iface):
     add_ipv6(module, iface)
 
 
+def config_swp_iface(module, iface):
+    add_ipv4(module, iface)
+    add_ipv6(module, iface)
+
+
 def modify_switch_config(module, iface):
     filestr = "auto %s\n" % (iface['name'])
     if iface['ifacetype'] == 'loopback':
         filestr += "iface %s inet loopback\n" % (iface['name'])
     else:
-        filestr += "iface %s" % (iface['name'])
-    for k, v in iface['config'].items():
-        if isinstance(v, list):
-            for subv in v:
-                filestr += "    %s %s\n" % (k, subv)
-        else:
-            filestr += "    %s %s\n" % (k, v)
+        filestr += "iface %s\n" % (iface['name'])
+    if 'config' in iface:
+        for k, v in iface['config'].items():
+            if isinstance(v, list):
+                for subv in v:
+                    filestr += "    %s %s\n" % (k, subv)
+            else:
+                filestr += "    %s %s\n" % (k, v)
 
+    directory = '/etc/network/ansible/'
+    if not os.path.exists(directory):
+        os.makedirs(directory)
     filename = "/etc/network/ansible/%s" % (iface['name'])
     f = open(filename, 'w')
     f.write(filestr)
@@ -219,8 +227,8 @@ def remove_config_from_etc_net_interfaces(module, iface):
 
     if add_source_ansible:
         addlines = ['\n',
-         '## Ansible controlled interfaces found here\n',
-         'source /etc/network/ansible/*\n']
+                    '## Ansible controlled interfaces found here\n',
+                    'source /etc/network/ansible/*\n']
         new_config = new_config + addlines
 
     f2 = open('/etc/network/interfaces', 'w')
@@ -247,17 +255,21 @@ def main():
     iface = {'ifacetype': _ifacetype}
     if _ifacetype == 'loopback':
         config_lo_iface(module, iface)
-
+    elif _ifacetype == 'swp':
+        config_swp_iface(module, iface)
     config_changed(module, iface)
     modify_switch_config(module, iface)
     remove_config_from_etc_net_interfaces(module, iface)
     if module.params.get('applyconfig'):
         apply_config(module, iface)
-
+    _msg = 'interface successfully configured %s' % (iface['name'])
+    module.exit_json(msg=_msg, changed=True)
 
 # import module snippets
 from ansible.module_utils.basic import *
 from ansible.module_utils.urls import *
+import copy
+import os
 
 if __name__ == '__main__':
     main()
