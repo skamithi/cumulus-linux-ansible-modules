@@ -199,6 +199,15 @@ def config_bridge_iface(module, iface):
     add_bridgemems(module, iface)
 
 
+def add_glob(bridgemems):
+    newarr = []
+    for i in bridgemems:
+        if re.search('-\d+', i):
+            newarr.append('glob ' + i)
+        else:
+            newarr.append(i)
+    return newarr
+
 def add_bridgemems(module, iface):
     bridgemems = module.params.get('bridgemems')
     if not bridgemems:
@@ -207,7 +216,8 @@ def add_bridgemems(module, iface):
             bridgemems = ifaceattrs['bridgemems']
         else:
             return
-    iface['config']['bridge-ports'] = bridgemems
+    bridgemems = add_glob(bridgemems)
+    iface['config']['bridge-ports'] = ' '.join(bridgemems)
     iface['config']['bridge-stp'] = 'on'
 
 

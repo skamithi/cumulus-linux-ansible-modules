@@ -366,7 +366,7 @@ def test_adding_bridgemem(mock_module):
                        'ifaceattrs': None}
     iface = {'name': 'viva', 'config': {}}
     add_bridgemems(instance, iface)
-    assert_equals(iface['config']['bridge-ports'], mems)
+    assert_equals(iface['config']['bridge-ports'], ' '.join(mems))
     assert_equals(iface['config']['bridge-stp'], 'on')
 
     # ifaceattr option defined
@@ -375,7 +375,7 @@ def test_adding_bridgemem(mock_module):
                        'ifaceattrs': {'bridgemems': mems}}
     iface = {'name': 'viva', 'config': {}}
     add_bridgemems(instance, iface)
-    assert_equals(iface['config']['bridge-ports'], mems)
+    assert_equals(iface['config']['bridge-ports'], ' '.join(mems))
     assert_equals(iface['config']['bridge-stp'], 'on')
 
     # no option set
@@ -384,4 +384,14 @@ def test_adding_bridgemem(mock_module):
     iface = {'name': 'viva', 'config': {}}
     add_bridgemems(instance, iface)
     assert_equals('bridge-ports' in iface['config'], False)
+
+    # bridge ports with ranges
+    mems = ['swp1-10', 'swp2' ,'swp30-40.100']
+    instance.params = { 'bridgemems': None,
+                       'ifaceattrs': {'bridgemems': mems}}
+    iface = {'name': 'viva', 'config': {}}
+    add_bridgemems(instance, iface)
+    assert_equals(iface['config']['bridge-ports'], 'glob swp1-10 swp2 glob swp30-40.100')
+    assert_equals(iface['config']['bridge-stp'], 'on')
+
 
