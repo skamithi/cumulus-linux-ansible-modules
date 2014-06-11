@@ -4,7 +4,8 @@ from nose.tools import set_trace
 from dev_modules.cl_interface import get_iface_type, add_ipv4, \
     add_ipv6, config_changed, modify_switch_config, main, \
     remove_config_from_etc_net_interfaces, config_swp_iface, \
-    check_if_applyconfig_name_defined_only, add_bridgemems
+    check_if_applyconfig_name_defined_only, add_bridgemems, \
+    config_dhcp
 from asserts import assert_equals
 
 
@@ -86,13 +87,59 @@ def test_module_args(mock_module,
                        'applyconfig': {'required': True, 'type': 'str'},
                        'name': {'required': True, 'type': 'str'},
                        'ifaceattrs': {'type': 'dict'},
+                       'dhcp': {'type': 'str', 'choices': ['yes', 'no']},
                        'bridgemems': {'type': 'list'}})
+
+
+@mock.patch('dev_modules.cl_interface.AnsibleModule')
+def test_config_dhcp(mock_module):
+    working_output = {
+        'addr_family': 'inet',
+        'addr_method': 'dhcp',
+        'config': {}
+    }
+
+    instance = mock_module.return_value
+    # dhcp is yes in modules.params
+    instance.params = {'dhcp': 'yes'}
+    iface = {'config': {}}
+    config_dhcp(instance, iface)
+    assert_equals(iface, working_output)
+
+    # dhcp is no in modules.params
+    instance.params = {'dhcp': 'no'}
+    iface = {'config': {}}
+    config_dhcp(instance, iface)
+    assert_equals(iface, {'config': {}})
+
+    # dhcp in ifaceattrs set to yes
+    instance.params = {'dhcp': None,
+                       'ifaceattrs': {'dhcp': 'yes'}}
+    iface = {'config': {}}
+    config_dhcp(instance, iface)
+    assert_equals(iface, working_output)
+
+    # dhcp in ifaceattrs sett to No
+    instance.params = {'dhcp': None,
+                       'ifaceattrs': {'dhcp': 'no'}}
+    iface = {'config': {}}
+    config_dhcp(instance, iface)
+    assert_equals(iface, {'config': {}})
+
+    # dhcp options not in params or ifaceattrs
+    instance.params = {}
+    iface = {'config': {}}
+    config_dhcp(instance, iface)
+    assert_equals(iface, {'config': {}})
 
 
 @mock.patch('dev_modules.cl_interface.add_ipv6')
 @mock.patch('dev_modules.cl_interface.add_ipv4')
 @mock.patch('dev_modules.cl_interface.AnsibleModule')
 def test_config_swp_iface(mock_module, mock_ipv4, mock_ipv6):
+    """
+    cl_interface - test configuring swp interfaces
+    """
     iface = {'name': 'lo', 'ifacetype': 'swp'}
     config_swp_iface(mock_module, iface)
     assert_equals(mock_ipv4.call_count, 1)
@@ -102,7 +149,7 @@ def test_config_swp_iface(mock_module, mock_ipv4, mock_ipv6):
 @mock.patch('dev_modules.cl_interface.AnsibleModule')
 def test_get_iface_type(mock_module):
     """
-    Test getting interface type
+    cl_interface - test getting iface type
     """
     # test for bridge
     instance = mock_module.return_value

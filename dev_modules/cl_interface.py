@@ -44,7 +44,10 @@ options:
             - provide a dictionary of all attributes to assign to the port. it
             is mutually exclusive with any other command.
         default: None
-
+    dhcp:
+        description:
+            - configure dhcp on the interface
+        choices: ['yes', 'no']
 notes:
     - Cumulus Linux Interface Documentation - http://cumulusnetworks.com/docs/2.0/user-guide/layer_1_2/interfaces.html
     - Contact Cumulus Networks @ http://cumulusnetworks.com/contact/
@@ -183,19 +186,38 @@ def sortdict(od):
     return res
 
 
-def config_lo_iface(module, iface):
+def config_dhcp(module, iface):
+    dhcpattrs = module.params.get('dhcp')
+    ifaceattrs = module.params.get('ifaceattrs')
+    if not dhcpattrs:
+        if ifaceattrs and 'dhcp' in ifaceattrs:
+            dhcpattrs = ifaceattrs['dhcp']
+        else:
+            return False
+    if dhcpattrs == 'yes':
+        iface['addr_method'] = 'dhcp'
+        iface['addr_family'] = 'inet'
+        return True
+    return False
+
+
+def config_static_ip(module, iface):
     add_ipv4(module, iface)
     add_ipv6(module, iface)
+
+
+def config_lo_iface(module, iface):
+    config_static_ip(module, iface)
 
 
 def config_swp_iface(module, iface):
-    add_ipv4(module, iface)
-    add_ipv6(module, iface)
+    if not config_dhcp(module, iface):
+        config_static_ip(module, iface)
 
 
 def config_bridge_iface(module, iface):
-    add_ipv4(module, iface)
-    add_ipv6(module, iface)
+    if not config_dhcp(module, iface):
+        config_static_ip(module, iface)
     add_bridgemems(module, iface)
 
 
@@ -207,6 +229,7 @@ def add_glob(bridgemems):
         else:
             newarr.append(i)
     return newarr
+
 
 def add_bridgemems(module, iface):
     bridgemems = module.params.get('bridgemems')
@@ -303,6 +326,7 @@ def main():
             ipv4=dict(type='list'),
             ipv6=dict(type='list'),
             ifaceattrs=dict(type='dict'),
+            dhcp=dict(type='str', choices=["yes", "no"]),
             applyconfig=dict(required=True, type='str')
         )
     )
