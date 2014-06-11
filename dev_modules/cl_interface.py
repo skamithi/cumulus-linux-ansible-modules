@@ -243,6 +243,14 @@ def remove_config_from_etc_net_interfaces(module, iface):
     f2.close()
 
 
+def check_if_applyconfig_name_defined_only(module):
+    modparams = sorted(module.params.keys())
+    _msg = "when ifaceattr is defined, only name " +  \
+        "and applyconfig options are allowed"
+    if modparams != ['applyconfig', 'ifaceattrs', 'name']:
+        module.fail_json(msg=_msg)
+
+
 def main():
     module = AnsibleModule(
         argument_spec=dict(
@@ -259,6 +267,9 @@ def main():
     ifaceattrs = module.params.get('ifaceattrs')
     if ifaceattrs is None:
         ifaceattrs = {}
+    else:
+        check_if_applyconfig_name_defined_only(module)
+
     _ifacetype = get_iface_type(module, ifaceattrs)
     iface = {'ifacetype': _ifacetype}
     iface['name'] = module.params.get('name')

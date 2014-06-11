@@ -3,7 +3,8 @@ import mock
 from nose.tools import set_trace
 from dev_modules.cl_interface import get_iface_type, add_ipv4, \
     add_ipv6, config_changed, modify_switch_config, main, \
-    remove_config_from_etc_net_interfaces, config_swp_iface
+    remove_config_from_etc_net_interfaces, config_swp_iface, \
+    check_if_applyconfig_name_defined_only
 from asserts import assert_equals
 
 
@@ -135,6 +136,31 @@ def test_get_iface_type(mock_module):
     instance.params.get_side_effect = mod_args_none
     ifaceattr = {'bridgemems': ''}
     assert_equals(get_iface_type(instance, ifaceattr), 'bridge')
+
+    # test if ifaceattr is set for bond
+    instance.params.get_side_effect = mod_args_none
+    ifaceattr = {'bondmems': ''}
+    assert_equals(get_iface_type(instance, ifaceattr), 'bond')
+
+
+@mock.patch('dev_modules.cl_interface.AnsibleModule')
+def test_exception_when_using_ifaceattr(mock_module):
+    """
+    cl_interfaces - test when using ifaceattr that only name,
+    and ifaceattr is defined
+    otherwise exit module with error
+    """
+    instance = mock_module.return_value
+    instance.params.keys.return_value = ['ifaceattrs', 'name', 'applyconfig']
+    check_if_applyconfig_name_defined_only(instance)
+    assert_equals(instance.fail_json.call_count, 0)
+
+    instance.params.keys.return_value = [
+        'ifaceattrs', 'bondmems', 'name', 'applyconfig']
+    check_if_applyconfig_name_defined_only(instance)
+    instance.fail_json.assert_called_with(
+        msg='when ifaceattr is defined, only ' +
+        'name and applyconfig options are allowed')
 
 
 @mock.patch('dev_modules.cl_interface.AnsibleModule')
