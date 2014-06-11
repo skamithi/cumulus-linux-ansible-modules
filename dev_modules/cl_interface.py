@@ -283,7 +283,11 @@ def remove_config_from_etc_net_interfaces(module, iface):
 
 
 def check_if_applyconfig_name_defined_only(module):
-    modparams = sorted(module.params.keys())
+    modparams = []
+    for k, v in module.params.items():
+        if v:
+            modparams.append(k)
+    modparams = sorted(modparams)
     _msg = "when ifaceattr is defined, only name " +  \
         "and applyconfig options are allowed"
     if modparams != ['applyconfig', 'ifaceattrs', 'name']:
@@ -294,11 +298,11 @@ def main():
     module = AnsibleModule(
         argument_spec=dict(
             name=dict(required=True, type='str'),
-            bridgemems=dict(default=None, type='list'),
-            bondmems=dict(default=None, type='list'),
-            ipv4=dict(default=None, type='list'),
-            ipv6=dict(default=None, type='list'),
-            ifaceattrs=dict(default=None, type='dict'),
+            bridgemems=dict(type='list'),
+            bondmems=dict(type='list'),
+            ipv4=dict(type='list'),
+            ipv6=dict(type='list'),
+            ifaceattrs=dict(type='dict'),
             applyconfig=dict(required=True, type='str')
         )
     )

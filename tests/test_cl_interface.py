@@ -80,13 +80,13 @@ def test_module_args(mock_module,
     mock_get_iface_type.return_value = 'loopback'
     main()
     mock_module.assert_called_with(
-        argument_spec={'bondmems': {'default': None, 'type': 'list'},
-                       'ipv6': {'default': None, 'type': 'list'},
-                       'ipv4': {'default': None, 'type': 'list'},
+        argument_spec={'bondmems': {'type': 'list'},
+                       'ipv6': {'type': 'list'},
+                       'ipv4': {'type': 'list'},
                        'applyconfig': {'required': True, 'type': 'str'},
                        'name': {'required': True, 'type': 'str'},
-                       'ifaceattrs': {'default': None, 'type': 'dict'},
-                       'bridgemems': {'default': None, 'type': 'list'}})
+                       'ifaceattrs': {'type': 'dict'},
+                       'bridgemems': {'type': 'list'}})
 
 
 @mock.patch('dev_modules.cl_interface.add_ipv6')
@@ -151,12 +151,19 @@ def test_exception_when_using_ifaceattr(mock_module):
     otherwise exit module with error
     """
     instance = mock_module.return_value
-    instance.params.keys.return_value = ['ifaceattrs', 'name', 'applyconfig']
+    instance.params = {
+        'ifaceattrs': {'something': '1'},
+        'name': 'sdf',
+        'applyconfig': 'yes'}
     check_if_applyconfig_name_defined_only(instance)
     assert_equals(instance.fail_json.call_count, 0)
 
-    instance.params.keys.return_value = [
-        'ifaceattrs', 'bondmems', 'name', 'applyconfig']
+    instance.params = {
+        'ifaceattrs': {'something': '1'},
+        'name': 'sdf',
+        'sdfdf': 'dfdf',
+        'applyconfig': 'yes'}
+
     check_if_applyconfig_name_defined_only(instance)
     instance.fail_json.assert_called_with(
         msg='when ifaceattr is defined, only ' +
@@ -361,8 +368,8 @@ def test_adding_bridgemem(mock_module):
     """
     # bridgemems option defined
     instance = mock_module.return_value
-    mems = ['swp1', 'swp2' ,'swp3.100']
-    instance.params = { 'bridgemems': mems,
+    mems = ['swp1', 'swp2', 'swp3.100']
+    instance.params = {'bridgemems': mems,
                        'ifaceattrs': None}
     iface = {'name': 'viva', 'config': {}}
     add_bridgemems(instance, iface)
@@ -370,8 +377,8 @@ def test_adding_bridgemem(mock_module):
     assert_equals(iface['config']['bridge-stp'], 'on')
 
     # ifaceattr option defined
-    mems = ['swp1', 'swp2' ,'swp3.100']
-    instance.params = { 'bridgemems': None,
+    mems = ['swp1', 'swp2', 'swp3.100']
+    instance.params = {'bridgemems': None,
                        'ifaceattrs': {'bridgemems': mems}}
     iface = {'name': 'viva', 'config': {}}
     add_bridgemems(instance, iface)
@@ -379,19 +386,17 @@ def test_adding_bridgemem(mock_module):
     assert_equals(iface['config']['bridge-stp'], 'on')
 
     # no option set
-    instance.params = { 'bridgemems': None,
+    instance.params = {'bridgemems': None,
                        'ifaceattrs': {}}
     iface = {'name': 'viva', 'config': {}}
     add_bridgemems(instance, iface)
     assert_equals('bridge-ports' in iface['config'], False)
 
     # bridge ports with ranges
-    mems = ['swp1-10', 'swp2' ,'swp30-40.100']
-    instance.params = { 'bridgemems': None,
+    mems = ['swp1-10', 'swp2', 'swp30-40.100']
+    instance.params = {'bridgemems': None,
                        'ifaceattrs': {'bridgemems': mems}}
     iface = {'name': 'viva', 'config': {}}
     add_bridgemems(instance, iface)
     assert_equals(iface['config']['bridge-ports'], 'glob swp1-10 swp2 glob swp30-40.100')
     assert_equals(iface['config']['bridge-stp'], 'on')
-
-
