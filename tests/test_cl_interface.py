@@ -4,7 +4,7 @@ from nose.tools import set_trace
 from dev_modules.cl_interface import get_iface_type, add_ipv4, \
     add_ipv6, config_changed, modify_switch_config, main, \
     remove_config_from_etc_net_interfaces, config_swp_iface, \
-    check_if_applyconfig_name_defined_only
+    check_if_applyconfig_name_defined_only, add_bridgemems
 from asserts import assert_equals
 
 
@@ -352,3 +352,36 @@ def test_appending_ansible_to_etc_network_interface(mock_module):
                    '\n',
                    '## Ansible controlled interfaces found here\n',
                    'source /etc/network/ansible/*\n'])
+
+
+@mock.patch('dev_modules.cl_interface.AnsibleModule')
+def test_adding_bridgemem(mock_module):
+    """
+    cl_interface - test adding bridge members
+    """
+    # bridgemems option defined
+    instance = mock_module.return_value
+    mems = ['swp1', 'swp2' ,'swp3.100']
+    instance.params = { 'bridgemems': mems,
+                       'ifaceattrs': None}
+    iface = {'name': 'viva', 'config': {}}
+    add_bridgemems(instance, iface)
+    assert_equals(iface['config']['bridge-ports'], mems)
+    assert_equals(iface['config']['bridge-stp'], 'on')
+
+    # ifaceattr option defined
+    mems = ['swp1', 'swp2' ,'swp3.100']
+    instance.params = { 'bridgemems': None,
+                       'ifaceattrs': {'bridgemems': mems}}
+    iface = {'name': 'viva', 'config': {}}
+    add_bridgemems(instance, iface)
+    assert_equals(iface['config']['bridge-ports'], mems)
+    assert_equals(iface['config']['bridge-stp'], 'on')
+
+    # no option set
+    instance.params = { 'bridgemems': None,
+                       'ifaceattrs': {}}
+    iface = {'name': 'viva', 'config': {}}
+    add_bridgemems(instance, iface)
+    assert_equals('bridge-ports' in iface['config'], False)
+

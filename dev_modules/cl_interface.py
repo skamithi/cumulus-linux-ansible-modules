@@ -105,6 +105,9 @@ def create_config_addr_attr(iface):
 
 def add_ipv4(module, iface):
     addrs = module.params.get('ipv4')
+    ifaceattrs = module.params.get('ifaceattrs')
+    if not addrs and ifaceattrs and 'ipv4' in ifaceattrs:
+        addrs = ifaceattrs['ipv4']
     if addrs:
         create_config_addr_attr(iface)
         iface['config']['address'] = addrs
@@ -112,10 +115,18 @@ def add_ipv4(module, iface):
 
 def add_ipv6(module, iface):
     addrs = module.params.get('ipv6')
+    ifaceattrs = module.params.get('ifaceattrs')
     if not addrs:
-        return
+        if ifaceattrs and 'ipv6' in ifaceattrs:
+            addrs = ifaceattrs['ipv6']
+        else:
+            return
     create_config_addr_attr(iface)
     addr_attr = iface['config']['address']
+    add_ipv6_to_iface(iface, addrs, addr_attr)
+
+
+def add_ipv6_to_iface(iface, addrs, addr_attr):
     if addr_attr is None:
         iface['config']['address'] = addrs
     elif isinstance(addr_attr, str):
@@ -180,6 +191,24 @@ def config_lo_iface(module, iface):
 def config_swp_iface(module, iface):
     add_ipv4(module, iface)
     add_ipv6(module, iface)
+
+
+def config_bridge_iface(module, iface):
+    add_ipv4(module, iface)
+    add_ipv6(module, iface)
+    add_bridgemems(module, iface)
+
+
+def add_bridgemems(module, iface):
+    bridgemems = module.params.get('bridgemems')
+    if not bridgemems:
+        ifaceattrs = module.params.get('ifaceattrs')
+        if ifaceattrs and 'bridgemems' in ifaceattrs:
+            bridgemems = ifaceattrs['bridgemems']
+        else:
+            return
+    iface['config']['bridge-ports'] = bridgemems
+    iface['config']['bridge-stp'] = 'on'
 
 
 def modify_switch_config(module, iface):
@@ -278,6 +307,8 @@ def main():
         config_lo_iface(module, iface)
     elif _ifacetype == 'swp':
         config_swp_iface(module, iface)
+    elif _ifacetype == 'bridge':
+        config_bridge_iface(module, iface)
     config_changed(module, iface)
     modify_switch_config(module, iface)
     remove_config_from_etc_net_interfaces(module, iface)
