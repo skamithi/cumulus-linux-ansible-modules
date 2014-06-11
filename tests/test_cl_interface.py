@@ -88,7 +88,10 @@ def test_module_args(mock_module,
                        'name': {'required': True, 'type': 'str'},
                        'ifaceattrs': {'type': 'dict'},
                        'dhcp': {'type': 'str', 'choices': ['yes', 'no']},
-                       'bridgemems': {'type': 'list'}})
+                       'bridgemems': {'type': 'list'}},
+        mutually_exclusive=[['bridgemems', 'bondmems'],
+                            ['dhcp', 'ipv4'],
+                            ['dhcp', 'ipv6']])
 
 
 @mock.patch('dev_modules.cl_interface.AnsibleModule')
@@ -310,7 +313,9 @@ def loop_iface():
         'config': {
             'address': ["10:3:3::3/128",
                         "10.3.3.3/32"]
-        }
+        },
+        'addr_method': 'loopback',
+        'addr_family': 'inet'
     }
     return iface
 

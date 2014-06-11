@@ -145,12 +145,6 @@ def add_ipv6_to_iface(iface, addrs, addr_attr):
 
 
 def config_changed(module, a_iface):
-    if a_iface['ifacetype'] == 'loopback':
-        a_iface['addr_method'] = 'loopback'
-        a_iface['addr_family'] = 'inet'
-    else:
-        a_iface['addr_method'] = None
-        a_iface['addr_family'] = None
     a_iface['auto'] = True
     a_iface = sortdict(a_iface)
     c_iface = None
@@ -246,8 +240,8 @@ def add_bridgemems(module, iface):
 
 def modify_switch_config(module, iface):
     filestr = "auto %s\n" % (iface['name'])
-    if iface['ifacetype'] == 'loopback':
-        filestr += "iface %s inet loopback\n" % (iface['name'])
+    if 'addr_method' is not None:
+        filestr += "iface %s inet %s\n" % (iface['name'], iface['addr_method'])
     else:
         filestr += "iface %s\n" % (iface['name'])
     if 'config' in iface:
@@ -328,7 +322,12 @@ def main():
             ifaceattrs=dict(type='dict'),
             dhcp=dict(type='str', choices=["yes", "no"]),
             applyconfig=dict(required=True, type='str')
-        )
+        ),
+        mutually_exclusive=[
+            ['bridgemems', 'bondmems'],
+            ['dhcp', 'ipv4'],
+            ['dhcp', 'ipv6']
+        ]
     )
 
     ifaceattrs = module.params.get('ifaceattrs')
@@ -347,6 +346,12 @@ def main():
         config_swp_iface(module, iface)
     elif _ifacetype == 'bridge':
         config_bridge_iface(module, iface)
+    if iface['ifacetype'] == 'loopback':
+        iface['addr_method'] = 'loopback'
+        iface['addr_family'] = 'inet'
+    else:
+        iface['addr_method'] = None
+        iface['addr_family'] = None
     config_changed(module, iface)
     modify_switch_config(module, iface)
     remove_config_from_etc_net_interfaces(module, iface)
