@@ -7,6 +7,13 @@ from dev_modules.cl_interface import get_iface_type, add_ipv4, \
 from asserts import assert_equals
 
 
+def mod_args_none(arg):
+    values = {'bridgemems': None,
+              'bondmems': None,
+              'name': 'swp10'}
+    return values[arg]
+
+
 def mod_args_bridgemems(arg):
     values = {'bridgemems': '2.0.0'}
     return values[arg]
@@ -46,7 +53,8 @@ def mod_args_unknown(arg):
     values = {'name': 'gibberish',
               'bridgemems': None,
               'bondmems': None,
-              'applyconfig': 'no'
+              'applyconfig': 'no',
+              'ifaceattrs': None
               }
     return values[arg]
 
@@ -76,48 +84,57 @@ def test_module_args(mock_module,
                        'ipv4': {'default': None, 'type': 'list'},
                        'applyconfig': {'required': True, 'type': 'str'},
                        'name': {'required': True, 'type': 'str'},
+                       'ifaceattrs': {'default': None, 'type': 'dict'},
                        'bridgemems': {'default': None, 'type': 'list'}})
+
 
 @mock.patch('dev_modules.cl_interface.add_ipv6')
 @mock.patch('dev_modules.cl_interface.add_ipv4')
 @mock.patch('dev_modules.cl_interface.AnsibleModule')
 def test_config_swp_iface(mock_module, mock_ipv4, mock_ipv6):
-    iface = { 'name': 'lo', 'ifacetype': 'swp' }
+    iface = {'name': 'lo', 'ifacetype': 'swp'}
     config_swp_iface(mock_module, iface)
     assert_equals(mock_ipv4.call_count, 1)
     assert_equals(mock_ipv6.call_count, 1)
+
 
 @mock.patch('dev_modules.cl_interface.AnsibleModule')
 def test_get_iface_type(mock_module):
     """
     Test getting interface type
     """
+    # test for bridge
     instance = mock_module.return_value
     instance.params.get.side_effect = mod_args_bridgemems
-    assert_equals(get_iface_type(instance), 'bridge')
+    assert_equals(get_iface_type(instance, {}), 'bridge')
     instance.params.get.called_with('bridgemems')
-
+    # test for bond
     instance.params.get.side_effect = mod_args_bondmems
-    assert_equals(get_iface_type(instance), 'bond')
+    assert_equals(get_iface_type(instance, {}), 'bond')
     instance.params.get.called_with('bondmems')
-
+    # test for mgmt
     instance.params.get.side_effect = mod_args_mgmt
-    assert_equals(get_iface_type(instance), 'mgmt')
+    assert_equals(get_iface_type(instance, {}), 'mgmt')
     instance.params.get_called_with('eth1')
-
+    # test for loopback
     instance.params.get.side_effect = mod_args_lo
-    assert_equals(get_iface_type(instance), 'loopback')
+    assert_equals(get_iface_type(instance, {}), 'loopback')
     instance.params.get_called_with('lo')
-
+    # test for phy
     instance.params.get.side_effect = mod_args_swp
-    assert_equals(get_iface_type(instance), 'swp')
+    assert_equals(get_iface_type(instance, {}), 'swp')
     instance.params.get_called_with('swp10')
-
+    # test if unknown
     instance.params.get.side_effect = mod_args_unknown
-    get_iface_type(instance)
+    get_iface_type(instance, {})
     assert_equals(instance.fail_json.call_count, 1)
     instance.fail_json.assert_called_with(
         msg='unable to determine interface type gibberish')
+
+    # test if ifaceattr is set for bridge
+    instance.params.get_side_effect = mod_args_none
+    ifaceattr = {'bridgemems': ''}
+    assert_equals(get_iface_type(instance, ifaceattr), 'bridge')
 
 
 @mock.patch('dev_modules.cl_interface.AnsibleModule')

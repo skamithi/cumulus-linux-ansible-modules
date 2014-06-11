@@ -15,6 +15,12 @@ options:
         description:
             - name of the interface
         required: true
+    applyconfig:
+        description:
+            - apply interface change
+        choices: ['yes', 'no']
+        default: 'no'
+        required: true
     ipv4:
         description:
             - list of IPv4 addresses to configure on the interface. use CIDR
@@ -33,12 +39,11 @@ options:
         description:
             - list ports associated with the bond interface
         default: None
-    applyconfig:
+   ifaceattrs:
         description:
-            - apply interface change
-        choices: ['yes', 'no']
-        default: 'no'
-
+            - provide a dictionary of all attributes to assign to the port. it
+            is mutually exclusive with any other command.
+        default: None
 
 notes:
     - Cumulus Linux Interface Documentation - http://cumulusnetworks.com/docs/2.0/user-guide/layer_1_2/interfaces.html
@@ -68,10 +73,10 @@ def run_cl_cmd(module, cmd):
     return ret
 
 
-def get_iface_type(module):
-    if module.params.get('bridgemems'):
+def get_iface_type(module, ifaceattrs):
+    if module.params.get('bridgemems') or 'bridgemems' in ifaceattrs:
         return 'bridge'
-    elif module.params.get('bondmems'):
+    elif module.params.get('bondmems') or 'bondmems' in ifaceattrs:
         return 'bond'
     elif module.params.get('name') == 'lo':
         return 'loopback'
@@ -246,12 +251,15 @@ def main():
             bondmems=dict(default=None, type='list'),
             ipv4=dict(default=None, type='list'),
             ipv6=dict(default=None, type='list'),
+            ifaceattrs=dict(default=None, type='dict'),
             applyconfig=dict(required=True, type='str')
         )
     )
 
-
-    _ifacetype = get_iface_type(module)
+    ifaceattrs = module.params.get('ifaceattrs')
+    if ifaceattrs is None:
+        ifaceattrs = {}
+    _ifacetype = get_iface_type(module, ifaceattrs)
     iface = {'ifacetype': _ifacetype}
     iface['name'] = module.params.get('name')
     create_config_dict(iface)
