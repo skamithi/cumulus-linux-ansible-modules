@@ -4,58 +4,58 @@ from nose.tools import set_trace
 from dev_modules.cl_interface import get_iface_type, add_ipv4, \
     add_ipv6, config_changed, modify_switch_config, main, \
     remove_config_from_etc_net_interfaces, config_swp_iface, \
-    check_if_applyconfig_name_defined_only, add_bridgemems, \
+    check_if_applyconfig_name_defined_only, add_bridgeports, \
     config_dhcp, compare_config, merge_config, remove_none_attrs, \
-    config_speed, config_mtu, add_bondmems, config_alias
+    config_speed, config_mtu, add_bondslaves, config_alias
 from asserts import assert_equals
 
 
 def mod_args_none(arg):
-    values = {'bridgemems': None,
-              'bondmems': None,
+    values = {'bridgeports': None,
+              'bondslaves': None,
               'name': 'swp10'}
     return values[arg]
 
 
-def mod_args_bridgemems(arg):
-    values = {'bridgemems': '2.0.0'}
+def mod_args_bridgeports(arg):
+    values = {'bridgeports': '2.0.0'}
     return values[arg]
 
 
-def mod_args_bondmems(arg):
-    values = {'bondmems': 'swp56, swp57',
-              'bridgemems': None}
+def mod_args_bondslaves(arg):
+    values = {'bondslaves': 'swp56, swp57',
+              'bridgeports': None}
     return values[arg]
 
 
 def mod_args_mgmt(arg):
     values = {'name': 'eth1',
-              'bridgemems': None,
-              'bondmems': None
+              'bridgeports': None,
+              'bondslaves': None
               }
     return values[arg]
 
 
 def mod_args_lo(arg):
     values = {'name': 'lo',
-              'bridgemems': None,
-              'bondmems': None
+              'bridgeports': None,
+              'bondslaves': None
               }
     return values[arg]
 
 
 def mod_args_swp(arg):
     values = {'name': 'swp10',
-              'bridgemems': None,
-              'bondmems': None
+              'bridgeports': None,
+              'bondslaves': None
               }
     return values[arg]
 
 
 def mod_args_unknown(arg):
     values = {'name': 'gibberish',
-              'bridgemems': None,
-              'bondmems': None,
+              'bridgeports': None,
+              'bondslaves': None,
               'applyconfig': 'no',
               'ifaceattrs': None
               }
@@ -82,7 +82,7 @@ def test_module_args(mock_module,
     mock_get_iface_type.return_value = 'loopback'
     main()
     mock_module.assert_called_with(
-        argument_spec={'bondmems': {'type': 'list'},
+        argument_spec={'bondslaves': {'type': 'list'},
                        'ipv6': {'type': 'list'},
                        'ipv4': {'type': 'list'},
                        'applyconfig': {'required': True, 'type': 'str'},
@@ -92,8 +92,8 @@ def test_module_args(mock_module,
                        'speed': {'type': 'str'},
                        'mtu': {'type': 'str'},
                        'dhcp': {'type': 'str', 'choices': ['yes', 'no']},
-                       'bridgemems': {'type': 'list'}},
-        mutually_exclusive=[['bridgemems', 'bondmems'],
+                       'bridgeports': {'type': 'list'}},
+        mutually_exclusive=[['bridgeports', 'bondslaves'],
                             ['dhcp', 'ipv4'],
                             ['dhcp', 'ipv6']])
 
@@ -160,13 +160,13 @@ def test_get_iface_type(mock_module):
     """
     # test for bridge
     instance = mock_module.return_value
-    instance.params.get.side_effect = mod_args_bridgemems
+    instance.params.get.side_effect = mod_args_bridgeports
     assert_equals(get_iface_type(instance, {}), 'bridge')
-    instance.params.get.called_with('bridgemems')
+    instance.params.get.called_with('bridgeports')
     # test for bond
-    instance.params.get.side_effect = mod_args_bondmems
+    instance.params.get.side_effect = mod_args_bondslaves
     assert_equals(get_iface_type(instance, {}), 'bond')
-    instance.params.get.called_with('bondmems')
+    instance.params.get.called_with('bondslaves')
     # test for mgmt
     instance.params.get.side_effect = mod_args_mgmt
     assert_equals(get_iface_type(instance, {}), 'mgmt')
@@ -188,12 +188,12 @@ def test_get_iface_type(mock_module):
 
     # test if ifaceattr is set for bridge
     instance.params.get_side_effect = mod_args_none
-    ifaceattr = {'bridgemems': ''}
+    ifaceattr = {'bridgeports': ''}
     assert_equals(get_iface_type(instance, ifaceattr), 'bridge')
 
     # test if ifaceattr is set for bond
     instance.params.get_side_effect = mod_args_none
-    ifaceattr = {'bondmems': ''}
+    ifaceattr = {'bondslaves': ''}
     assert_equals(get_iface_type(instance, ifaceattr), 'bond')
 
 
@@ -485,55 +485,55 @@ def test_adding_bridgemem(mock_module):
     """
     cl_interface - test adding bridge members
     """
-    # bridgemems option defined
+    # bridgeports option defined
     instance = mock_module.return_value
     mems = ['swp1', 'swp2', 'swp3.100']
-    instance.params = {'bridgemems': mems,
+    instance.params = {'bridgeports': mems,
                        'ifaceattrs': None}
     iface = {'name': 'viva', 'config': {}}
-    add_bridgemems(instance, iface)
+    add_bridgeports(instance, iface)
     assert_equals(iface['config']['bridge-ports'], ' '.join(mems))
     assert_equals(iface['config']['bridge-stp'], 'on')
 
     # ifaceattr option defined
     mems = ['swp1', 'swp2', 'swp3.100']
-    instance.params = {'bridgemems': None,
-                       'ifaceattrs': {'bridgemems': mems}}
+    instance.params = {'bridgeports': None,
+                       'ifaceattrs': {'bridgeports': mems}}
     iface = {'name': 'viva', 'config': {}}
-    add_bridgemems(instance, iface)
+    add_bridgeports(instance, iface)
     assert_equals(iface['config']['bridge-ports'], ' '.join(mems))
     assert_equals(iface['config']['bridge-stp'], 'on')
 
     # no option set
-    instance.params = {'bridgemems': None,
+    instance.params = {'bridgeports': None,
                        'ifaceattrs': {}}
     iface = {'name': 'viva', 'config': {}}
-    add_bridgemems(instance, iface)
+    add_bridgeports(instance, iface)
     assert_equals('bridge-ports' in iface['config'], False)
 
     # bridge ports with ranges
     mems = ['swp1-10', 'swp2', 'swp30-40.100']
-    instance.params = {'bridgemems': None,
-                       'ifaceattrs': {'bridgemems': mems}}
+    instance.params = {'bridgeports': None,
+                       'ifaceattrs': {'bridgeports': mems}}
     iface = {'name': 'viva', 'config': {}}
-    add_bridgemems(instance, iface)
+    add_bridgeports(instance, iface)
     assert_equals(iface['config']['bridge-ports'],
                   'glob swp1-10 swp2 glob swp30-40.100')
     assert_equals(iface['config']['bridge-stp'], 'on')
 
     # bridge port set to none
     mems = ['none']
-    instance.params = {'bridgemems': None,
-                       'ifaceattrs': {'bridgemems': mems}}
+    instance.params = {'bridgeports': None,
+                       'ifaceattrs': {'bridgeports': mems}}
     iface = {'name': 'viva', 'config': {}}
-    add_bridgemems(instance, iface)
+    add_bridgeports(instance, iface)
     assert_equals(iface['config']['bridge-ports'], None)
     # single bridge mem
     mems = 'swp1'
-    instance.params = {'bridgemems': None,
-                       'ifaceattrs': {'bridgemems': mems}}
+    instance.params = {'bridgeports': None,
+                       'ifaceattrs': {'bridgeports': mems}}
     iface = {'name': 'viva', 'config': {}}
-    add_bridgemems(instance, iface)
+    add_bridgeports(instance, iface)
     assert_equals(iface['config']['bridge-ports'], mems)
 
 
@@ -787,27 +787,28 @@ def test_bond_config(mock_module):
     cl_interface - config bond
     """
     instance = mock_module.return_value
-    # bondmems in module params
-    instance.params = {'bondmems': ['swp1', 'swp2']}
+    # bondslaves in module params
+    instance.params = {'bondslaves': ['swp1', 'swp2']}
     iface = {'config': {}}
-    add_bondmems(instance, iface)
+    add_bondslaves(instance, iface)
     assert_equals(iface['config'], bond_config_not_empty())
-    # bondmems in ifaceattr params
-    instance.params = {'bondmems': None,
+    # bondslaves in ifaceattr params
+    instance.params = {'bondslaves': None,
                        'ifaceattrs': {
-                           'bondmems': ['swp1', 'swp2']
+                           'bondslaves': ['swp1', 'swp2']
                        }}
     iface = {'config': {}}
-    add_bondmems(instance, iface)
+    add_bondslaves(instance, iface)
     assert_equals(iface['config'], bond_config_not_empty())
-    # bondmems in module params  - set to 'none'
-    instance.params = {'bondmems': ['none']}
+    # bondslaves in module params  - set to 'none'
+    instance.params = {'bondslaves': ['none']}
     iface = {'config': {}}
-    add_bondmems(instance, iface)
+    add_bondslaves(instance, iface)
     assert_equals(iface['config'], bond_config_empty())
-    # bondmems in ifaceattr params  - set to 'none'
-    instance.params = {'bondmems': None,
-                       'ifaceattrs': {'bondmems': 'none'}}
+    # bondslaves in ifaceattr params  - set to 'none'
+    instance.params = {'bondslaves': None,
+                       'ifaceattrs': {'bondslaves': 'none'}}
     iface = {'config': {}}
-    add_bondmems(instance, iface)
+    add_bondslaves(instance, iface)
     assert_equals(iface['config'], bond_config_empty())
+
