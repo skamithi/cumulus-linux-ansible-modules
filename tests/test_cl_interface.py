@@ -321,6 +321,20 @@ def loop_iface():
     return iface
 
 
+def swp_iface():
+    iface = {
+        'name': 'swp10',
+        'ifacetype': 'swp',
+        'config': {
+            'address': ["10:3:3::3/128",
+                        "10.3.3.3/32"]
+        },
+        'addr_method': None,
+        'addr_family': None
+    }
+    return iface
+
+
 @mock.patch('dev_modules.cl_interface.run_cl_cmd')
 @mock.patch('dev_modules.cl_interface.AnsibleModule')
 def test_config_changed_lo_config_same(mock_module, mock_exec):
@@ -338,6 +352,9 @@ def test_config_changed_lo_config_same(mock_module, mock_exec):
 @mock.patch('dev_modules.cl_interface.os')
 @mock.patch('dev_modules.cl_interface.AnsibleModule')
 def test_modify_switch_config(mock_module, mock_os):
+    """
+    cl_interface - test with inet method
+    """
     instance = mock_module.return_value
     mock_os.path.exists.return_value = False
     testwrite = open('/tmp/test.me', 'w')
@@ -350,6 +367,30 @@ def test_modify_switch_config(mock_module, mock_os):
     mock_os.path.exists.assert_called_with('/etc/network/ansible/')
     fstr = 'auto lo\n'
     fstr += 'iface lo inet loopback\n'
+    fstr += '    address 10:3:3::3/128\n'
+    fstr += '    address 10.3.3.3/32\n'
+    output = open('/tmp/test.me').readlines()
+    assert_equals(''.join(output), fstr)
+
+
+@mock.patch('dev_modules.cl_interface.os')
+@mock.patch('dev_modules.cl_interface.AnsibleModule')
+def test_modify_switch_config2(mock_module, mock_os):
+    """
+    cl_interface - test when no inet method is set
+    """
+    instance = mock_module.return_value
+    mock_os.path.exists.return_value = False
+    testwrite = open('/tmp/test.me', 'w')
+    iface = swp_iface()
+    with mock.patch('__builtin__.open') as mock_open:
+        mock_open.return_value = testwrite
+        modify_switch_config(instance, iface)
+        mock_open.assert_called_with('/etc/network/ansible/swp10', 'w')
+
+    mock_os.path.exists.assert_called_with('/etc/network/ansible/')
+    fstr = 'auto swp10\n'
+    fstr += 'iface swp10\n'
     fstr += '    address 10:3:3::3/128\n'
     fstr += '    address 10.3.3.3/32\n'
     output = open('/tmp/test.me').readlines()
@@ -527,6 +568,7 @@ def test_compare_config4():
     }
     assert_equals(compare_config(new_config, orig_config()), True)
 
+
 def test_compare_config5():
     """
     cl_interface test compare config. 'config' has new attr
@@ -537,6 +579,8 @@ def test_compare_config5():
         }
     }
     assert_equals(compare_config(new_config, orig_config()), False)
+
+
 def test_merge_config():
     """
     cl_interface - merge creating new element in object
@@ -553,7 +597,7 @@ def test_merge_config():
     assert_equals(orig_modify, orig)
 
 
-def test_merge_config():
+def test_merge_config2():
     """
     cl_interface - merge config - replace existing config
     """
@@ -573,7 +617,7 @@ def test_merge_config():
     assert_equals(orig_modify, orig)
 
 
-def test_merge_config():
+def test_merge_config3():
     """
     cl_interface - merge config - delete existin config
     """

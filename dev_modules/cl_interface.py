@@ -264,8 +264,9 @@ def add_bridgemems(module, iface):
 
 def modify_switch_config(module, iface):
     filestr = "auto %s\n" % (iface['name'])
-    if 'addr_method' is not None:
-        filestr += "iface %s inet %s\n" % (iface['name'], iface['addr_method'])
+    if iface['addr_method'] is not None:
+        filestr += "iface %s inet %s\n" % \
+            (iface['name'], iface['addr_method'])
     else:
         filestr += "iface %s\n" % (iface['name'])
     if 'config' in iface:
@@ -376,7 +377,7 @@ def main():
     else:
         iface['addr_method'] = None
         iface['addr_family'] = None
-    iface = config_changed(module, iface)
+    config_changed(module, iface)
     modify_switch_config(module, iface)
     remove_config_from_etc_net_interfaces(module, iface)
     if module.params.get('applyconfig') == 'yes':
