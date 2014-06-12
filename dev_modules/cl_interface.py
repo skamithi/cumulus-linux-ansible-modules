@@ -108,7 +108,10 @@ def create_config_addr_attr(iface):
 
 def get_ip(addrs):
     if isinstance(addrs, list) and len(addrs) == 1:
-        return addrs[0]
+        if addrs[0].lower() == 'none':
+            return None
+        else:
+            return addrs[0]
     return addrs
 
 
@@ -270,7 +273,7 @@ def modify_switch_config(module, iface):
             if isinstance(v, list):
                 for subv in v:
                     filestr += "    %s %s\n" % (k, subv)
-            else:
+            elif v is not None:
                 filestr += "    %s %s\n" % (k, v)
 
     directory = '/etc/network/ansible/'

@@ -7,7 +7,6 @@ from dev_modules.cl_interface import get_iface_type, add_ipv4, \
     check_if_applyconfig_name_defined_only, add_bridgemems, \
     config_dhcp, compare_config, merge_config
 from asserts import assert_equals
-import copy
 
 
 def mod_args_none(arg):
@@ -235,6 +234,11 @@ def test_add_ipv4(mock_module):
     iface = {'ifacetype': 'lo', 'config': {}}
     add_ipv4(instance, iface)
     assert_equals(iface['config']['address'], addr[0])
+    # addr is none - remove it
+    instance.params.get.return_value = ['none']
+    iface = {'config': {}}
+    add_ipv4(instance, iface)
+    assert_equals(iface['config']['address'], None)
 
 
 @mock.patch('dev_modules.cl_interface.AnsibleModule')
@@ -377,6 +381,29 @@ def test_modify_switch_config2(mock_module, mock_os):
     fstr += 'iface swp10\n'
     fstr += '    address 10:3:3::3/128\n'
     fstr += '    address 10.3.3.3/32\n'
+    output = open('/tmp/test.me').readlines()
+    assert_equals(''.join(output), fstr)
+
+
+@mock.patch('dev_modules.cl_interface.os')
+@mock.patch('dev_modules.cl_interface.AnsibleModule')
+def test_modify_switch_config3(mock_module, mock_os):
+    """
+    cl_interface - test when attr is set to none
+    """
+    instance = mock_module.return_value
+    mock_os.path.exists.return_value = False
+    testwrite = open('/tmp/test.me', 'w')
+    iface = swp_iface()
+    iface['config']['address'] = None
+    with mock.patch('__builtin__.open') as mock_open:
+        mock_open.return_value = testwrite
+        modify_switch_config(instance, iface)
+        mock_open.assert_called_with('/etc/network/ansible/swp10', 'w')
+
+    mock_os.path.exists.assert_called_with('/etc/network/ansible/')
+    fstr = 'auto swp10\n'
+    fstr += 'iface swp10\n'
     output = open('/tmp/test.me').readlines()
     assert_equals(''.join(output), fstr)
 
@@ -599,15 +626,3 @@ def test_merge_config2():
     orig['addr_method'] = 'dhcp'
     orig['config']['speed'] = '3000'
     assert_equals(orig_modify, orig)
-
-
-def test_merge_config3():
-    """
-    cl_interface - merge config - delete existin config
-    """
-
-    new_config = {
-        'config': {
-            'speed': None
-        }
-    }
