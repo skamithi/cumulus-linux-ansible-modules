@@ -19,7 +19,7 @@ options:
         description:
             - full path to binary image. Can be a local path, http or https URL
         required: true
-    switch_slots:
+    switch_slot:
         description:
             - Switch slots after installing the image.\
                 Only a reboot is needed.\
@@ -47,7 +47,7 @@ Example playbook entries using the cl_img_install module
       cl_img_install: version=2.0.1 src='/root/CumulusLinux-2.0.1.bin'
 
     - name: install image and switch slots. only reboot needed
-      cl_img_install: version=2.0.1 src=/root/image.bin switch_slots=yes'
+      cl_img_install: version=2.0.1 src=/root/image.bin switch_slot=yes'
 '''
 
 
@@ -139,16 +139,16 @@ def install_img(module):
     run_cl_cmd(module, app_path)
 
 
-def switch_slots(module, slotnum):
-    _switch_slots = module.params.get('switch_slots')
-    if _switch_slots == 'yes':
+def switch_slot(module, slotnum):
+    _switch_slot = module.params.get('switch_slot')
+    if _switch_slot == 'yes':
         app_path = '/usr/cumulus/bin/cl-img-select %s' % (slotnum)
         run_cl_cmd(module, app_path)
 
 
 def check_sw_version(module, _version):
     slots = get_slot_info(module)
-    perform_switch_slots = module.params.get('switch_slots')
+    perform_switch_slot = module.params.get('switch_slot')
     for _num, slot in slots.items():
         if slot['version'] == _version:
             if 'active' in slot:
@@ -159,8 +159,8 @@ def check_sw_version(module, _version):
                 _msg = "Version " + _version + \
                     " is installed in the alternate slot. "
                 if 'primary' not in slot:
-                    if perform_switch_slots == 'yes':
-                        switch_slots(module, _num)
+                    if perform_switch_slot == 'yes':
+                        switch_slot(module, _num)
                         _msg = _msg + \
                             "cl-img-select has made the alternate " + \
                             "slot the primary slot. " +\
@@ -169,7 +169,7 @@ def check_sw_version(module, _version):
                     else:
                         _msg = _msg + \
                             "Next reboot will not load " + _version + ". " + \
-                            "switch_slots keyword set to 'no'."
+                            "switch_slot keyword set to 'no'."
                         module.exit_json(changed=False, msg=_msg)
                 else:
                     _msg = _msg + \
@@ -182,7 +182,7 @@ def main():
         argument_spec=dict(
             src=dict(required=True, type='str'),
             version=dict(required=True, type='str'),
-            switch_slots=dict(default='no', choices=["yes", "no"])
+            switch_slot=dict(default='no', choices=["yes", "no"])
         ),
     )
 
