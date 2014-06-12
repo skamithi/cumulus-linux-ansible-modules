@@ -107,11 +107,12 @@ def create_config_addr_attr(iface):
 
 
 def get_ip(addrs):
-    if isinstance(addrs, list) and len(addrs) == 1:
-        if addrs[0].lower() == 'none':
-            return None
-        else:
-            return addrs[0]
+    if isinstance(addrs, list):
+        if len(addrs) == 1:
+            if addrs[0].lower() == 'none':
+                return None
+            else:
+                return addrs[0]
     elif addrs.lower() == 'none':
         return None
     return addrs
