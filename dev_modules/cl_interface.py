@@ -48,6 +48,13 @@ options:
         description:
             - configure dhcp on the interface
         choices: ['yes', 'no']
+    speed:
+        description:
+            - set speed of the bond, bridge or swp(front panel) or mgmt(eth0)
+            interface.  speed is in MB
+    mtu:
+        description:
+            - set MTU. Configure Jumbo Frame by setting MTU to 9000.
 notes:
     - Cumulus Linux Interface Documentation - http://cumulusnetworks.com/docs/2.0/user-guide/layer_1_2/interfaces.html
     - Contact Cumulus Networks @ http://cumulusnetworks.com/contact/
@@ -56,16 +63,16 @@ EXAMPLES = '''
 #Example playbook entries using the cl_interface
 
 ## configure a front panel port with an IP
-cl_interface: name=swp1  ipv4=10.1.1.1/24 apply=yes
+cl_interface: name=swp1  ipv4=10.1.1.1/24 applyconfig=yes
 
 ## configure a front panel port with multiple IPs
-cl_interface: name=swp1 ipv4=['10.1.1.1/24', '20.1.1.1/24'] apply=yes
+cl_interface: name=swp1 ipv4=['10.1.1.1/24', '20.1.1.1/24'] applyconfig=yes
 
 ## configure a bridge interface with a few trunk members and access port
-cl_interface: name=br0  bridgemems=['swp1-10.100', 'swp11'] apply=yes
+cl_interface: name=br0  bridgemems=['swp1-10.100', 'swp11'] applyconfig=yes
 
 ## configure a bond interface with an IP address
-cl_interface: name=br0 bondmems=['swp1', 'swp2'] ipv4='10.1.1.1/24' apply=yes
+cl_interface: name=br0 bondmems=['swp1', 'swp2'] ipv4='10.1.1.1/24' applyconfig=yes
 '''
 
 
@@ -229,6 +236,32 @@ def config_dhcp(module, iface):
     return False
 
 
+def config_speed(module, iface):
+    speedattr = module.params.get('speed')
+    ifaceattrs = module.params.get('ifaceattrs')
+    if not speedattr:
+        if ifaceattrs and 'speed' in ifaceattrs:
+            speedattr = ifaceattrs['speed']
+        else:
+            return
+    if speedattr.lower() == 'none':
+        speedattr = None
+    iface['config']['speed'] = speedattr
+
+
+def config_mtu(module, iface):
+    mtuattr = module.params.get('mtu')
+    ifaceattrs = module.params.get('ifaceattrs')
+    if not mtuattr:
+        if ifaceattrs and 'mtu' in ifaceattrs:
+            mtuattr = ifaceattrs['mtu']
+        else:
+            return
+    if mtuattr.lower() == 'none':
+        mtuattr = None
+    iface['config']['mtu'] = mtuattr
+
+
 def config_static_ip(module, iface):
     add_ipv4(module, iface)
     add_ipv6(module, iface)
@@ -370,6 +403,8 @@ def main():
             ipv6=dict(type='list'),
             ifaceattrs=dict(type='dict'),
             dhcp=dict(type='str', choices=["yes", "no"]),
+            speed=dict(type='str'),
+            mtu=dict(type='str'),
             applyconfig=dict(required=True, type='str')
         ),
         mutually_exclusive=[
@@ -399,6 +434,8 @@ def main():
         iface['addr_method'] = 'loopback'
         iface['addr_family'] = 'inet'
     else:
+        config_speed(module, iface)
+        config_mtu(module, iface)
         iface['addr_method'] = None
         iface['addr_family'] = None
     config_changed(module, iface)

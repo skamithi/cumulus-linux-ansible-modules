@@ -5,7 +5,8 @@ from dev_modules.cl_interface import get_iface_type, add_ipv4, \
     add_ipv6, config_changed, modify_switch_config, main, \
     remove_config_from_etc_net_interfaces, config_swp_iface, \
     check_if_applyconfig_name_defined_only, add_bridgemems, \
-    config_dhcp, compare_config, merge_config, remove_none_attrs
+    config_dhcp, compare_config, merge_config, remove_none_attrs, \
+    config_speed, config_mtu
 from asserts import assert_equals
 
 
@@ -87,6 +88,8 @@ def test_module_args(mock_module,
                        'applyconfig': {'required': True, 'type': 'str'},
                        'name': {'required': True, 'type': 'str'},
                        'ifaceattrs': {'type': 'dict'},
+                       'speed': {'type': 'str'},
+                       'mtu': {'type': 'str'},
                        'dhcp': {'type': 'str', 'choices': ['yes', 'no']},
                        'bridgemems': {'type': 'list'}},
         mutually_exclusive=[['bridgemems', 'bondmems'],
@@ -669,3 +672,61 @@ def test_merge_config2():
     orig['addr_method'] = 'dhcp'
     orig['config']['speed'] = '3000'
     assert_equals(orig_modify, orig)
+
+
+@mock.patch('dev_modules.cl_interface.AnsibleModule')
+def test_config_speed(mock_module):
+    """
+    cl_interface - config speed
+    """
+    instance = mock_module.return_value
+    # speed set in module.param not empty
+    instance.params = {'speed': '1000'}
+    iface = {'config': {}}
+    config_speed(instance, iface)
+    assert_equals(iface, {'config': {'speed': '1000'}})
+    # speed set in module.param is 'none'
+    instance.params = {'speed': 'none'}
+    iface = {'config': {}}
+    config_speed(instance, iface)
+    assert_equals(iface, {'config': {'speed': None}})
+    # speed set in ifaceattr not empty
+    instance.params = {'speed': None, 'ifaceattrs': {'speed': '1000'}}
+    iface = {'config': {}}
+    config_speed(instance, iface)
+    assert_equals(iface, {'config': {'speed': '1000'}})
+    # speed set in ifaceattr is 'none'
+    instance.params = {'speed': None, 'ifaceattrs': {'speed': 'none'}}
+    iface = {'config': {}}
+    config_speed(instance, iface)
+    assert_equals(iface, {'config': {'speed': None}})
+
+
+@mock.patch('dev_modules.cl_interface.AnsibleModule')
+def test_config_mtu(mock_module):
+    """
+    cl_interface - config mtu
+    """
+    instance = mock_module.return_value
+    # mtu set in module.param not empty
+    instance.params = {'mtu': '1000'}
+    iface = {'config': {}}
+    config_mtu(instance, iface)
+    assert_equals(iface, {'config': {'mtu': '1000'}})
+    # mtu set in module.param is 'none'
+    instance.params = {'mtu': 'none'}
+    iface = {'config': {}}
+    config_mtu(instance, iface)
+    assert_equals(iface, {'config': {'mtu': None}})
+    # mtu set in ifaceattr not empty
+    instance.params = {'mtu': None, 'ifaceattrs': {'mtu': '1000'}}
+    iface = {'config': {}}
+    config_mtu(instance, iface)
+    assert_equals(iface, {'config': {'mtu': '1000'}})
+    # mtu set in ifaceattr is 'none'
+    instance.params = {'mtu': None, 'ifaceattrs': {'mtu': 'none'}}
+    iface = {'config': {}}
+    config_mtu(instance, iface)
+    assert_equals(iface, {'config': {'mtu': None}})
+
+
