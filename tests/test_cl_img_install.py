@@ -1,7 +1,7 @@
 import mock
 from nose.tools import set_trace
 from dev_modules.cl_img_install import install_img, \
-    check_url, switch_slots, get_active_slot, get_primary_slot_num, \
+    check_url, switch_slot, get_active_slot, get_primary_slot_num, \
     check_mnt_root_lsb_release, check_fw_print_env, get_slot_version, \
     check_sw_version, get_slot_info
 
@@ -11,7 +11,7 @@ from asserts import assert_equals
 def mod_args(arg):
     values = {'version': '2.0.0',
               'src': 'http://10.1.1.1/cl.bin',
-              'switch_slots': 'yes'}
+              'switch_slot': 'yes'}
     return values[arg]
 
 
@@ -122,10 +122,10 @@ def test_get_slot_info(mock_module,
     mock_primary_ver.return_value = '2'
     assert_equals(get_slot_info(instance), slot_info())
 
-@mock.patch('dev_modules.cl_img_install.switch_slots')
+@mock.patch('dev_modules.cl_img_install.switch_slot')
 @mock.patch('dev_modules.cl_img_install.get_slot_info')
 @mock.patch('dev_modules.cl_img_install.AnsibleModule')
-def test_check_sw_version(mock_module, mock_get_slot_info, mock_switch_slots):
+def test_check_sw_version(mock_module, mock_get_slot_info, mock_switch_slot):
     instance = mock_module.return_value
     mock_get_slot_info.return_value = slot_info()
     ver = '2.0.10'
@@ -142,7 +142,7 @@ def test_check_sw_version(mock_module, mock_get_slot_info, mock_switch_slots):
     ver = '2.0.3'
     mock_get_slot_info.return_value = slot_info2()
     check_sw_version(instance, ver)
-    instance.exit_json.assert_called_with(msg="Version 2.0.3 is installed in the alternate slot. Next reboot will not load 2.0.3. switch_slots keyword set to 'no'.", changed=False)
+    instance.exit_json.assert_called_with(msg="Version 2.0.3 is installed in the alternate slot. Next reboot will not load 2.0.3. switch_slot keyword set to 'no'.", changed=False)
 
     instance.params.get.return_value = 'yes'
     check_sw_version(instance, ver)
@@ -170,13 +170,13 @@ def test_check_url(mock_module):
         msg=_msg)
 
 
-def mod_args_switch_slots_yes(arg):
-    values = {'switch_slots': 'yes'}
+def mod_args_switch_slot_yes(arg):
+    values = {'switch_slot': 'yes'}
     return values[arg]
 
 
-def mod_args_switch_slots_no(arg):
-    values = {'switch_slots': 'no'}
+def mod_args_switch_slot_no(arg):
+    values = {'switch_slot': 'no'}
     return values[arg]
 
 
@@ -195,17 +195,17 @@ def test_img_install(mock_module, mock_run_cl_cmd):
 
 @mock.patch('dev_modules.cl_img_install.run_cl_cmd')
 @mock.patch('dev_modules.cl_img_install.AnsibleModule')
-def test_switch_slots(mock_module, mock_run_cl_cmd):
+def test_switch_slot(mock_module, mock_run_cl_cmd):
     """
     Test switching slots
     """
     instance = mock_module.return_value
 
-    instance.params.get.side_effect = mod_args_switch_slots_no
-    switch_slots(instance, 1)
+    instance.params.get.side_effect = mod_args_switch_slot_no
+    switch_slot(instance, 1)
     assert_equals(mock_run_cl_cmd.call_count, 0)
 
-    instance.params.get.side_effect = mod_args_switch_slots_yes
-    switch_slots(instance, '1')
+    instance.params.get.side_effect = mod_args_switch_slot_yes
+    switch_slot(instance, '1')
     runcmd = '/usr/cumulus/bin/cl-img-select 1'
     mock_run_cl_cmd.assert_called_with(instance, runcmd)
