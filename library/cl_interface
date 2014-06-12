@@ -121,9 +121,7 @@ def get_iface_type(module, ifaceattrs):
     elif re.match('^swp', module.params.get('name')):
         return 'swp'
     else:
-        _name = module.params.get('name')
-        _msg = 'unable to determine interface type %s' % (_name)
-        module.fail_json(msg=_msg)
+        return 'notavailable'
 
 
 def create_config_dict(iface):
