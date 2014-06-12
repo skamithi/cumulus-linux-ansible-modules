@@ -6,7 +6,7 @@ from dev_modules.cl_interface import get_iface_type, add_ipv4, \
     remove_config_from_etc_net_interfaces, config_swp_iface, \
     check_if_applyconfig_name_defined_only, add_bridgemems, \
     config_dhcp, compare_config, merge_config, remove_none_attrs, \
-    config_speed, config_mtu, add_bondmems
+    config_speed, config_mtu, add_bondmems, config_alias
 from asserts import assert_equals
 
 
@@ -88,6 +88,7 @@ def test_module_args(mock_module,
                        'applyconfig': {'required': True, 'type': 'str'},
                        'name': {'required': True, 'type': 'str'},
                        'ifaceattrs': {'type': 'dict'},
+                       'alias': {'type': 'str'},
                        'speed': {'type': 'str'},
                        'mtu': {'type': 'str'},
                        'dhcp': {'type': 'str', 'choices': ['yes', 'no']},
@@ -730,6 +731,34 @@ def test_config_mtu(mock_module):
     assert_equals(iface, {'config': {'mtu': None}})
 
 
+@mock.patch('dev_modules.cl_interface.AnsibleModule')
+def test_config_alias(mock_module):
+    """
+    cl_interface - config alias
+    """
+    instance = mock_module.return_value
+    # alias set in module.param not empty
+    instance.params = {'alias': '1000'}
+    iface = {'config': {}}
+    config_alias(instance, iface)
+    assert_equals(iface, {'config': {'alias': '1000'}})
+    # alias set in module.param is 'none'
+    instance.params = {'alias': 'none'}
+    iface = {'config': {}}
+    config_alias(instance, iface)
+    assert_equals(iface, {'config': {'alias': None}})
+    # alias set in ifaceattr not empty
+    instance.params = {'alias': None, 'ifaceattrs': {'alias': '1000'}}
+    iface = {'config': {}}
+    config_alias(instance, iface)
+    assert_equals(iface, {'config': {'alias': '1000'}})
+    # alias set in ifaceattr is 'none'
+    instance.params = {'alias': None, 'ifaceattrs': {'alias': 'none'}}
+    iface = {'config': {}}
+    config_alias(instance, iface)
+    assert_equals(iface, {'config': {'alias': None}})
+
+
 def bond_config_not_empty():
     return {
         'bond-miimon': '100',
@@ -782,7 +811,3 @@ def test_bond_config(mock_module):
     iface = {'config': {}}
     add_bondmems(instance, iface)
     assert_equals(iface['config'], bond_config_empty())
-
-
-
-

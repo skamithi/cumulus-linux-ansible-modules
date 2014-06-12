@@ -21,42 +21,41 @@ options:
         choices: ['yes', 'no']
         default: 'no'
         required: true
+    alias:
+        description:
+            - add a port description
     ipv4:
         description:
-            - list of IPv4 addresses to configure on the interface. use CIDR
-            syntax.
-        default: None
+            - list of IPv4 addresses to configure on the interface. \
+                use X.X.X.X/YY syntax.
     ipv6:
         description:
-            - list of IPv6 addresses  to configure on the interface. use CIDR
-            syntax
-        default: None
+            - list of IPv6 addresses  to configure on the interface. \
+                use X:X:X::X/YYY syntax
     bridgemems:
         description:
             - list ports associated with the bridge interface.
-        default: None
     bondmems:
         description:
             - list ports associated with the bond interface
-        default: None
-   ifaceattrs:
+    ifaceattrs:
         description:
-            - provide a dictionary of all attributes to assign to the port. it
-            is mutually exclusive with any other command.
-        default: None
+            - provide a dictionary of all attributes to assign to the port. \
+                it is mutually exclusive with any other command.
     dhcp:
         description:
             - configure dhcp on the interface
         choices: ['yes', 'no']
     speed:
         description:
-            - set speed of the bond, bridge or swp(front panel) or mgmt(eth0)
-            interface.  speed is in MB
+            - set speed of the bond, bridge or swp(front panel) or \
+            mgmt(eth0) interface. speed is in MB
     mtu:
         description:
             - set MTU. Configure Jumbo Frame by setting MTU to 9000.
 notes:
-    - Cumulus Linux Interface Documentation - http://cumulusnetworks.com/docs/2.0/user-guide/layer_1_2/interfaces.html
+    - Cumulus Linux Interface Documentation - \
+        http://cumulusnetworks.com/docs/2.0/user-guide/layer_1_2/interfaces.html
     - Contact Cumulus Networks @ http://cumulusnetworks.com/contact/
 '''
 EXAMPLES = '''
@@ -72,7 +71,34 @@ cl_interface: name=swp1 ipv4=['10.1.1.1/24', '20.1.1.1/24'] applyconfig=yes
 cl_interface: name=br0  bridgemems=['swp1-10.100', 'swp11'] applyconfig=yes
 
 ## configure a bond interface with an IP address
-cl_interface: name=br0 bondmems=['swp1', 'swp2'] ipv4='10.1.1.1/24' applyconfig=yes
+cl_interface:
+    name=br0
+    bondmems=['swp1', 'swp2']
+    ipv4='10.1.1.1/24' applyconfig=yes
+
+## use complex args with ifaceattr
+cl_interface:
+    ifaceattr: "{{ item.value }}"
+    applyconfig: 'no'
+    name: "{{ item.key}}"
+with_dict:interfaces[ansible_hostname]
+notify:
+    - reload networking
+
+## interfaces.yml file for complex args
+interfaces:
+    sw1:
+        bonds:
+            bond0:
+                alias: 'to switch1'
+                bondmems:
+                    - swp1
+                    - swp3
+            bond3
+                alias: 'to switch10'
+                bondmems:
+                    -swp2
+                    -swp4
 '''
 
 
@@ -182,7 +208,7 @@ def config_changed(module, a_iface):
 
 
 def merge_config(newobj, orig):
-    for k, v in newobj.items():
+    for k, v in newobj.iteritems():
         if isinstance(v, dict):
             if k in orig:
                 merge_config(v, orig[k])
@@ -193,7 +219,7 @@ def merge_config(newobj, orig):
 
 
 def compare_config(newobj, orig):
-    for k, v in newobj.items():
+    for k, v in newobj.iteritems():
         if isinstance(v, dict):
             if not compare_config(v, orig[k]):
                 return False
@@ -213,7 +239,7 @@ def apply_config(module, iface):
 
 def sortdict(od):
     res = {}
-    for k, v in sorted(od.items()):
+    for k, v in sorted(od.iteritems()):
         if isinstance(v, dict):
             res[k] = sortdict(v)
         elif isinstance(v, list):
@@ -260,6 +286,20 @@ def config_mtu(module, iface):
     if mtuattr.lower() == 'none':
         mtuattr = None
     iface['config']['mtu'] = mtuattr
+
+
+def config_alias(module, iface):
+    aliasattr = module.params.get('alias')
+    ifaceattrs = module.params.get('ifaceattrs')
+    if not aliasattr:
+        if ifaceattrs and 'alias' in ifaceattrs:
+            aliasattr = ifaceattrs['alias']
+        else:
+            return
+    if aliasattr.lower() == 'none':
+        aliasattr = None
+    iface['config']['alias'] = aliasattr
+
 
 
 def config_static_ip(module, iface):
@@ -376,7 +416,7 @@ def modify_switch_config(module, iface):
     else:
         filestr += "iface %s\n" % (iface['name'])
     if 'config' in iface:
-        for k, v in iface['config'].items():
+        for k, v in iface['config'].iteritems():
             if isinstance(v, list):
                 for subv in v:
                     filestr += "    %s %s\n" % (k, subv)
@@ -432,7 +472,7 @@ def remove_config_from_etc_net_interfaces(module, iface):
 
 def check_if_applyconfig_name_defined_only(module):
     modparams = []
-    for k, v in module.params.items():
+    for k, v in module.params.iteritems():
         if v:
             modparams.append(k)
     modparams = sorted(modparams)
@@ -440,6 +480,27 @@ def check_if_applyconfig_name_defined_only(module):
         "and applyconfig options are allowed"
     if modparams != ['applyconfig', 'ifaceattrs', 'name']:
         module.fail_json(msg=_msg)
+
+
+def config_iface(module, iface, _ifacetype):
+    if _ifacetype == 'loopback':
+        config_lo_iface(module, iface)
+    elif _ifacetype == 'swp':
+        config_swp_iface(module, iface)
+    elif _ifacetype == 'bridge':
+        config_bridge_iface(module, iface)
+    elif _ifacetype == 'bond':
+        config_bond_iface(module, iface)
+    if iface['ifacetype'] == 'loopback':
+        iface['addr_method'] = 'loopback'
+        iface['addr_family'] = 'inet'
+    else:
+        config_speed(module, iface)
+        config_mtu(module, iface)
+        config_alias(module, iface)
+        if 'addr_method' not in iface:
+            iface['addr_method'] = None
+            iface['addr_family'] = None
 
 
 def main():
@@ -450,6 +511,7 @@ def main():
             bondmems=dict(type='list'),
             ipv4=dict(type='list'),
             ipv6=dict(type='list'),
+            alias=dict(type='str'),
             ifaceattrs=dict(type='dict'),
             dhcp=dict(type='str', choices=["yes", "no"]),
             speed=dict(type='str'),
@@ -473,22 +535,7 @@ def main():
     iface = {'ifacetype': _ifacetype}
     iface['name'] = module.params.get('name')
     create_config_dict(iface)
-    if _ifacetype == 'loopback':
-        config_lo_iface(module, iface)
-    elif _ifacetype == 'swp':
-        config_swp_iface(module, iface)
-    elif _ifacetype == 'bridge':
-        config_bridge_iface(module, iface)
-    elif _ifacetype == 'bond':
-        config_bond_iface(module, iface)
-    if iface['ifacetype'] == 'loopback':
-        iface['addr_method'] = 'loopback'
-        iface['addr_family'] = 'inet'
-    else:
-        config_speed(module, iface)
-        config_mtu(module, iface)
-        iface['addr_method'] = None
-        iface['addr_family'] = None
+    config_iface(module, iface, _ifacetype)
     config_changed(module, iface)
     modify_switch_config(module, iface)
     remove_config_from_etc_net_interfaces(module, iface)
