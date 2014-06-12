@@ -32,10 +32,10 @@ options:
         description:
             - list of IPv6 addresses  to configure on the interface. \
                 use X:X:X::X/YYY syntax
-    bridgemems:
+    bridgeports:
         description:
             - list ports associated with the bridge interface.
-    bondmems:
+    bondslaves:
         description:
             - list ports associated with the bond interface
     ifaceattrs:
@@ -68,12 +68,12 @@ cl_interface: name=swp1  ipv4=10.1.1.1/24 applyconfig=yes
 cl_interface: name=swp1 ipv4=['10.1.1.1/24', '20.1.1.1/24'] applyconfig=yes
 
 ## configure a bridge interface with a few trunk members and access port
-cl_interface: name=br0  bridgemems=['swp1-10.100', 'swp11'] applyconfig=yes
+cl_interface: name=br0  bridgeports=['swp1-10.100', 'swp11'] applyconfig=yes
 
 ## configure a bond interface with an IP address
 cl_interface:
     name=br0
-    bondmems=['swp1', 'swp2']
+    bondslaves=['swp1', 'swp2']
     ipv4='10.1.1.1/24' applyconfig=yes
 
 ## use complex args with ifaceattr
@@ -91,12 +91,12 @@ interfaces:
         bonds:
             bond0:
                 alias: 'to switch1'
-                bondmems:
+                bondslaves:
                     - swp1
                     - swp3
             bond3
                 alias: 'to switch10'
-                bondmems:
+                bondslaves:
                     -swp2
                     -swp4
 '''
@@ -110,9 +110,9 @@ def run_cl_cmd(module, cmd):
 
 
 def get_iface_type(module, ifaceattrs):
-    if module.params.get('bridgemems') or 'bridgemems' in ifaceattrs:
+    if module.params.get('bridgeports') or 'bridgeports' in ifaceattrs:
         return 'bridge'
-    elif module.params.get('bondmems') or 'bondmems' in ifaceattrs:
+    elif module.params.get('bondslaves') or 'bondslaves' in ifaceattrs:
         return 'bond'
     elif module.params.get('name') == 'lo':
         return 'loopback'
@@ -319,18 +319,18 @@ def config_swp_iface(module, iface):
 def config_bridge_iface(module, iface):
     if not config_dhcp(module, iface):
         config_static_ip(module, iface)
-    add_bridgemems(module, iface)
+    add_bridgeports(module, iface)
 
 
 def config_bond_iface(module, iface):
     if not config_dhcp(module, iface):
         config_static_ip(module, iface)
-    add_bondmems(module, iface)
+    add_bondslaves(module, iface)
 
 
-def add_glob(bridgemems):
+def add_glob(bridgeports):
     newarr = []
-    for i in bridgemems:
+    for i in bridgeports:
         if re.search('-\d+', i):
             newarr.append('glob ' + i)
         else:
@@ -338,32 +338,32 @@ def add_glob(bridgemems):
     return newarr
 
 
-def add_bondmems(module, iface):
-    bondmems = module.params.get('bondmems')
-    if not bondmems:
+def add_bondslaves(module, iface):
+    bondslaves = module.params.get('bondslaves')
+    if not bondslaves:
         ifaceattrs = module.params.get('ifaceattrs')
-        if ifaceattrs and 'bondmems' in ifaceattrs:
-            bondmems = ifaceattrs['bondmems']
+        if ifaceattrs and 'bondslaves' in ifaceattrs:
+            bondslaves = ifaceattrs['bondslaves']
         else:
             return
-    if isinstance(bondmems, list):
-        if bondmems[0].lower() == 'none':
+    if isinstance(bondslaves, list):
+        if bondslaves[0].lower() == 'none':
             remove_bond_config(iface)
             return
-    elif bondmems.lower() == 'none':
+    elif bondslaves.lower() == 'none':
         remove_bond_config(iface)
         return
     try:
-        bondmems.lower()
-        bondmems = [bondmems]
+        bondslaves.lower()
+        bondslaves = [bondslaves]
     except:
         pass
-    add_bond_config(iface, bondmems)
+    add_bond_config(iface, bondslaves)
 
 
-def add_bond_config(iface, bondmems):
+def add_bond_config(iface, bondslaves):
     config = iface['config']
-    config['bond-slaves'] = ' '.join(bondmems)
+    config['bond-slaves'] = ' '.join(bondslaves)
     config['bond-miimon'] = '100'
     config['bond-mode'] = '802.3ad'
     config['bond-xmit-hash-policy'] = 'layer3+4'
@@ -381,30 +381,30 @@ def remove_bond_config(iface):
     config['bond-min-links'] = None
 
 
-def add_bridgemems(module, iface):
-    bridgemems = module.params.get('bridgemems')
-    if not bridgemems:
+def add_bridgeports(module, iface):
+    bridgeports = module.params.get('bridgeports')
+    if not bridgeports:
         ifaceattrs = module.params.get('ifaceattrs')
-        if ifaceattrs and 'bridgemems' in ifaceattrs:
-            bridgemems = ifaceattrs['bridgemems']
+        if ifaceattrs and 'bridgeports' in ifaceattrs:
+            bridgeports = ifaceattrs['bridgeports']
         else:
             return
-    if isinstance(bridgemems, list):
-        if bridgemems[0].lower() == 'none':
+    if isinstance(bridgeports, list):
+        if bridgeports[0].lower() == 'none':
             iface['config']['bridge-ports'] = None
             iface['config']['bridge-stp'] = None
             return
-    elif bridgemems.lower() == 'none':
+    elif bridgeports.lower() == 'none':
         iface['config']['bridge-ports'] = None
         iface['config']['bridge-stp'] = None
         return
     try:
-        bridgemems.lower()
-        bridgemems = [bridgemems]
+        bridgeports.lower()
+        bridgeports = [bridgeports]
     except:
         pass
-    bridgemems = add_glob(bridgemems)
-    iface['config']['bridge-ports'] = ' '.join(bridgemems)
+    bridgeports = add_glob(bridgeports)
+    iface['config']['bridge-ports'] = ' '.join(bridgeports)
     iface['config']['bridge-stp'] = 'on'
 
 
@@ -507,8 +507,8 @@ def main():
     module = AnsibleModule(
         argument_spec=dict(
             name=dict(required=True, type='str'),
-            bridgemems=dict(type='list'),
-            bondmems=dict(type='list'),
+            bridgeports=dict(type='list'),
+            bondslaves=dict(type='list'),
             ipv4=dict(type='list'),
             ipv6=dict(type='list'),
             alias=dict(type='str'),
@@ -519,7 +519,7 @@ def main():
             applyconfig=dict(required=True, type='str')
         ),
         mutually_exclusive=[
-            ['bridgemems', 'bondmems'],
+            ['bridgeports', 'bondslaves'],
             ['dhcp', 'ipv4'],
             ['dhcp', 'ipv6']
         ]
