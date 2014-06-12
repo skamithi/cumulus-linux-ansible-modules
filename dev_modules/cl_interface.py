@@ -268,7 +268,11 @@ def add_bridgemems(module, iface):
         iface['config']['bridge-ports'] = None
         iface['config']['bridge-stp'] = None
         return
-
+    try:
+        bridgemems.lower()
+        bridgemems = [bridgemems]
+    except:
+        pass
     bridgemems = add_glob(bridgemems)
     iface['config']['bridge-ports'] = ' '.join(bridgemems)
     iface['config']['bridge-stp'] = 'on'

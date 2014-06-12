@@ -523,6 +523,13 @@ def test_adding_bridgemem(mock_module):
     iface = {'name': 'viva', 'config': {}}
     add_bridgemems(instance, iface)
     assert_equals(iface['config']['bridge-ports'], None)
+    # single bridge mem
+    mems = 'swp1'
+    instance.params = {'bridgemems': None,
+                       'ifaceattrs': {'bridgemems': mems}}
+    iface = {'name': 'viva', 'config': {}}
+    add_bridgemems(instance, iface)
+    assert_equals(iface['config']['bridge-ports'], mems)
 
 
 def orig_config():
