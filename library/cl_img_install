@@ -5,7 +5,7 @@
 #
 DOCUMENTATION = '''
 ---
-module: cl_install_img
+module: cl_img_install
 author: Stanley Karunditu
 short_description: Install a different Cumulus Linux version.
 description:
@@ -21,12 +21,14 @@ options:
         required: true
     switch_slots:
         description:
-            - Switch slots after installing the image. Only a reboot is needed.
-            Reboot can be done as a notification.
+            - Switch slots after installing the image.\
+                Only a reboot is needed.\
+                Reboot can be done as a notification.
         choices: ['yes', 'no']
         default: 'no'
 notes:
-    - Image Management Documentation - http://cumulusnetworks.com/docs/2.0/user-guide/system_management_diagnostics/img-mgmt.html#upgrade
+    - Image Management Documentation - \
+        http://cumulusnetworks.com/docs/2.0/user-guide/system_management_diagnostics/img-mgmt.html#upgrade
     - Contact Cumulus Networks @ http://cumulusnetworks.com/contact/
 '''
 EXAMPLES = '''
@@ -34,7 +36,9 @@ Example playbook entries using the cl_img_install module
 
     tasks:
     - name: install image using using http url. Use notify to reboot switch
-      cl_img_install: version=2.0.1 src='http://10.1.1.1/CumulusLinux-2.0.1.bin' switch_slot=yes
+      cl_img_install: version=2.0.1 \
+          src='http://10.1.1.1/CumulusLinux-2.0.1.bin'
+          switch_slot=yes
       notify: reboot_switch
 
     - name: download cumulus linux to local system
