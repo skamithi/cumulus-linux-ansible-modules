@@ -507,6 +507,14 @@ def test_adding_bridgemem(mock_module):
                   'glob swp1-10 swp2 glob swp30-40.100')
     assert_equals(iface['config']['bridge-stp'], 'on')
 
+    # bridge port set to none
+    mems = ['none']
+    instance.params = {'bridgemems': None,
+                       'ifaceattrs': {'bridgemems': mems}}
+    iface = {'name': 'viva', 'config': {}}
+    add_bridgemems(instance, iface)
+    assert_equals(iface['config']['bridge-ports'], None)
+
 
 def orig_config():
     return {

@@ -256,9 +256,12 @@ def add_bridgemems(module, iface):
             bridgemems = ifaceattrs['bridgemems']
         else:
             return
-    bridgemems = add_glob(bridgemems)
-    iface['config']['bridge-ports'] = ' '.join(bridgemems)
-    iface['config']['bridge-stp'] = 'on'
+    if bridgemems[0].lower() == 'none':
+        iface['config']['bridge-ports'] = None
+    else:
+        bridgemems = add_glob(bridgemems)
+        iface['config']['bridge-ports'] = ' '.join(bridgemems)
+        iface['config']['bridge-stp'] = 'on'
 
 
 def modify_switch_config(module, iface):
