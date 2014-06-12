@@ -112,6 +112,8 @@ def get_ip(addrs):
             return None
         else:
             return addrs[0]
+    elif addrs.lower() == 'none':
+        return None
     return addrs
 
 
@@ -256,12 +258,19 @@ def add_bridgemems(module, iface):
             bridgemems = ifaceattrs['bridgemems']
         else:
             return
-    if bridgemems[0].lower() == 'none':
+    if isinstance(bridgemems, list):
+        if bridgemems[0].lower() == 'none':
+            iface['config']['bridge-ports'] = None
+            iface['config']['bridge-stp'] = None
+            return
+    elif bridgemems.lower() == 'none':
         iface['config']['bridge-ports'] = None
-    else:
-        bridgemems = add_glob(bridgemems)
-        iface['config']['bridge-ports'] = ' '.join(bridgemems)
-        iface['config']['bridge-stp'] = 'on'
+        iface['config']['bridge-stp'] = None
+        return
+
+    bridgemems = add_glob(bridgemems)
+    iface['config']['bridge-ports'] = ' '.join(bridgemems)
+    iface['config']['bridge-stp'] = 'on'
 
 
 def modify_switch_config(module, iface):

@@ -234,12 +234,16 @@ def test_add_ipv4(mock_module):
     iface = {'ifacetype': 'lo', 'config': {}}
     add_ipv4(instance, iface)
     assert_equals(iface['config']['address'], addr[0])
-    # addr is none - remove it
+    # addr is none, array - remove it
     instance.params.get.return_value = ['none']
     iface = {'config': {}}
     add_ipv4(instance, iface)
     assert_equals(iface['config']['address'], None)
-
+    # addr is none , str - remote it
+    instance.params.get.return_value = u'none'
+    iface = {'config': {}}
+    add_ipv4(instance, iface)
+    assert_equals(iface['config']['address'], None)
 
 @mock.patch('dev_modules.cl_interface.AnsibleModule')
 def test_add_ipv6(mock_module):
