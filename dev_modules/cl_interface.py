@@ -146,6 +146,13 @@ def add_ipv6(module, iface):
         iface['config']['address'] = addr_attr + addrs
 
 
+def remove_none_attrs(iface):
+    if 'config' in iface:
+        for k, v in iface['config'].items():
+            if v is None:
+                del iface['config'][k]
+
+
 def config_changed(module, a_iface):
     a_iface['auto'] = True
     a_iface = sortdict(a_iface)
@@ -157,6 +164,7 @@ def config_changed(module, a_iface):
     c_iface = sortdict(json.loads(''.join(json_ifquery))[0])
     a_iface_copy = copy.deepcopy(a_iface)
     del a_iface_copy['ifacetype']
+    remove_none_attrs(a_iface_copy)
     if compare_config(a_iface_copy, c_iface):
         _msg = "no change in interface %s configuration" % (a_iface['name'])
         module.exit_json(msg=_msg, changed=False)

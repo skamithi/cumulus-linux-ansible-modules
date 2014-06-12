@@ -5,7 +5,7 @@ from dev_modules.cl_interface import get_iface_type, add_ipv4, \
     add_ipv6, config_changed, modify_switch_config, main, \
     remove_config_from_etc_net_interfaces, config_swp_iface, \
     check_if_applyconfig_name_defined_only, add_bridgemems, \
-    config_dhcp, compare_config, merge_config
+    config_dhcp, compare_config, merge_config, remove_none_attrs
 from asserts import assert_equals
 
 
@@ -249,6 +249,7 @@ def test_add_ipv4(mock_module):
     iface = {'config': {}}
     add_ipv4(instance, iface)
     assert_equals(iface['config']['address'], ['1', '2'])
+
 
 @mock.patch('dev_modules.cl_interface.AnsibleModule')
 def test_add_ipv6(mock_module):
@@ -614,6 +615,24 @@ def test_compare_config5():
         }
     }
     assert_equals(compare_config(new_config, orig_config()), False)
+
+
+def test_compare_config6():
+    """
+    cl_interface attrs are marked for deletion
+    """
+    new_config = {
+        'config': {
+            'bridge-stp': None
+        }
+    }
+    orig_config = {
+        'config': {
+            'speed: 100'
+        }
+    }
+    remove_none_attrs(new_config)
+    assert_equals(compare_config(new_config, orig_config), True)
 
 
 def test_merge_config():
