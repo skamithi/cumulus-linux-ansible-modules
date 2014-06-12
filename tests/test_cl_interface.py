@@ -223,7 +223,7 @@ def test_exception_when_using_ifaceattr(mock_module):
 
 @mock.patch('dev_modules.cl_interface.AnsibleModule')
 def test_add_ipv4(mock_module):
-    addr = '10.1.1.1/24'
+    addr = ['10.1.1.1/24']
     # addr is empty
     instance = mock_module.return_value
     instance.params.get.return_value = None
@@ -234,12 +234,12 @@ def test_add_ipv4(mock_module):
     instance.params.get.return_value = addr
     iface = {'ifacetype': 'lo', 'config': {}}
     add_ipv4(instance, iface)
-    assert_equals(iface['config']['address'], addr)
+    assert_equals(iface['config']['address'], addr[0])
 
 
 @mock.patch('dev_modules.cl_interface.AnsibleModule')
 def test_add_ipv6(mock_module):
-    addr = '10:1:1::1/127'
+    addr = ['10:1:1::1/127']
     instance = mock_module.return_value
 
     # iface addr is None ipv6 is None
@@ -251,34 +251,18 @@ def test_add_ipv6(mock_module):
     # iface addr is None ipv6 is not None
     instance.params.get.return_value = addr
     add_ipv6(instance, iface)
-    assert_equals(iface['config']['address'], addr)
+    assert_equals(iface['config']['address'], addr[0])
 
-    # iface addr is str ipv6 is str
+    # iface addr is str
     instance.params.get.return_value = addr
-    iface = {'config': {'address': '10.1.1.1/24'}}
-    add_ipv6(instance, iface)
-    assert_equals(iface['config']['address'],
-                  ['10.1.1.1/24',
-                   '10:1:1::1/127'])
-
-    # iface addr is str ipv6 is list
-    instance.params.get.return_value = [addr]
     iface = {'config': {'address': '10.1.1.1/24'}}
     add_ipv6(instance, iface)
     assert_equals(iface['config']['address'],
                   ['10:1:1::1/127',
                    '10.1.1.1/24'])
 
-    # iface addr is list ipv6 is str
+    # iface addr is list
     instance.params.get.return_value = addr
-    iface = {'config': {'address': ['10.1.1.1/24']}}
-    add_ipv6(instance, iface)
-    assert_equals(iface['config']['address'],
-                  ['10.1.1.1/24',
-                   '10:1:1::1/127'])
-
-    # iface addr is list ipv6 is list
-    instance.params.get.return_value = [addr]
     iface = {'config': {'address': ['10.1.1.1/24']}}
     add_ipv6(instance, iface)
     assert_equals(iface['config']['address'],

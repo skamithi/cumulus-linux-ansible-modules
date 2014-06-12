@@ -106,6 +106,12 @@ def create_config_addr_attr(iface):
         pass
 
 
+def get_ip(addrs):
+    if isinstance(addrs, list) and len(addrs) == 1:
+        return addrs[0]
+    return addrs
+
+
 def add_ipv4(module, iface):
     addrs = module.params.get('ipv4')
     ifaceattrs = module.params.get('ifaceattrs')
@@ -113,7 +119,7 @@ def add_ipv4(module, iface):
         addrs = ifaceattrs['ipv4']
     if addrs:
         create_config_addr_attr(iface)
-        iface['config']['address'] = addrs
+        iface['config']['address'] = get_ip(addrs)
 
 
 def add_ipv6(module, iface):
@@ -126,22 +132,12 @@ def add_ipv6(module, iface):
             return
     create_config_addr_attr(iface)
     addr_attr = iface['config']['address']
-    add_ipv6_to_iface(iface, addrs, addr_attr)
-
-
-def add_ipv6_to_iface(iface, addrs, addr_attr):
     if addr_attr is None:
-        iface['config']['address'] = addrs
+        iface['config']['address'] = get_ip(addrs)
     elif isinstance(addr_attr, str):
-        if isinstance(addrs, str):
-            iface['config']['address'] = [addr_attr, addrs]
-        elif isinstance(addrs, list):
-            iface['config']['address'] = addrs + [addr_attr]
+        iface['config']['address'] = addrs + [addr_attr]
     elif isinstance(addr_attr, list):
-        if isinstance(addrs, str):
-            iface['config']['address'] = addr_attr + [addrs]
-        elif isinstance(addrs, list):
-            iface['config']['address'] = addr_attr + addrs
+        iface['config']['address'] = addr_attr + addrs
 
 
 def config_changed(module, a_iface):
