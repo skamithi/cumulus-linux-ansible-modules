@@ -6,7 +6,7 @@ from dev_modules.cl_interface import get_iface_type, add_ipv4, \
     remove_config_from_etc_net_interfaces, config_swp_iface, \
     check_if_applyconfig_name_defined_only, add_bridgemems, \
     config_dhcp, compare_config, merge_config, remove_none_attrs, \
-    config_speed, config_mtu
+    config_speed, config_mtu, add_bondmems
 from asserts import assert_equals
 
 
@@ -728,5 +728,61 @@ def test_config_mtu(mock_module):
     iface = {'config': {}}
     config_mtu(instance, iface)
     assert_equals(iface, {'config': {'mtu': None}})
+
+
+def bond_config_not_empty():
+    return {
+        'bond-miimon': '100',
+        'bond-lacp-rate': '1',
+        'bond-min-links': '1',
+        'bond-slaves': 'swp1 swp2',
+        'bond-mode': '802.3ad',
+        'bond-xmit-hash-policy': 'layer3+4'
+    }
+
+
+def bond_config_empty():
+    return {
+        'bond-miimon': None,
+        'bond-lacp-rate': None,
+        'bond-min-links': None,
+        'bond-slaves': None,
+        'bond-mode': None,
+        'bond-xmit-hash-policy': None
+    }
+
+
+@mock.patch('dev_modules.cl_interface.AnsibleModule')
+def test_bond_config(mock_module):
+    """
+    cl_interface - config bond
+    """
+    instance = mock_module.return_value
+    # bondmems in module params
+    instance.params = {'bondmems': ['swp1', 'swp2']}
+    iface = {'config': {}}
+    add_bondmems(instance, iface)
+    assert_equals(iface['config'], bond_config_not_empty())
+    # bondmems in ifaceattr params
+    instance.params = {'bondmems': None,
+                       'ifaceattrs': {
+                           'bondmems': ['swp1', 'swp2']
+                       }}
+    iface = {'config': {}}
+    add_bondmems(instance, iface)
+    assert_equals(iface['config'], bond_config_not_empty())
+    # bondmems in module params  - set to 'none'
+    instance.params = {'bondmems': ['none']}
+    iface = {'config': {}}
+    add_bondmems(instance, iface)
+    assert_equals(iface['config'], bond_config_empty())
+    # bondmems in ifaceattr params  - set to 'none'
+    instance.params = {'bondmems': None,
+                       'ifaceattrs': {'bondmems': 'none'}}
+    iface = {'config': {}}
+    add_bondmems(instance, iface)
+    assert_equals(iface['config'], bond_config_empty())
+
+
 
 

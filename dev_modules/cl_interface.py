@@ -282,6 +282,12 @@ def config_bridge_iface(module, iface):
     add_bridgemems(module, iface)
 
 
+def config_bond_iface(module, iface):
+    if not config_dhcp(module, iface):
+        config_static_ip(module, iface)
+    add_bondmems(module, iface)
+
+
 def add_glob(bridgemems):
     newarr = []
     for i in bridgemems:
@@ -290,6 +296,49 @@ def add_glob(bridgemems):
         else:
             newarr.append(i)
     return newarr
+
+
+def add_bondmems(module, iface):
+    bondmems = module.params.get('bondmems')
+    if not bondmems:
+        ifaceattrs = module.params.get('ifaceattrs')
+        if ifaceattrs and 'bondmems' in ifaceattrs:
+            bondmems = ifaceattrs['bondmems']
+        else:
+            return
+    if isinstance(bondmems, list):
+        if bondmems[0].lower() == 'none':
+            remove_bond_config(iface)
+            return
+    elif bondmems.lower() == 'none':
+        remove_bond_config(iface)
+        return
+    try:
+        bondmems.lower()
+        bondmems = [bondmems]
+    except:
+        pass
+    add_bond_config(iface, bondmems)
+
+
+def add_bond_config(iface, bondmems):
+    config = iface['config']
+    config['bond-slaves'] = ' '.join(bondmems)
+    config['bond-miimon'] = '100'
+    config['bond-mode'] = '802.3ad'
+    config['bond-xmit-hash-policy'] = 'layer3+4'
+    config['bond-lacp-rate'] = '1'
+    config['bond-min-links'] = '1'
+
+
+def remove_bond_config(iface):
+    config = iface['config']
+    config['bond-slaves'] = None
+    config['bond-miimon'] = None
+    config['bond-mode'] = None
+    config['bond-xmit-hash-policy'] = None
+    config['bond-lacp-rate'] = None
+    config['bond-min-links'] = None
 
 
 def add_bridgemems(module, iface):
@@ -430,6 +479,8 @@ def main():
         config_swp_iface(module, iface)
     elif _ifacetype == 'bridge':
         config_bridge_iface(module, iface)
+    elif _ifacetype == 'bond':
+        config_bond_iface(module, iface)
     if iface['ifacetype'] == 'loopback':
         iface['addr_method'] = 'loopback'
         iface['addr_family'] = 'inet'
