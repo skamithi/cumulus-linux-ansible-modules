@@ -5,8 +5,9 @@ from dev_modules.cl_interface import get_iface_type, add_ipv4, \
     add_ipv6, config_changed, modify_switch_config, main, \
     remove_config_from_etc_net_interfaces, config_swp_iface, \
     check_if_applyconfig_name_defined_only, add_bridgemems, \
-    config_dhcp
+    config_dhcp, compare_config, merge_config
 from asserts import assert_equals
+import copy
 
 
 def mod_args_none(arg):
@@ -450,5 +451,135 @@ def test_adding_bridgemem(mock_module):
                        'ifaceattrs': {'bridgemems': mems}}
     iface = {'name': 'viva', 'config': {}}
     add_bridgemems(instance, iface)
-    assert_equals(iface['config']['bridge-ports'], 'glob swp1-10 swp2 glob swp30-40.100')
+    assert_equals(iface['config']['bridge-ports'],
+                  'glob swp1-10 swp2 glob swp30-40.100')
     assert_equals(iface['config']['bridge-stp'], 'on')
+
+
+def orig_config():
+    return {
+        'auto': True,
+        'addr_method': None,
+        'addr_family': None,
+        'name': 'swp1',
+        'config': {
+            'bridge-ports': 'swp1 swp2',
+            'speed': '1000',
+            'mtu': '3000'
+        }
+    }
+
+
+def test_compare_config():
+    """
+    cl_interface test compare config. config is new is different
+    """
+    new_config = {
+        'config': {
+            'bridge-ports': 'swp2 swp3',
+            'address': '10.1.1.1/24'
+        }
+    }
+    assert_equals(compare_config(new_config, orig_config()), False)
+
+
+def test_compare_config2():
+    """
+    cl_interface test compare config. addr_method is the same
+    """
+
+    new_config = {
+        'addr_method': 'dhcp',
+        'addr_family': 'inet',
+        'config': {
+            'speed': '1000'
+        }
+    }
+    orig = orig_config()
+    orig['addr_method'] = 'dhcp'
+    orig['addr_family'] = 'inet'
+
+    assert_equals(compare_config(new_config, orig), True)
+
+
+def test_compare_config3():
+    """
+    cl_interface test compare config.
+    addr_method is different. 'config' is empty
+    """
+    new_config = {
+        'addr_method': 'dhcp',
+        'addr_family': 'inet',
+        'config': {}
+    }
+    orig = orig_config()
+    assert_equals(compare_config(new_config, orig), False)
+
+
+def test_compare_config4():
+    """
+    cl_interface test compare config. 'config' is the same
+    """
+    new_config = {
+        'config': {
+            'speed': '1000'
+        }
+    }
+    assert_equals(compare_config(new_config, orig_config()), True)
+
+def test_compare_config5():
+    """
+    cl_interface test compare config. 'config' has new attr
+    """
+    new_config = {
+        'config': {
+            'bridge-stp': 'on'
+        }
+    }
+    assert_equals(compare_config(new_config, orig_config()), False)
+def test_merge_config():
+    """
+    cl_interface - merge creating new element in object
+    """
+    new_config = {
+        'config': {
+            'bridge-stp': 'on'
+        }
+    }
+    orig = orig_config()
+    orig_modify = orig_config()
+    merge_config(new_config, orig_modify)
+    orig['config']['bridge-stp'] = 'on'
+    assert_equals(orig_modify, orig)
+
+
+def test_merge_config():
+    """
+    cl_interface - merge config - replace existing config
+    """
+    new_config = {
+        'config': {
+            'speed': '3000'
+        },
+        'addr_family': 'inet',
+        'addr_method': 'dhcp'
+    }
+    orig = orig_config()
+    orig_modify = orig_config()
+    merge_config(new_config, orig_modify)
+    orig['addr_family'] = 'inet'
+    orig['addr_method'] = 'dhcp'
+    orig['config']['speed'] = '3000'
+    assert_equals(orig_modify, orig)
+
+
+def test_merge_config():
+    """
+    cl_interface - merge config - delete existin config
+    """
+
+    new_config = {
+        'config': {
+            'speed': None
+        }
+    }

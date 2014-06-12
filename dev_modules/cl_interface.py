@@ -155,12 +155,38 @@ def config_changed(module, a_iface):
     c_iface = sortdict(json.loads(''.join(json_ifquery))[0])
     a_iface_copy = copy.deepcopy(a_iface)
     del a_iface_copy['ifacetype']
-    if a_iface_copy == c_iface:
+    if compare_config(a_iface_copy, c_iface):
         _msg = "no change in interface %s configuration" % (a_iface['name'])
         module.exit_json(msg=_msg, changed=False)
         return False
     else:
+        merge_config(a_iface, c_iface)
         return True
+
+
+def merge_config(newobj, orig):
+    for k, v in newobj.items():
+        if isinstance(v, dict):
+            if k in orig:
+                merge_config(v, orig[k])
+            else:
+                orig[k] = v
+        else:
+            orig[k] = v
+
+
+def compare_config(newobj, orig):
+    for k, v in newobj.items():
+        if isinstance(v, dict):
+            if not compare_config(v, orig[k]):
+                return False
+        else:
+            if k in orig:
+                if orig[k] != v:
+                    return False
+            else:
+                return False
+    return True
 
 
 def apply_config(module, iface):
@@ -186,8 +212,6 @@ def config_dhcp(module, iface):
     if not dhcpattrs:
         if ifaceattrs and 'dhcp' in ifaceattrs:
             dhcpattrs = ifaceattrs['dhcp']
-        else:
-            return False
     if dhcpattrs == 'yes':
         iface['addr_method'] = 'dhcp'
         iface['addr_family'] = 'inet'
@@ -352,7 +376,7 @@ def main():
     else:
         iface['addr_method'] = None
         iface['addr_family'] = None
-    config_changed(module, iface)
+    iface = config_changed(module, iface)
     modify_switch_config(module, iface)
     remove_config_from_etc_net_interfaces(module, iface)
     if module.params.get('applyconfig') == 'yes':
