@@ -198,10 +198,16 @@ def main():
 
     install_img(module)
 
-    _changed = True
-    _msg = "Cumulus Linux Version " + _version + " successfully" + \
-        " installed in alternate slot"
-    module.exit_json(changed=_changed, msg=_msg)
+    check_sw_version(module, _version)
+
+    perform_switch_slot = module.params.get('switch_slot')
+    if perform_switch_slot == 'yes':
+        check_sw_version(module, _version)
+    else:
+        _changed = True
+        _msg = "Cumulus Linux Version " + _version + " successfully" + \
+            " installed in alternate slot"
+        module.exit_json(changed=_changed, msg=_msg)
 
 
 # import module snippets

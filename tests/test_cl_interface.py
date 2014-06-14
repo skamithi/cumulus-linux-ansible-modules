@@ -179,12 +179,6 @@ def test_get_iface_type(mock_module):
     instance.params.get.side_effect = mod_args_swp
     assert_equals(get_iface_type(instance, {}), 'swp')
     instance.params.get_called_with('swp10')
-    # test if unknown
-    instance.params.get.side_effect = mod_args_unknown
-    get_iface_type(instance, {})
-    assert_equals(instance.fail_json.call_count, 1)
-    instance.fail_json.assert_called_with(
-        msg='unable to determine interface type gibberish')
 
     # test if ifaceattr is set for bridge
     instance.params.get_side_effect = mod_args_none
