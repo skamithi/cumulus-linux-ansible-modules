@@ -249,6 +249,16 @@ def test_add_ipv4(mock_module):
     assert_equals(iface['config']['address'], ['1', '2'])
 
 
+def params_with_ifaceattrs(arg):
+    values = {
+        'ipv6': None,
+        'ifaceattrs': {
+            'ipv6': '10:1:1::1/127'
+        }
+    }
+    return values[arg]
+
+
 @mock.patch('dev_modules.cl_interface.AnsibleModule')
 def test_add_ipv6(mock_module):
     addr = ['10:1:1::1/127']
@@ -276,6 +286,15 @@ def test_add_ipv6(mock_module):
     # iface addr is list
     instance.params.get.return_value = addr
     iface = {'config': {'address': ['10.1.1.1/24']}}
+    add_ipv6(instance, iface)
+    assert_equals(iface['config']['address'],
+                  ['10.1.1.1/24',
+                   '10:1:1::1/127'])
+
+    # iface addr is in ifaceattrs
+    instance.params.get.side_effect = params_with_ifaceattrs
+    iface = {'config': {'address': ['10.1.1.1/24']}}
+    set_trace()
     add_ipv6(instance, iface)
     assert_equals(iface['config']['address'],
                   ['10.1.1.1/24',
