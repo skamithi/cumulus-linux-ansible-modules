@@ -169,9 +169,11 @@ def add_ipv6(module, iface):
             return
     create_config_addr_attr(iface)
     addr_attr = iface['config']['address']
+    if isinstance(addrs, unicode):
+        addrs = [addrs]
     if addr_attr is None:
         iface['config']['address'] = get_ip(addrs)
-    elif isinstance(addr_attr, str):
+    elif isinstance(addr_attr, unicode):
         iface['config']['address'] = addrs + [addr_attr]
     elif isinstance(addr_attr, list):
         iface['config']['address'] = addr_attr + addrs
@@ -297,7 +299,6 @@ def config_alias(module, iface):
     if aliasattr.lower() == 'none':
         aliasattr = None
     iface['config']['alias'] = aliasattr
-
 
 
 def config_static_ip(module, iface):
