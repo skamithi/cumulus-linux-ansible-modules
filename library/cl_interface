@@ -169,6 +169,8 @@ def add_ipv6(module, iface):
             return
     create_config_addr_attr(iface)
     addr_attr = iface['config']['address']
+    if isinstance(addrs, str):
+        addrs = [addrs]
     if addr_attr is None:
         iface['config']['address'] = get_ip(addrs)
     elif isinstance(addr_attr, str):
