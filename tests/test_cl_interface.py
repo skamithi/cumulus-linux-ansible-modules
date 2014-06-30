@@ -253,7 +253,7 @@ def params_with_ifaceattrs(arg):
     values = {
         'ipv6': None,
         'ifaceattrs': {
-            'ipv6': '10:1:1::1/127'
+            'ipv6': u'10:1:1::1/127'
         }
     }
     return values[arg]
@@ -277,7 +277,7 @@ def test_add_ipv6(mock_module):
 
     # iface addr is str
     instance.params.get.return_value = addr
-    iface = {'config': {'address': '10.1.1.1/24'}}
+    iface = {'config': {'address': u'10.1.1.1/24'}}
     add_ipv6(instance, iface)
     assert_equals(iface['config']['address'],
                   ['10:1:1::1/127',
@@ -294,7 +294,6 @@ def test_add_ipv6(mock_module):
     # iface addr is in ifaceattrs
     instance.params.get.side_effect = params_with_ifaceattrs
     iface = {'config': {'address': ['10.1.1.1/24']}}
-    set_trace()
     add_ipv6(instance, iface)
     assert_equals(iface['config']['address'],
                   ['10.1.1.1/24',
@@ -824,4 +823,3 @@ def test_bond_config(mock_module):
     iface = {'config': {}}
     add_bondslaves(instance, iface)
     assert_equals(iface['config'], bond_config_empty())
-
