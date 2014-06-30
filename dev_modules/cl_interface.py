@@ -76,9 +76,9 @@ cl_interface:
     bondslaves=['swp1', 'swp2']
     ipv4='10.1.1.1/24' applyconfig=yes
 
-## use complex args with ifaceattr
+## use complex args with ifaceattrs
 cl_interface:
-    ifaceattr: "{{ item.value }}"
+    ifaceattrs: "{{ item.value }}"
     applyconfig: 'no'
     name: "{{ item.key}}"
 with_dict:interfaces[ansible_hostname]
