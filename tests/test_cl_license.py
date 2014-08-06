@@ -1,9 +1,10 @@
 import mock
 from mock import MagicMock
 from nose.tools import set_trace
-from dev_modules.cl_license import license_installed, main, \
+from dev_modules.cl_license import license_upto_date, main, \
     check_license_url, check_for_switchd_run_ready
 from asserts import assert_equals
+from datetime import date
 
 LICENSE_PATH = '/etc/cumulus/.license.txt'
 
@@ -25,25 +26,32 @@ def mod_args_return_values_switchd_yes(arg):
     return values[arg]
 
 
+@mock.patch('dev_modules.cl_license.get_todays_date')
 @mock.patch('dev_modules.cl_license.os.path.exists')
-def test_check_license_existence(mock_os_path_exists):
+def test_check_license_existence(mock_os_path_exists, mock_date):
     "Test check_license_existence"
+    lf = open('tests/license.txt')
     mock_module = MagicMock()
+    mock_date.return_value = date(2014, 8, 6)
     mock_os_path_exists.return_value = True
-    license_installed(mock_module)
-    mock_module.exit_json.assert_called_with(
-        msg='license already installed', changed=False)
+    with mock.patch('__builtin__.open') as mock_open:
+        mock_open.return_value = lf
+        license_upto_date(mock_module)
+        mock_module.exit_json.assert_called_with(
+            msg='license is installed and has not expired', changed=False)
     mock_os_path_exists.assert_called_with(LICENSE_PATH)
     mock_os_path_exists.return_value = False
     mock_module = MagicMock()
-    license_installed(mock_module)
+    license_upto_date(mock_module)
     assert_equals(mock_module.exit_json.call_count, 0)
 
 
+@mock.patch('dev_modules.cl_license.license_is_current')
 @mock.patch('dev_modules.cl_license.AnsibleModule')
-def test_run_main_restart_switchd_no(mock_ansible_module):
+def test_run_main_restart_switchd_no(mock_ansible_module, mock_license):
     "Test correct cl_licence file execution when restart_switchd_is_no"
     instance = mock_ansible_module.return_value
+    instance.mock_license.return_value = True
     instance.params.get.side_effect = mod_args_return_values_switchd_no
     instance.run_command.return_value = ['0', '', '']
     main()
@@ -54,14 +62,17 @@ def test_run_main_restart_switchd_no(mock_ansible_module):
     instance.exit_json.assert_called_with(msg=_msg, changed=True)
 
 
+@mock.patch('dev_modules.cl_license.license_is_current')
 @mock.patch('dev_modules.cl_license.AnsibleModule')
 @mock.patch('dev_modules.cl_license.restart_switchd_now')
 def test_run_main_restart_switchd_yes(mock_restart_switchd,
-                                      mock_ansible_module):
+                                      mock_ansible_module,
+                                      mock_license):
     """
     Test correct cl_licence file execution when restart_switchd_is_yes\
     and switchd fails to start.
     """
+    mock_license.return_value = True
     mock_restart_switchd.return_value = False
     instance = mock_ansible_module.return_value
     instance.params.get.side_effect = mod_args_return_values_switchd_yes
@@ -74,18 +85,22 @@ def test_run_main_restart_switchd_yes(mock_restart_switchd,
         msg='license updated/installed. switchd failed to restart')
 
 
+@mock.patch('dev_modules.cl_license.license_is_current')
 @mock.patch('dev_modules.cl_license.AnsibleModule')
 @mock.patch('dev_modules.cl_license.restart_switchd_now')
-def test_run_main_restart_switchd_yes_doesn_fail(mock_restart_switchd,
-                                                 mock_ansible_module):
+def test_run_main_restart_switchd_yes_doesnt_fail(mock_restart_switchd,
+                                                  mock_ansible_module,
+                                                  mock_license):
     """
     Test correct cl_licence file execution when restart_switchd_is_yes\
     and switchd starts properly
     """
+    mock_license.return_value = True
     mock_restart_switchd.return_value = True
     instance = mock_ansible_module.return_value
     instance.params.get.side_effect = mod_args_return_values_switchd_yes
     instance.run_command.return_value = ['0', '', '']
+
     main()
     instance.run_command.assert_called_with(
         '/usr/cumulus/bin/cl-license -i http://10.1.1.1/license.txt',
