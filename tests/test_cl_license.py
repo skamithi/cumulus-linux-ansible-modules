@@ -31,8 +31,9 @@ def mod_args_return_values_switchd_yes(arg):
 def test_check_license_existence(mock_os_path_exists, mock_date):
     "Test check_license_existence"
     lf = open('tests/license.txt')
+    # license file exists and is current
     mock_module = MagicMock()
-    mock_date.return_value = date(2014, 8, 6)
+    mock_date.return_value = date(2013, 8, 6)
     mock_os_path_exists.return_value = True
     with mock.patch('__builtin__.open') as mock_open:
         mock_open.return_value = lf
@@ -40,10 +41,18 @@ def test_check_license_existence(mock_os_path_exists, mock_date):
         mock_module.exit_json.assert_called_with(
             msg='license is installed and has not expired', changed=False)
     mock_os_path_exists.assert_called_with(LICENSE_PATH)
+    # license file does not exist
     mock_os_path_exists.return_value = False
     mock_module = MagicMock()
     license_upto_date(mock_module)
     assert_equals(mock_module.exit_json.call_count, 0)
+    # license file exists but has expired
+    mock_os_path_exists.return_value = True
+    mock_date.return_value = date(2014, 8, 6)
+    with mock.patch('__builtin__.open') as mock_open:
+        mock_open.return_value = lf
+        license_upto_date(mock_module)
+        assert_equals(mock_module.exit_json.call_count, 0)
 
 
 @mock.patch('dev_modules.cl_license.license_is_current')
