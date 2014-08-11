@@ -3,7 +3,7 @@ from nose.tools import set_trace
 from dev_modules.cl_img_install import install_img, \
     check_url, switch_slot, get_active_slot, get_primary_slot_num, \
     determine_sw_version, check_mnt_root_lsb_release, check_fw_print_env, get_slot_version, \
-    check_sw_version, get_slot_info
+    check_sw_version, get_slot_info, main
 
 from asserts import assert_equals
 
@@ -14,6 +14,11 @@ def mod_args(arg):
               'switch_slot': 'yes'}
     return values[arg]
 
+def mod_args_no_switch_slot(arg):
+    values = {'version': None,
+              'switch_slot': 'no',
+              'src': '/usr/local/CumulusLinux-2.1.3.bin'}
+    return values[arg]
 
 def mod_args_version_in_file(arg):
     values = {'version': None,
@@ -171,6 +176,26 @@ def test_check_sw_version(mock_module, mock_get_slot_info, mock_switch_slot):
         msg='Version 2.0.3 is installed in the alternate slot. cl-img-select has made the alternate slot the primary slot. Next reboot, switch will load 2.0.3.', changed=True)
 
 
+@mock.patch('dev_modules.cl_img_install.install_img')
+@mock.patch('dev_modules.cl_img_install.check_url')
+@mock.patch('dev_modules.cl_img_install.check_sw_version')
+@mock.patch('dev_modules.cl_img_install.determine_sw_version')
+@mock.patch('dev_modules.cl_img_install.AnsibleModule')
+def test_module_args(mock_module,
+                     mock_det_ver,
+                     mock_check_ver,
+                     mock_check_url,
+                     mock_install_img):
+    """ cl_img_install - Test module argument specs"""
+    instance = mock_module.return_value
+    instance.params.get.side_effect = mod_args
+    main()
+    mock_module.assert_called_with(
+        argument_spec={'src': {'required': True, 'type': 'str'},
+                       'version': {'type': 'str'},
+                       'switch_slot': {'default': 'no', 'choices': ['yes', 'no']}})
+
+
 @mock.patch('dev_modules.cl_img_install.AnsibleModule')
 def test_check_url(mock_module):
     """
@@ -202,17 +227,19 @@ def mod_args_switch_slot_no(arg):
     return values[arg]
 
 
+@mock.patch('dev_modules.cl_img_install.check_sw_version')
 @mock.patch('dev_modules.cl_img_install.run_cl_cmd')
 @mock.patch('dev_modules.cl_img_install.AnsibleModule')
-def test_img_install(mock_module, mock_run_cl_cmd):
+def test_img_install(mock_module, mock_run_cl_cmd, mock_check_sw):
     """
     Test install image
     """
     instance = mock_module.return_value
-    instance.params.get.side_effect = mod_args
-    install_img(instance)
-    cmd = '/usr/cumulus/bin/cl-img-install -f %s' % (mod_args('src'))
+    instance.params.get.side_effect = mod_args_no_switch_slot
+    install_img(instance, '2.0.3')
+    cmd = '/usr/cumulus/bin/cl-img-install -f %s' % (mod_args_no_switch_slot('src'))
     mock_run_cl_cmd.assert_called_with(instance, cmd)
+    instance.exit_json.assert_called_with(msg='Cumulus Linux Version 2.0.3 successfully installed in alternate slot', changed=True)
 
 
 @mock.patch('dev_modules.cl_img_install.run_cl_cmd')
