@@ -132,10 +132,20 @@ def get_active_slot(module):
     return None
 
 
-def install_img(module):
+def install_img(module, _version):
     src = module.params.get('src')
     app_path = '/usr/cumulus/bin/cl-img-install -f %s' % (src)
     run_cl_cmd(module, app_path)
+    perform_switch_slot = module.params.get('switch_slot')
+    if perform_switch_slot == 'yes':
+        check_sw_version(module, _version)
+    else:
+        _changed = True
+        _msg = "Cumulus Linux Version " + _version + " successfully" + \
+            " installed in alternate slot"
+        module.exit_json(changed=_changed, msg=_msg)
+
+
 
 
 def switch_slot(module, slotnum):
@@ -195,13 +205,10 @@ def main():
     module = AnsibleModule(
         argument_spec=dict(
             src=dict(required=True, type='str'),
-            version=dict(required=True, type='str'),
+            version=dict(type='str'),
             switch_slot=dict(default='no', choices=["yes", "no"])
         ),
     )
-
-    _changed = False
-    _msg = ''
 
     _version = determine_sw_version(module)
     _url = module.params.get('src')
@@ -210,18 +217,7 @@ def main():
 
     check_url(module, _url)
 
-    install_img(module)
-
-    check_sw_version(module, _version)
-
-    perform_switch_slot = module.params.get('switch_slot')
-    if perform_switch_slot == 'yes':
-        check_sw_version(module, _version)
-    else:
-        _changed = True
-        _msg = "Cumulus Linux Version " + _version + " successfully" + \
-            " installed in alternate slot"
-        module.exit_json(changed=_changed, msg=_msg)
+    install_img(module, _version)
 
 
 # import module snippets
