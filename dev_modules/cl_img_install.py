@@ -14,7 +14,6 @@ options:
     version:
         description:
             - cumulus linux version to install
-        required: true
     src:
         description:
             - full path to binary image. Can be a local path, http or https URL
@@ -43,8 +42,8 @@ Example playbook entries using the cl_img_install module
 
     - name: download cumulus linux to local system
       get_url: src=ftp://cumuluslinux.bin dest=/root/CumulusLinux-2.0.1.bin
-    - name: install image from local filesystem
-      cl_img_install: version=2.0.1 src='/root/CumulusLinux-2.0.1.bin'
+    - name: install image from local filesystem. Get version from the filename
+      cl_img_install:  src='/root/CumulusLinux-2.0.1.bin'
 
     - name: install image and switch slots. only reboot needed
       cl_img_install: version=2.0.1 src=/root/image.bin switch_slot=yes'
@@ -146,6 +145,21 @@ def switch_slot(module, slotnum):
         run_cl_cmd(module, app_path)
 
 
+def determine_sw_version(module):
+    _version = module.params.get('version')
+    _filename = ''
+    # Use _version if user defines it
+    if _version:
+        return _version
+    else:
+        _filename = module.params.get('src').split('/')[-1]
+        _match = re.search('\d+\W\d+\W\d+', _filename)
+        if _match:
+            return re.sub('\W', '.', _match.group())
+    _msg = 'Unable to determine version from file %s' %  (_filename)
+    module.exit_json(changed=False, msg=_msg)
+
+
 def check_sw_version(module, _version):
     slots = get_slot_info(module)
     perform_switch_slot = module.params.get('switch_slot')
@@ -189,7 +203,7 @@ def main():
     _changed = False
     _msg = ''
 
-    _version = module.params.get('version')
+    _version = determine_sw_version(module)
     _url = module.params.get('src')
 
     check_sw_version(module, _version)

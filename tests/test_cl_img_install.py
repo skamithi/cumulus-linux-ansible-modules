@@ -2,7 +2,7 @@ import mock
 from nose.tools import set_trace
 from dev_modules.cl_img_install import install_img, \
     check_url, switch_slot, get_active_slot, get_primary_slot_num, \
-    check_mnt_root_lsb_release, check_fw_print_env, get_slot_version, \
+    determine_sw_version, check_mnt_root_lsb_release, check_fw_print_env, get_slot_version, \
     check_sw_version, get_slot_info
 
 from asserts import assert_equals
@@ -13,6 +13,25 @@ def mod_args(arg):
               'src': 'http://10.1.1.1/cl.bin',
               'switch_slot': 'yes'}
     return values[arg]
+
+
+def mod_args_version_in_file(arg):
+    values = {'version': None,
+              'src': 'http://10.1.1.1/CumulusLinux-2-3-1',
+              'switch_slot': 'yes'}
+    return values[arg]
+
+
+@mock.patch('dev_modules.cl_img_install.AnsibleModule')
+def test_determine_sw_version(mock_module):
+    instance = mock_module.return_value
+    instance.params.get.side_effect = mod_args
+    _version = determine_sw_version(instance)
+    assert_equals(_version, '2.0.0')
+    instance = mock_module.return_value
+    instance.params.get.side_effect = mod_args_version_in_file
+    _version = determine_sw_version(instance)
+    assert_equals(_version, '2.3.1')
 
 
 @mock.patch('dev_modules.cl_img_install.AnsibleModule')
@@ -122,6 +141,7 @@ def test_get_slot_info(mock_module,
     mock_primary_ver.return_value = '2'
     assert_equals(get_slot_info(instance), slot_info())
 
+
 @mock.patch('dev_modules.cl_img_install.switch_slot')
 @mock.patch('dev_modules.cl_img_install.get_slot_info')
 @mock.patch('dev_modules.cl_img_install.AnsibleModule')
@@ -142,11 +162,13 @@ def test_check_sw_version(mock_module, mock_get_slot_info, mock_switch_slot):
     ver = '2.0.3'
     mock_get_slot_info.return_value = slot_info2()
     check_sw_version(instance, ver)
-    instance.exit_json.assert_called_with(msg="Version 2.0.3 is installed in the alternate slot. Next reboot will not load 2.0.3. switch_slot keyword set to 'no'.", changed=False)
+    instance.exit_json.assert_called_with(
+        msg="Version 2.0.3 is installed in the alternate slot. Next reboot will not load 2.0.3. switch_slot keyword set to 'no'.", changed=False)
 
     instance.params.get.return_value = 'yes'
     check_sw_version(instance, ver)
-    instance.exit_json.assert_called_with(msg='Version 2.0.3 is installed in the alternate slot. cl-img-select has made the alternate slot the primary slot. Next reboot, switch will load 2.0.3.', changed=True)
+    instance.exit_json.assert_called_with(
+        msg='Version 2.0.3 is installed in the alternate slot. cl-img-select has made the alternate slot the primary slot. Next reboot, switch will load 2.0.3.', changed=True)
 
 
 @mock.patch('dev_modules.cl_img_install.AnsibleModule')
