@@ -20,8 +20,11 @@ options:
             - restart switchd process after installing the license
         choices: ['yes', 'no']
         default: 'no'
+    force:
+        choices: ['yes', 'no']
+        default: 'no'
 notes:
-    - License Documentation - http://cumulusnetworks.com/docs/2.0/quick-start/quick-start.html
+    - License Documentation - http://cumulusnetworks.com/docs/2.1/quick-start/quick-start.html
     - Contact Cumulus Networks @ http://cumulusnetworks.com/contact/
 '''
 EXAMPLES = '''
@@ -51,9 +54,32 @@ def run_cl_cmd(module, cmd, check_rc=True):
     return ret[:-1]
 
 
-def license_installed(module):
-    if os.path.exists(LICENSE_PATH):
-        module.exit_json(changed=False, msg="license already installed")
+def get_todays_date():
+    """
+    create function to wrap getting today's date so i can mock it.
+    """
+    datetime.now().strftime('%s')
+
+def license_is_current():
+    """
+    Check that license is current. If it is not,
+    then install the license file from ansible
+    * Assumes that license file been installed is current. Not checking this *
+    """
+    license_file = open(LICENSE_PATH).readlines()
+    for _line in license_file:
+        if re.match('expires', _line):
+            expire_date = _line.split()[0].split('=')[1]
+            # today's date in epoch
+            todays_date = get_todays_date().strftime('%s')
+            if expire_date > todays_date:
+                return True
+    return False
+
+
+def license_upto_date(module):
+    if os.path.exists(LICENSE_PATH) and license_is_current():
+        module.exit_json(changed=False, msg="license is installed and has not expired")
 
 
 def check_for_switchd_run_ready(module):
@@ -86,11 +112,12 @@ def main():
     module = AnsibleModule(
         argument_spec=dict(
             src=dict(required=True, type='str'),
-            restart_switchd=dict(default='no', choices=["yes", "no"])
+            restart_switchd=dict(default='no', choices=["yes", "no"]),
+            force=dict(default='no', choices=['yes', 'no'])
         ),
     )
 
-    license_installed(module)
+    license_upto_date(module)
 
     license_url = module.params.get('src')
     restart_switchd = module.params.get('restart_switchd')
@@ -119,6 +146,7 @@ def main():
 from ansible.module_utils.basic import *
 from ansible.module_utils.urls import *
 import time
+from datetime import datetime
 from urlparse import urlparse
 
 if __name__ == '__main__':
