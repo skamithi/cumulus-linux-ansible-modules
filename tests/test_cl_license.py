@@ -3,8 +3,8 @@ from mock import MagicMock
 from nose.tools import set_trace
 from dev_modules.cl_license import license_upto_date, main, \
     check_license_url, check_for_switchd_run_ready, get_todays_date
-from asserts import assert_equals, assert_not_equals
-from datetime import date
+from asserts import assert_equals
+from datetime import date, datetime
 
 LICENSE_PATH = '/etc/cumulus/.license.txt'
 
@@ -27,7 +27,13 @@ def mod_args_return_values_switchd_yes(arg):
 
 
 def test_get_todays_date():
-    assert_not_equals(get_todays_date(), None)
+    """
+    cl_license. test that getting current date returns a date,
+    not a string or None
+    """
+    result = get_todays_date()
+    assert_equals(isinstance(result, datetime), True)
+
 
 @mock.patch('dev_modules.cl_license.get_todays_date')
 @mock.patch('dev_modules.cl_license.os.path.exists')
