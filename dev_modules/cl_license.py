@@ -58,7 +58,7 @@ def get_todays_date():
     """
     create function to wrap getting today's date so i can mock it.
     """
-    return datetime.now().strftime('%s')
+    return datetime.now()
 
 def license_is_current():
     """
