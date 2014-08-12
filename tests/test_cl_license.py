@@ -2,8 +2,8 @@ import mock
 from mock import MagicMock
 from nose.tools import set_trace
 from dev_modules.cl_license import license_upto_date, main, \
-    check_license_url, check_for_switchd_run_ready
-from asserts import assert_equals
+    check_license_url, check_for_switchd_run_ready, get_todays_date
+from asserts import assert_equals, assert_not_equals
 from datetime import date
 
 LICENSE_PATH = '/etc/cumulus/.license.txt'
@@ -25,6 +25,9 @@ def mod_args_return_values_switchd_yes(arg):
               'restart_switchd': 'yes'}
     return values[arg]
 
+
+def test_get_todays_date():
+    assert_not_equals(get_todays_date(), None)
 
 @mock.patch('dev_modules.cl_license.get_todays_date')
 @mock.patch('dev_modules.cl_license.os.path.exists')
