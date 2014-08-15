@@ -58,7 +58,7 @@ def get_todays_date():
     """
     create function to wrap getting today's date so i can mock it.
     """
-    return datetime.now().strftime('%s')
+    return datetime.now()
 
 def license_is_current():
     """
@@ -144,7 +144,7 @@ def main():
 
 # import module snippets
 from ansible.module_utils.basic import *
-from ansible.module_utils.urls import *
+#from ansible.module_utils.urls import *
 import time
 from datetime import datetime
 from urlparse import urlparse
