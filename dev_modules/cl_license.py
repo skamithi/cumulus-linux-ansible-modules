@@ -7,9 +7,9 @@ DOCUMENTATION = '''
 ---
 module: cl_license
 author: Sean Cavanaugh & Stanley Karunditu
-short_description: install Cumulus Linux license
+short_description: Install Cumulus Linux license
 description:
-    - install Cumulus Linux license
+    - Install a Cumulus Linux license. The module checks for any existing license and if it is expired with replace it with the license been pushed to the switch. The module does not check that the license been installed is an active license.
 options:
     src:
         description:
@@ -21,6 +21,8 @@ options:
         choices: ['yes', 'no']
         default: 'no'
     force:
+        description:
+            - force installation of the license
         choices: ['yes', 'no']
         default: 'no'
 notes:
@@ -60,6 +62,7 @@ def get_todays_date():
     """
     return datetime.now()
 
+
 def license_is_current():
     """
     Check that license is current. If it is not,
@@ -79,7 +82,8 @@ def license_is_current():
 
 def license_upto_date(module):
     if os.path.exists(LICENSE_PATH) and license_is_current():
-        module.exit_json(changed=False, msg="license is installed and has not expired")
+        module.exit_json(changed=False,
+                         msg="license is installed and has not expired")
 
 
 def check_for_switchd_run_ready(module):
@@ -144,7 +148,7 @@ def main():
 
 # import module snippets
 from ansible.module_utils.basic import *
-#from ansible.module_utils.urls import *
+# from ansible.module_utils.urls import *
 import time
 from datetime import datetime
 from urlparse import urlparse

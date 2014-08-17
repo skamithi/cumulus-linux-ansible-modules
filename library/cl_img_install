@@ -222,7 +222,8 @@ def main():
 
 # import module snippets
 from ansible.module_utils.basic import *
-from ansible.module_utils.urls import *
+# incompatible with ansible 1.4.4 - ubuntu 12.04 version
+#from ansible.module_utils.urls import *
 from urlparse import urlparse
 import re
 
