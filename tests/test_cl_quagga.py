@@ -1,7 +1,7 @@
 import mock
 from nose.tools import set_trace
 from dev_modules.cl_quagga import main, create_new_quagga_file, \
-    check_quagga_services_setting
+    check_quagga_services_setting, check_protocol_options
 from asserts import assert_equals
 
 
@@ -15,8 +15,10 @@ def mod_args(arg):
 
 @mock.patch('dev_modules.cl_quagga.check_quagga_services_setting')
 @mock.patch('dev_modules.cl_quagga.create_new_quagga_file')
+@mock.patch('dev_modules.cl_quagga.check_protocol_options')
 @mock.patch('dev_modules.cl_quagga.AnsibleModule')
 def test_module_args(mock_module,
+                     mock_check_protocol,
                      mock_create_new_quagga_file,
                      mock_get_existing_quagga_services):
     """ cl_quagga - Test module argument specs"""
@@ -71,4 +73,18 @@ def test_check_quagga_services_setting(mock_module,
         msg='Desired quagga routing protocols already configured',
         changed=False
     )
+
+@mock.patch('dev_modules.cl_quagga.AnsibleModule')
+def test_check_protocol_options(mock_module):
+    instance = mock_module.return_value
+    # protocol options are correct
+    instance.params.get.return_value = ['ospfd', 'bgpd']
+    check_protocol_options(instance)
+    assert_equals(instance.fail_json.call_count, 0)
+    # protocol option is incorrect
+    instance.params.get.return_value = ['ospfd', 'ripd']
+    check_protocol_options(instance)
+    instance.fail_json.assert_called_with(msg="protocols options are " +
+                                          "'ospfd, ospf6d, bgpd'." +
+                                           " option used was ripd")
 

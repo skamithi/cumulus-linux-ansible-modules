@@ -94,6 +94,15 @@ def check_quagga_services_setting(module):
         _msg = 'Desired quagga routing protocols already configured'
         module.exit_json(msg=_msg, changed=False)
 
+def check_protocol_options(module):
+    list_of_protocols = module.params.get('protocols')
+    acceptable_list = ['ospfd', 'ospf6d', 'bgpd']
+    for i in list_of_protocols:
+        if not i in acceptable_list:
+            module.fail_json(msg="protocols options are '" +
+                             ', '.join(acceptable_list) + "'. option used was " + i
+                             )
+
 def main():
     module = AnsibleModule(
         argument_spec=dict(
@@ -102,10 +111,10 @@ def main():
                        choices=['stopped', 'started', 'restarted']),
         ),
     )
+    check_protocol_options(module)
     module.quagga_daemon_file = '/etc/quagga/daemons'
     module.tmp_quagga_file = '/tmp/quagga_daemons'
     create_new_quagga_file(module)
-    check_quagga_services_setting(module)
 
 # import module snippets
 from ansible.module_utils.basic import *
