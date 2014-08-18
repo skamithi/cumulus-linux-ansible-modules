@@ -1,6 +1,6 @@
 import mock
 from nose.tools import set_trace
-from dev_modules.cl_quagga import main
+from dev_modules.cl_quagga import main, create_new_quagga_file
 from asserts import assert_equals
 
 
@@ -12,8 +12,12 @@ def mod_args(arg):
     return values[arg]
 
 
+@mock.patch('dev_modules.cl_quagga.get_existing_quagga_services')
+@mock.patch('dev_modules.cl_quagga.create_new_quagga_file')
 @mock.patch('dev_modules.cl_quagga.AnsibleModule')
-def test_module_args(mock_module):
+def test_module_args(mock_module,
+                     mock_create_new_quagga_file,
+                     mock_get_existing_quagga_services):
     """ cl_quagga - Test module argument specs"""
     instance = mock_module.return_value
     instance.params.get.side_effect = mod_args
@@ -22,5 +26,29 @@ def test_module_args(mock_module):
         argument_spec={'state':
                        {'type': 'str', 'choices':
                         ['stopped', 'started', 'restarted']},
-                       'protocols': {'type': 'str'}})
+                       'protocols': {'type': 'list'}})
 
+
+@mock.patch('dev_modules.cl_quagga.AnsibleModule')
+def test_create_new_quagga_file(mock_module):
+    instance = mock_module.return_value
+    filename = '/tmp/test'
+    instance.tmp_quagga_file = filename
+    # only ospfv2
+    instance.params.get.return_value = ['ospf']
+    create_new_quagga_file(instance)
+    _lines = open(filename).readlines()
+    assert_equals(_lines[0], '#created using ansible\n')
+    assert_equals(_lines[2], 'zebra=yes\n')
+    assert_equals(_lines[3], 'ospf=yes\n')
+    # ospfv2 and ospfv3
+    instance.params.get.return_value = ['ospf6d','ospf']
+    create_new_quagga_file(instance)
+    _lines = open(filename).readlines()
+    assert_equals(_lines[3], 'ospf6d=yes\n')
+    assert_equals(_lines[4], 'ospf=yes\n')
+    # install bgp only
+    instance.params.get.return_value = ['bgp']
+    create_new_quagga_file(instance)
+    _lines = open(filename).readlines()
+    assert_equals(_lines[3], 'bgp=yes\n')

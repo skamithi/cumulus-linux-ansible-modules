@@ -10,7 +10,11 @@ author: Stanley Karunditu
 short_description: Enable routing protocol services via Quagga
 description:
     - Enable Quagga services available on Cumulus Linux. \
-This includes OSPF v2/v3 and BGP v4/v6.
+This includes OSPF v2/v3 and BGP. Quagga services are defined in the \
+/etc/quagga/daemons file. This module creates a file that will only enable \
+OSPF or BGP routing protocols, because this is what Cumulus Linux currently \
+supports. Using Ansible Templates you any supported or unsupported quagga \
+routing protocol.
 options:
     protocols:
         description:
@@ -50,7 +54,11 @@ Example playbook entries using the cl_quagga module
 
     - name: bgp is enabled but change to bgp and ospf v2
         cl_quagga: protocols="ospf, bgp" state=restarted
+
+    - name: just enable static routing in quagga
+        cl_quagga: state=restarted
 '''
+
 
 def run_cl_cmd(module, cmd, check_rc=True):
     try:
@@ -62,19 +70,52 @@ def run_cl_cmd(module, cmd, check_rc=True):
     return ret
 
 
+def create_new_quagga_file(module):
+    # if module is stopped don't bother creating new quagga file
+    list_of_protocols = module.params.get('protocols')
+    if module.param.get('state') != 'stopped':
+        f = open(module.tmp_quagga_file, 'w')
+        f.write('#created using ansible\n')
+        f.write('#--------------------#\n')
+        f.write('zebra=yes\n')
+        for protocol in list_of_protocols:
+            if protocol == 'ospf':
+                f.write('ospf=yes\n')
+            if protocol == 'ospf6d':
+                f.write('ospf6d=yes\n')
+            if protocol == 'bgp':
+                f.write('bgp=yes\n')
+        f.close()
+
+
+def get_current_quagga_daemons(module):
+    return open(module.quagga_daemon_file).readlines()
+
+
+def get_existing_quagga_services(module):
+    current_file = open(module.quagga_daemon_file).readlines()
+    new_file = open(module.tmp_quagga_file).readlines()
+
+
 def main():
     module = AnsibleModule(
         argument_spec=dict(
-            protocols=dict(type='str'),
-            state=dict(type='str', choices=['stopped', 'started', 'restarted']),
+            protocols=dict(type='list'),
+            state=dict(type='str',
+                       choices=['stopped', 'started', 'restarted']),
         ),
     )
+    module.quagga_daemon_file = '/etc/quagga/daemons'
+    module.tmp_quagga_file = '/tmp/quagga_daemons'
+    create_new_quagga_file(module)
+    get_existing_quagga_services(module)
 
 # import module snippets
 from ansible.module_utils.basic import *
 # incompatible with ansible 1.4.4 - ubuntu 12.04 version
 #from ansible.module_utils.urls import *
 from urlparse import urlparse
+import filecmp
 import re
 
 if __name__ == '__main__':
