@@ -88,14 +88,11 @@ def create_new_quagga_file(module):
         f.close()
 
 
-def get_current_quagga_daemons(module):
-    return open(module.quagga_daemon_file).readlines()
-
-
-def get_existing_quagga_services(module):
-    current_file = open(module.quagga_daemon_file).readlines()
-    new_file = open(module.tmp_quagga_file).readlines()
-
+def check_quagga_services_setting(module):
+    if cmp(module.quagga_daemon_file,
+           module.tmp_quagga_file) == False:
+        _msg = 'Desired quagga routing protocols already configured'
+        module.exit_json(msg=_msg, changed=False)
 
 def main():
     module = AnsibleModule(
@@ -108,15 +105,14 @@ def main():
     module.quagga_daemon_file = '/etc/quagga/daemons'
     module.tmp_quagga_file = '/tmp/quagga_daemons'
     create_new_quagga_file(module)
-    get_existing_quagga_services(module)
+    check_quagga_services_setting(module)
 
 # import module snippets
 from ansible.module_utils.basic import *
 # incompatible with ansible 1.4.4 - ubuntu 12.04 version
 #from ansible.module_utils.urls import *
 from urlparse import urlparse
-import filecmp
-import re
+from filecmp import cmp
 
 if __name__ == '__main__':
     main()

@@ -1,6 +1,7 @@
 import mock
 from nose.tools import set_trace
-from dev_modules.cl_quagga import main, create_new_quagga_file
+from dev_modules.cl_quagga import main, create_new_quagga_file, \
+    check_quagga_services_setting
 from asserts import assert_equals
 
 
@@ -12,7 +13,7 @@ def mod_args(arg):
     return values[arg]
 
 
-@mock.patch('dev_modules.cl_quagga.get_existing_quagga_services')
+@mock.patch('dev_modules.cl_quagga.check_quagga_services_setting')
 @mock.patch('dev_modules.cl_quagga.create_new_quagga_file')
 @mock.patch('dev_modules.cl_quagga.AnsibleModule')
 def test_module_args(mock_module,
@@ -52,3 +53,21 @@ def test_create_new_quagga_file(mock_module):
     create_new_quagga_file(instance)
     _lines = open(filename).readlines()
     assert_equals(_lines[3], 'bgp=yes\n')
+
+@mock.patch('dev_modules.cl_quagga.cmp')
+@mock.patch('dev_modules.cl_quagga.AnsibleModule')
+def test_check_quagga_services_setting(mock_module,
+                                       mock_cmp):
+    instance = mock_module.return_value
+    # if file comparison is true
+    mock_cmp.return_value = True
+    check_quagga_services_setting(instance)
+    assert_equals(instance.exit_json.call_count , 0)
+    # if file comparison is false - files don't match
+    mock_cmp.return_value = False
+    check_quagga_services_setting(instance)
+    instance.exit_json.assert_called_with(
+        msg='Desired quagga routing protocols already configured',
+        changed=False
+    )
+
