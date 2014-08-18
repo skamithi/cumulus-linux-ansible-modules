@@ -793,6 +793,59 @@ def bond_config_empty():
     }
 
 
+def mod_arg_add_bond_slaves_glob(arg):
+    values = {'bondslaves': ['swp1-3', 'swp4'],
+              'ifaceattrs': None
+              }
+    return values[arg]
+
+
+def mod_arg_add_bond_slaves(arg):
+    values = {'bondslaves': ['swp1-3', 'swp4'],
+              'ifaceattrs': None
+              }
+    return values[arg]
+
+
+def mod_arg_add_bond_slaves_none(arg):
+    values = {'bondslaves': ['None'],
+              'ifaceattrs': None
+              }
+    return values[arg]
+
+def mod_arg_add_bond_slaves_single(arg):
+    values = {'bondslaves': ['swp1', 'swp2'],
+              'ifaceattrs': None
+              }
+    return values[arg]
+
+
+
+@mock.patch('dev_modules.cl_interface.AnsibleModule')
+def test_add_bond_slaves(mock_module):
+    """
+    cl_interface - test add_bond_slaves
+    """
+    instance = mock_module.return_value
+    # bond slaves is swp1-3
+    instance.params.get.side_effect = mod_arg_add_bond_slaves_glob
+    iface = {'config': bond_config_empty()}
+    add_bondslaves(instance, iface)
+    assert_equals(iface.get('config').get('bond-slaves'), 'glob swp1-3 swp4')
+
+    # bondslaves set to 'None'
+    instance = mock_module.return_value
+    instance.params.get.side_effect = mod_arg_add_bond_slaves_none
+    add_bondslaves(instance, iface)
+    assert_equals(iface.get('config').get('bond-slaves'), None)
+
+    # single interfaces, e.g swp1 , swp2
+    instance = mock_module.return_value
+    instance.params.get.side_effect = mod_arg_add_bond_slaves_single
+    add_bondslaves(instance, iface)
+    assert_equals(iface.get('config').get('bond-slaves'), 'swp1 swp2')
+
+
 @mock.patch('dev_modules.cl_interface.AnsibleModule')
 def test_bond_config(mock_module):
     """
