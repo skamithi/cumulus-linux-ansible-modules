@@ -28,7 +28,8 @@ def test_module_args(mock_module,
                        {'type': 'str', 'choices':
                         ['stopped', 'started', 'restarted']},
                        'protocols': {'type': 'list'}})
-
+    assert_equals(instance.quagga_daemon_file, '/etc/quagga/daemons')
+    assert_equals(instance.tmp_quagga_file, '/tmp/quagga_daemons')
 
 @mock.patch('dev_modules.cl_quagga.AnsibleModule')
 def test_create_new_quagga_file(mock_module):
