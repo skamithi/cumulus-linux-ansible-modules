@@ -70,35 +70,53 @@ cl_interface: name=swp1 ipv4=['10.1.1.1/24', '20.1.1.1/24'] applyconfig=yes
 ## configure a bridge interface with a few trunk members and access port
 cl_interface: name=br0  bridgeports=['swp1-10.100', 'swp11'] applyconfig=yes
 
+## configure a bond interface with multiple contiguous ports
+cl_interface: name=bond1 bondslaves=['swp17-20'] applyconfig=yes
+
 ## configure a bond interface with an IP address
 cl_interface:
     name=br0
     bondslaves=['swp1', 'swp2']
     ipv4='10.1.1.1/24' applyconfig=yes
 
-## use complex args with ifaceattrs
+## use complex args with ifaceattrs. restart networking only if a change occurs
+## notify doesn't work well because its asynchronous and networking must be \
+started synchronously
+- name: configure multiple interfaces using interface.yml
 cl_interface:
     ifaceattrs: "{{ item.value }}"
     applyconfig: 'no'
     name: "{{ item.key}}"
 with_dict:interfaces[ansible_hostname]
-notify:
-    - reload networking
+register:  networking
+- name: apply all network changes if change occured. faster than doing per \
+interface restart using applyconfig option.
+  service: name=networking state=reloaded
+  when: networking.changed == True
 
 ## interfaces.yml file for complex args
 interfaces:
     sw1:
-        bonds:
-            bond0:
-                alias: 'to switch1'
-                bondslaves:
-                    - swp1
-                    - swp3
-            bond3
-                alias: 'to switch10'
-                bondslaves:
-                    -swp2
-                    -swp4
+        vlan1:
+            bridgeports:
+                - bond0.1
+                - bond3.1
+            ipv4: "10.1.1.1/24"
+            alias: "tagged vlan 1"
+        swp1:
+            mtu: 9000
+        swp3:
+            mtu: 9000
+        bond0:
+            alias: 'to switch1'
+            bondslaves:
+                - swp1
+                - swp3
+        bond3
+            alias: 'to switch10'
+            bondslaves:
+                -swp2
+                -swp4
 '''
 
 
@@ -327,9 +345,9 @@ def config_bond_iface(module, iface):
     add_bondslaves(module, iface)
 
 
-def add_glob(bridgeports):
+def add_glob(ports):
     newarr = []
-    for i in bridgeports:
+    for i in ports:
         if re.search('-\d+', i):
             newarr.append('glob ' + i)
         else:
@@ -357,6 +375,7 @@ def add_bondslaves(module, iface):
         bondslaves = [bondslaves]
     except:
         pass
+    bondslaves = add_glob(bondslaves)
     add_bond_config(iface, bondslaves)
 
 
