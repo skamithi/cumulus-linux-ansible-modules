@@ -10,12 +10,15 @@ author: Stanley Karunditu
 short_description: Enable routing protocol services via Quagga
 description:
     - Enable Quagga services available on Cumulus Linux. \
-        This includes OSPF v2/v3 and BGP v4/v6.
+This includes OSPF v2/v3 and BGP v4/v6.
 options:
     protocols:
         description:
             - provide a list of protocols to enable via Quagga
     state:
+        description:
+            - start , stop or restart the quagga daemon. By default the \
+                quagga daemon is disabled
         choices: ['restarted', 'started', 'stopped']
 notes:
     - Quagga Routing Documentation - \
