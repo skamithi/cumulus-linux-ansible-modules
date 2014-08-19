@@ -49,8 +49,6 @@ as this might not start quagga when you want it to
     - name: restart Quagga right away after setting it
         service: name=quagga state=restarted
         when: ospf_service.changed == True
-    - name: enable only static routing in quagga
-        cl_quagga_protocol name="zebra" state=present
 '''
 
 
