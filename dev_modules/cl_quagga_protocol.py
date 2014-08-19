@@ -84,11 +84,17 @@ def setting_is_configured(module):
     _state = convert_to_yes_or_no(_state)
     _daemon_output = read_daemon_file(module)
     _str = "(%s)=(%s)" % (_protocol, 'yes|no')
+    _daemonstr = re.compile("\w+=yes")
     _zebrastr = re.compile("zebra=(yes|no)")
     _matchstr = re.compile(_str)
+    daemoncount = 0
+    module.disable_zebra = False
     for _line in _daemon_output:
         _match = re.match(_matchstr, _line)
+        _active_daemon_match = re.match(_daemonstr, _line)
         _zebramatch = re.match(_zebrastr, _line)
+        if _active_daemon_match:
+            daemoncount += 1
         if _zebramatch:
             if _zebramatch.group(1) == 'no' and _state == 'yes':
                 return False
@@ -98,6 +104,8 @@ def setting_is_configured(module):
                     (_protocol, module.params.get('state'))
                 module.exit_json(msg=_msg, changed=False)
     # for nosetests purposes only
+    if daemoncount < 3 and _state == 'no':
+        module.disable_zebra = True
     return False
 
 
@@ -114,7 +122,9 @@ def modify_config(module):
         _match = re.match(_matchstr, _line)
         _zebramatch = re.match(_zebrastr, _line)
         if _zebramatch:
-            if _zebramatch.group(1) == 'no' and _state == 'yes':
+            if module.disable_zebra is True and _state == 'no':
+                write_to_file.write('zebra=no\n')
+            elif _state == 'yes':
                 write_to_file.write('zebra=yes\n')
             else:
                 write_to_file.write(_line)

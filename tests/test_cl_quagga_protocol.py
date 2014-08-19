@@ -1,6 +1,6 @@
 import mock
 from nose.tools import set_trace
-from dev_modules.cl_quagga import main, convert_to_yes_or_no, \
+from dev_modules.cl_quagga_protocol import main, convert_to_yes_or_no, \
     setting_is_configured, modify_config
 from asserts import assert_equals
 
@@ -11,9 +11,9 @@ def mod_args(arg):
     return values[arg]
 
 
-@mock.patch('dev_modules.cl_quagga.modify_config')
-@mock.patch('dev_modules.cl_quagga.setting_is_configured')
-@mock.patch('dev_modules.cl_quagga.AnsibleModule')
+@mock.patch('dev_modules.cl_quagga_protocol.modify_config')
+@mock.patch('dev_modules.cl_quagga_protocol.setting_is_configured')
+@mock.patch('dev_modules.cl_quagga_protocol.AnsibleModule')
 def test_module_args(mock_module,
                      mock_check_setting,
                      mock_modify_config):
@@ -30,9 +30,9 @@ def test_module_args(mock_module,
                                  'choices': ['present', 'absent'],
                                  'required': True}
                        })
-
     assert_equals(instance.quagga_daemon_file,
                   '/etc/quagga/daemons')
+
 
 def check_setting_args(arg):
     values = {
@@ -58,8 +58,16 @@ def check_setting_args_state_absent(arg):
     return values[arg]
 
 
-@mock.patch('dev_modules.cl_quagga.read_daemon_file')
-@mock.patch('dev_modules.cl_quagga.AnsibleModule')
+def check_setting_args_bgp_absent(arg):
+    values = {
+        'name': 'bgpd',
+        'state': 'absent'
+    }
+    return values[arg]
+
+
+@mock.patch('dev_modules.cl_quagga_protocol.read_daemon_file')
+@mock.patch('dev_modules.cl_quagga_protocol.AnsibleModule')
 def test_setting_is_configured(mock_module,
                                mock_read_daemon_file):
     instance = mock_module.return_value
@@ -81,11 +89,14 @@ def test_setting_is_configured(mock_module,
     instance.params.get.side_effect = check_setting_args_state_absent
     daemon_output = open('tests/quagga_daemon.txt').readlines()
     mock_read_daemon_file.return_value = daemon_output
-    assert_equals(setting_is_configured(instance), False)
+    setting_is_configured(instance)
+    # if only one daemon is enabled and set to be turned off,
+    # set to turn off zebra as well
+    assert_equals(instance.disable_zebra, True)
 
 
-@mock.patch('dev_modules.cl_quagga.read_daemon_file')
-@mock.patch('dev_modules.cl_quagga.AnsibleModule')
+@mock.patch('dev_modules.cl_quagga_protocol.read_daemon_file')
+@mock.patch('dev_modules.cl_quagga_protocol.AnsibleModule')
 def test_modify_config(mock_module,
                        mock_read_daemon_file):
     instance = mock_module.return_value
@@ -117,6 +128,17 @@ def test_modify_config(mock_module,
     result = open('tests/quagga_disable.txt').readlines()
     assert_equals(result[0].strip(), 'zebra=yes')
     assert_equals(result[1].strip(), 'bgpd=yes')
+    assert_equals(result[2].strip(), 'ospfd=no')
+    # remove bgp, it should also remove zebra
+    instance.params.get.side_effect = check_setting_args_bgp_absent
+    instance.quagga_daemon_file = 'tests/quagga_zebra_turned_off.txt'
+    mock_read_daemon_file.return_value = \
+        open('tests/quagga_disable.txt').readlines()
+    instance.disable_zebra = True
+    modify_config(instance)
+    result = open('tests/quagga_zebra_turned_off.txt').readlines()
+    assert_equals(result[0].strip(), 'zebra=no')
+    assert_equals(result[1].strip(), 'bgpd=no')
     assert_equals(result[2].strip(), 'ospfd=no')
 
 
