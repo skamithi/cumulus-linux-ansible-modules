@@ -94,13 +94,39 @@ def setting_is_configured(module):
         if _zebramatch:
             if _zebramatch.group(1) == 'no' and _state == 'yes':
                 return False
-        if _match:
+        elif _match:
             if _state == _match.group(2):
                 _msg = "%s is configured and is %s" % \
                     (_protocol, module.params.get('state'))
                 module.exit_json(msg=_msg, changed=False)
-                return True
+    # for nosetests purposes only
     return False
+
+
+def modify_config(module):
+    _protocol = module.params.get('name')
+    _state = module.params.get('state')
+    _state = convert_to_yes_or_no(_state)
+    _daemon_output = read_daemon_file(module)
+    _str = "(%s)=(%s)" % (_protocol, 'yes|no')
+    _zebrastr = re.compile("zebra=(yes|no)")
+    _matchstr = re.compile(_str)
+    write_to_file = open(module.quagga_daemon_file, 'w')
+    for _line in _daemon_output:
+        _match = re.match(_matchstr, _line)
+        _zebramatch = re.match(_zebrastr, _line)
+        if _zebramatch:
+            if _zebramatch.group(1) == 'no' and _state == 'yes':
+                write_to_file.write('zebra=yes\n')
+            else:
+                write_to_file.write(_line)
+        elif _match:
+            if _state != _match.group(2):
+                _str = "%s=%s\n" % (_protocol, _state)
+                write_to_file.write(_str)
+        else:
+            write_to_file.write(_line)
+    write_to_file.close()
 
 
 def main():
@@ -115,6 +141,7 @@ def main():
     )
     module.quagga_daemon_file = '/etc/quagga/daemons'
     setting_is_configured(module)
+    modify_config(module)
 
 
 # import module snippets
