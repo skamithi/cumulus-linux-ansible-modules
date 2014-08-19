@@ -64,15 +64,37 @@ def run_cl_cmd(module, cmd, check_rc=True):
     return ret
 
 
+def convert_to_yes_or_no(_state):
+    if _state == 'present':
+        _str = 'yes'
+    else:
+        _str = 'no'
+    return _str
+
+
+def check_setting(module):
+    _protocol = module.params.get('name')
+    _state = module.params.get('state')
+    _state = convert_to_yes_or_no(_state)
+    _daemon_output = read_daemon_file(module)
+    for _line in _daemon_output:
+        _str = "(%s)=(%s)" % (_protocol, _state)
+        _matchstr = re.compile(_str)
+
+
 def main():
     module = AnsibleModule(
         argument_spec=dict(
             name=dict(type='str',
-                      choices=['ospfd', 'ospf6d', 'bgp']),
+                      choices=['ospfd', 'ospf6d', 'bgp'],
+                      required=True),
             state=dict(type='str',
-                       choices=['present', 'absent'])
-        ),
+                       choices=['present', 'absent'],
+                       required=True)),
     )
+    module.quagga_daemon_file = '/etc/quagga/daemons'
+    check_setting(module)
+
 
 # import module snippets
 from ansible.module_utils.basic import *
