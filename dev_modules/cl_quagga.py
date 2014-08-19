@@ -64,69 +64,20 @@ def run_cl_cmd(module, cmd, check_rc=True):
     return ret
 
 
-def create_new_quagga_file(module):
-    # if module is stopped don't bother creating new quagga file
-    list_of_protocols = module.params.get('protocols')
-    if module.param.get('state') != 'stopped':
-        f = open(module.tmp_quagga_file, 'w')
-        f.write('#created using ansible\n')
-        f.write('#--------------------#\n')
-        f.write('zebra=yes\n')
-        for protocol in list_of_protocols:
-            if protocol == 'ospf':
-                f.write('ospf=yes\n')
-            if protocol == 'ospf6d':
-                f.write('ospf6d=yes\n')
-            if protocol == 'bgp':
-                f.write('bgp=yes\n')
-        f.close()
-
-
-def check_quagga_services_setting(module):
-    if cmp(module.quagga_daemon_file,
-           module.tmp_quagga_file) is False:
-        _msg = 'Desired quagga routing protocols already configured'
-        module.exit_json(msg=_msg, changed=False)
-
-
-def check_protocol_options(module):
-    list_of_protocols = module.params.get('protocols')
-    acceptable_list = ['ospfd', 'ospf6d', 'bgpd']
-    for i in list_of_protocols:
-        if i not in acceptable_list:
-            module.fail_json(msg="protocols options are '" +
-                             ', '.join(acceptable_list) +
-                             "'. option used was " + i
-                             )
-
-
-def copy_quagga_service_file(module):
-    copy(module.tmp_quagga_file, module.quagga_daemon_file)
-
-
 def main():
     module = AnsibleModule(
         argument_spec=dict(
-            protocols=dict(type='list'),
+            name=dict(type='str',
+                      choices=['ospfd', 'ospf6d', 'bgp']),
             state=dict(type='str',
-                       choices=['stopped', 'started', 'restarted']),
+                       choices=['present', 'absent'])
         ),
     )
-    check_protocol_options(module)
-    module.quagga_daemon_file = '/etc/quagga/daemons'
-    module.tmp_quagga_file = '/tmp/quagga_daemons'
-    create_new_quagga_file(module)
-    check_quagga_services_setting(module)
-    copy_quagga_service_file(module)
-#    change_quagga_service_state(module)
 
 # import module snippets
 from ansible.module_utils.basic import *
 # incompatible with ansible 1.4.4 - ubuntu 12.04 version
 # from ansible.module_utils.urls import *
-from urlparse import urlparse
-from filecmp import cmp
-from shutil import copy
 
 if __name__ == '__main__':
     main()
