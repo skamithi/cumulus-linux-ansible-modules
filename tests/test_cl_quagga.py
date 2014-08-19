@@ -1,6 +1,7 @@
 import mock
 from nose.tools import set_trace
-from dev_modules.cl_quagga import main, convert_to_yes_or_no
+from dev_modules.cl_quagga import main, convert_to_yes_or_no, \
+    setting_is_configured
 from asserts import assert_equals
 
 
@@ -9,7 +10,8 @@ def mod_args(arg):
               'state': 'present'}
     return values[arg]
 
-@mock.patch('dev_modules.cl_quagga.check_setting')
+
+@mock.patch('dev_modules.cl_quagga.setting_is_configured')
 @mock.patch('dev_modules.cl_quagga.AnsibleModule')
 def test_module_args(mock_module,
                      mock_check_setting):
@@ -26,6 +28,48 @@ def test_module_args(mock_module,
                                  'choices': ['present', 'absent'],
                                  'required': True}
                        })
+
+
+def check_setting_args(arg):
+    values = {
+        'name': 'ospfd',
+        'state': 'present'
+    }
+    return values[arg]
+
+
+def check_setting_args_state_absent(arg):
+    values = {
+        'name': 'ospfd',
+        'state': 'absent'
+    }
+    return values[arg]
+
+
+@mock.patch('dev_modules.cl_quagga.read_daemon_file')
+@mock.patch('dev_modules.cl_quagga.AnsibleModule')
+def test_setting_is_configured(mock_module,
+                               mock_read_daemon_file):
+    instance = mock_module.return_value
+    instance.params.get.side_effect = check_setting_args
+    daemon_output = open('tests/quagga_daemon.txt').readlines()
+    mock_read_daemon_file.return_value = daemon_output
+    assert_equals(setting_is_configured(instance), True)
+    instance.exit_json.assert_called_with(
+        msg='ospfd is configured and is present', changed=False)
+    # all quagga daemons off
+    daemon_output = open('tests/quagga_daemon_off.txt').readlines()
+    mock_read_daemon_file.return_value = daemon_output
+    assert_equals(setting_is_configured(instance), False)
+    # all quagga daemons except zebra is off
+    daemon_output = open('tests/quagga_daemon_zebra_off.txt').readlines()
+    mock_read_daemon_file.return_value = daemon_output
+    assert_equals(setting_is_configured(instance), False)
+    # state absent, routing protocol is on
+    instance.params.get.side_effect = check_setting_args_state_absent
+    daemon_output = open('tests/quagga_daemon.txt').readlines()
+    mock_read_daemon_file.return_value = daemon_output
+    assert_equals(setting_is_configured(instance), False)
 
 
 def test_convert_to_yes_or_no():

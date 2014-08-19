@@ -72,14 +72,35 @@ def convert_to_yes_or_no(_state):
     return _str
 
 
-def check_setting(module):
+def read_daemon_file(module):
+    f = open(module.quagga_daemon_file)
+    if f:
+        return f.readlines()
+    else:
+        return []
+
+
+def setting_is_configured(module):
     _protocol = module.params.get('name')
     _state = module.params.get('state')
     _state = convert_to_yes_or_no(_state)
     _daemon_output = read_daemon_file(module)
+    _str = "(%s)=(%s)" % (_protocol, 'yes|no')
+    _zebrastr = re.compile("zebra=(yes|no)")
+    _matchstr = re.compile(_str)
     for _line in _daemon_output:
-        _str = "(%s)=(%s)" % (_protocol, _state)
-        _matchstr = re.compile(_str)
+        _match = re.match(_matchstr, _line)
+        _zebramatch = re.match(_zebrastr, _line)
+        if _zebramatch:
+            if _zebramatch.group(1) == 'no' and _state == 'yes':
+                return False
+        if _match:
+            if _state == _match.group(2):
+                _msg = "%s is configured and is %s" % \
+                    (_protocol, module.params.get('state'))
+                module.exit_json(msg=_msg, changed=False)
+                return True
+    return False
 
 
 def main():
@@ -93,13 +114,14 @@ def main():
                        required=True)),
     )
     module.quagga_daemon_file = '/etc/quagga/daemons'
-    check_setting(module)
+    setting_is_configured(module)
 
 
 # import module snippets
 from ansible.module_utils.basic import *
 # incompatible with ansible 1.4.4 - ubuntu 12.04 version
 # from ansible.module_utils.urls import *
+import re
 
 if __name__ == '__main__':
     main()
