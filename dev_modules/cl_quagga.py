@@ -142,7 +142,12 @@ def main():
     module.quagga_daemon_file = '/etc/quagga/daemons'
     setting_is_configured(module)
     modify_config(module)
-
+    _protocol = module.params.get('name')
+    _state = module.params.get('state')
+    _state = convert_to_yes_or_no(_state)
+    _msg = "%s protocol setting modified to %s" % \
+        (_protocol, _state)
+    module.exit_json(msg=_msg, changed=True)
 
 # import module snippets
 from ansible.module_utils.basic import *
