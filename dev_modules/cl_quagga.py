@@ -5,7 +5,7 @@
 #
 DOCUMENTATION = '''
 ---
-module: cl_quagga
+module: cl_quagga_protocol
 author: Stanley Karunditu
 short_description: Enable routing protocol services via Quagga
 description:
@@ -16,14 +16,16 @@ OSPF or BGP routing protocols, because this is what Cumulus Linux currently \
 supports. Using Ansible Templates you any supported or unsupported quagga \
 routing protocol.
 options:
-    protocols:
+    name:
         description:
-            - provide a list of protocols to enable via Quagga
+            - this is a test
+        choices: ['zebra', 'ospfd', 'ospf6d', 'bgpd']
+        required: true
     state:
         description:
-            - start , stop or restart the quagga daemon. By default the \
-                quagga daemon is disabled
-        choices: ['restarted', 'started', 'stopped']
+            - describe whether the protocol should be enabled or disabled
+        choices: ['present', 'absent']
+        required: true
 notes:
     - Quagga Routing Documentation - \
         http://cumulusnetworks.com/docs/2.1/user-guide/layer_3/index.html \
@@ -34,29 +36,21 @@ EXAMPLES = '''
 Example playbook entries using the cl_quagga module
 
     tasks:
-    - name: activate ospf v2
-        cl_quagga: protocols="ospf" state=restarted
-
-    - name: activate ospf v2 and v3
-        cl_quagga: protocols="ospf, ospf6d" state=restarted
-
-    - name: activate bgp
-        cl_quagga: protocols="bgp" state=restarted
-
-    - name: configure ospfv2 and bgp but don't activate the change
-        cl_quagga: protocols="bgp, ospf"
-
-    - name: stop all routing protocols
-        cl_quagga: state=stopped
-
-    - name: ospf is enabled but change it to bgp only
-        cl_quagga: protocols="ospf" state=restarted
-
-    - name: bgp is enabled but change to bgp and ospf v2
-        cl_quagga: protocols="ospf, bgp" state=restarted
-
-    - name: just enable static routing in quagga
-        cl_quagga: state=restarted
+    - name: activate ospfv2
+        cl_quagga_protocol name="ospfd" state=present
+    - name: deactivate ospfv3
+        cl_quagga_protocol name="ospf6d" state=absent
+    - name: enable bgp v4/v6
+        cl_quagga_protocol name="bgpd" state=present
+    - name: activate ospf then restart quagga right away. don't use notify \
+as this might not start quagga when you want it to
+        cl_quagga_protocol name="ospfd" state=present
+        register: ospf_service
+    - name: restart Quagga right away after setting it
+        service: name=quagga state=restarted
+        when: ospf_service.changed == True
+    - name: enable only static routing in quagga
+        cl_quagga_protocol name="zebra" state=present
 '''
 
 
