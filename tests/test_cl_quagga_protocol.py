@@ -24,7 +24,7 @@ def test_module_args(mock_module,
     mock_module.assert_called_with(
         argument_spec={'name':
                        {'type': 'str', 'choices':
-                        ['ospfd', 'ospf6d', 'bgp'],
+                        ['ospfd', 'ospf6d', 'bgpd'],
                         'required': True},
                        'state': {'type': 'str',
                                  'choices': ['present', 'absent'],

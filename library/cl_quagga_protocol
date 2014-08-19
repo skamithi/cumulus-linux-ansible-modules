@@ -141,7 +141,7 @@ def main():
     module = AnsibleModule(
         argument_spec=dict(
             name=dict(type='str',
-                      choices=['ospfd', 'ospf6d', 'bgp'],
+                      choices=['ospfd', 'ospf6d', 'bgpd'],
                       required=True),
             state=dict(type='str',
                        choices=['present', 'absent'],
