@@ -18,7 +18,7 @@ routing protocol.
 options:
     name:
         description:
-            - this is a test
+            - name of the protocol to update
         choices: ['zebra', 'ospfd', 'ospf6d', 'bgpd']
         required: true
     state:
