@@ -5,27 +5,36 @@
 #
 DOCUMENTATION = '''
 ---
-module: cl_quagga_protocol
+module: cl_quagga_ospf
 author: Stanley Karunditu
-short_description: Enable routing protocol services via Quagga
+short_description: Configure basic OSPF parameters and interfaces
 description:
-    - Enable Quagga services available on Cumulus Linux. \
-This includes OSPF v2/v3 and BGP. Quagga services are defined in the \
-/etc/quagga/daemons file. This module creates a file that will only enable \
-OSPF or BGP routing protocols, because this is what Cumulus Linux currently \
-supports. Using Ansible Templates you any supported or unsupported quagga \
-routing protocol.
+    - Used to configure basic OSPF parameters such as \
+router id and bandwidth cost, or OSPF interface configuration \
+like point-to-point settings or enabling OSPF on an interface. \
+This configuration is applied to single OSPF instance. \
+Multiple OSPF instance configuration is currently not supported.
 options:
-    name:
+    router_id:
         description:
-            - name of the protocol to update
-        choices: ['zebra', 'ospfd', 'ospf6d', 'bgpd']
+            - Set the OSPF router id
         required: true
+    reference_bandwidth:
+            - Set the OSPF reference bandwidth
+    ifacename:
+        description:
+            - Configure OSPF on a particular interface
+    point2point:
+        description:
+            - Configure OSPF point to point on a particular interface. \
+Requires 'ifacename' be configured.
     state:
         description:
-            - describe whether the protocol should be enabled or disabled
-        choices: ['present', 'absent']
-        required: true
+            - Describes if OSPF should be present on a particular interface. \
+Requires 'ifacename' be configured
+        choices: [ 'present', 'absent']
+
+
 notes:
     - Quagga Routing Documentation - \
         http://cumulusnetworks.com/docs/2.1/user-guide/layer_3/index.html \
