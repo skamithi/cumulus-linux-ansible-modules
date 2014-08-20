@@ -20,14 +20,23 @@ options:
             - Set the OSPF router id
         required: true
     reference_bandwidth:
+        description:
             - Set the OSPF reference bandwidth
+    saveconfig:
+        description:
+            - Save the config after apply it
+        choices: ['yes', 'no']
+        default: ['no']
     ifacename:
         description:
             - Configure OSPF on a particular interface
     point2point:
         description:
             - Configure OSPF point to point on a particular interface. \
-Requires 'ifacename' be configured.
+Requires 'ifacename'.
+    cost:
+        description:
+            - define ospf cost. Requires 'ifacename'
     state:
         description:
             - Describes if OSPF should be present on a particular interface. \
@@ -46,7 +55,7 @@ Example playbook entries using the cl_quagga module
 
     tasks:
     - name: activate ospfv2
-        cl_quagga_protocol name="ospfd" state=present
+        cl_quagga_ospf router_id=10.1.1.1
     - name: deactivate ospfv3
         cl_quagga_protocol name="ospf6d" state=absent
     - name: enable bgp v4/v6
