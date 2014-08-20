@@ -6,7 +6,8 @@ from dev_modules.cl_interface import get_iface_type, add_ipv4, \
     remove_config_from_etc_net_interfaces, config_swp_iface, \
     check_if_applyconfig_name_defined_only, add_bridgeports, \
     config_dhcp, compare_config, merge_config, remove_none_attrs, \
-    config_speed, config_mtu, add_bondslaves, config_alias
+    config_speed, config_mtu, add_bondslaves, config_alias, \
+    config_iface
 from asserts import assert_equals
 
 
@@ -57,7 +58,8 @@ def mod_args_unknown(arg):
               'bridgeports': None,
               'bondslaves': None,
               'applyconfig': 'no',
-              'ifaceattrs': None
+              'ifaceattrs': None,
+              'state': 'present',
               }
     return values[arg]
 
@@ -92,10 +94,25 @@ def test_module_args(mock_module,
                        'speed': {'type': 'str'},
                        'mtu': {'type': 'str'},
                        'dhcp': {'type': 'str', 'choices': ['yes', 'no']},
+                       'state': {'type': 'str',
+                                 'choices': ['noconfig', 'hasconfig'],
+                                 'default': 'hasconfig'},
                        'bridgeports': {'type': 'list'}},
         mutually_exclusive=[['bridgeports', 'bondslaves'],
                             ['dhcp', 'ipv4'],
                             ['dhcp', 'ipv6']])
+
+
+def mod_arg_state_absent(arg):
+    values = {'name': 'br0',
+              'state': 'absent',
+              'ifaceattrs': None,
+              'speed': None,
+              'mtu': None,
+              'alias': None,
+              'applyconfig': 'no'
+              }
+    return values[arg]
 
 
 @mock.patch('dev_modules.cl_interface.AnsibleModule')
@@ -317,6 +334,36 @@ def test_config_changed_lo_config_different(mock_module,
         },
         'name': 'lo'
     }
+    mock_exec.return_value = ''.join(open('tests/lo.txt').readlines())
+    assert_equals(config_changed(instance, iface), True)
+
+
+@mock.patch('dev_modules.cl_interface.AnsibleModule')
+def test_state_absent_in_config_iface(mock_module):
+    """
+    cl-interface: if state is absent then set alias to 'noconfig'
+    with no other config. setting iface with no config doesn't work
+    to keep config idempotent with current code done
+    """
+    instance = mock_module.return_value
+    instance.params.get.return_value = 'noconfig'
+    config_iface(instance, {'config': {}}, 'none')
+    instance.params.get.assert_called_with('state')
+
+
+@mock.patch('dev_modules.cl_interface.run_cl_cmd')
+@mock.patch('dev_modules.cl_interface.AnsibleModule')
+def test_config_changed_different_state_absent(mock_module,
+                                               mock_exec):
+    """
+    cl-interface - test config_changed with state == noconfig
+    """
+    instance = mock_module.return_value
+    instance.params.get_return_value = 'lo'
+    iface = {'name': 'lo', 'ifacetype': 'loopback',
+             'config': {
+                 'alias': 'noconfig'
+             }}
     mock_exec.return_value = ''.join(open('tests/lo.txt').readlines())
     assert_equals(config_changed(instance, iface), True)
 

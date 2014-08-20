@@ -53,6 +53,11 @@ options:
     mtu:
         description:
             - set MTU. Configure Jumbo Frame by setting MTU to 9000.
+    state:
+        description:
+            - set to 'noconfig' to remove all config from an interface.
+        choices: ['noconfig', 'hasconfig']
+        default: 'hasconfig'
 notes:
     - Cumulus Linux Interface Documentation - \
         http://cumulusnetworks.com/docs/2.0/user-guide/layer_1_2/interfaces.html
@@ -79,9 +84,13 @@ cl_interface:
     bondslaves=['swp1', 'swp2']
     ipv4='10.1.1.1/24' applyconfig=yes
 
+## remove all configuration from an interface
+cl_interface: name=br0 state=noconfig
+
 ## use complex args with ifaceattrs. restart networking only if a change occurs
 ## notify doesn't work well because its asynchronous and networking must be \
-started synchronously
+## started synchronously. More efficient when doing lots of config changes \
+## to apply the changes, then run 'ifup -a' once at the end
 - name: configure multiple interfaces using interface.yml
 cl_interface:
     ifaceattrs: "{{ item.value }}"
@@ -501,7 +510,10 @@ def check_if_applyconfig_name_defined_only(module):
 
 
 def config_iface(module, iface, _ifacetype):
-    if _ifacetype == 'loopback':
+    if module.params.get('state') == 'noconfig':
+        iface.get('config')['alias'] = 'noconfig'
+        return
+    elif _ifacetype == 'loopback':
         config_lo_iface(module, iface)
     elif _ifacetype == 'swp':
         config_swp_iface(module, iface)
@@ -534,6 +546,8 @@ def main():
             dhcp=dict(type='str', choices=["yes", "no"]),
             speed=dict(type='str'),
             mtu=dict(type='str'),
+            state=dict(type='str', choices=['noconfig', 'hasconfig'],
+                       default='hasconfig'),
             applyconfig=dict(required=True, type='str')
         ),
         mutually_exclusive=[
