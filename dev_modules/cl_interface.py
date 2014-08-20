@@ -20,7 +20,6 @@ options:
             - apply interface change
         choices: ['yes', 'no']
         default: 'no'
-        required: true
     alias:
         description:
             - add a port description
@@ -75,8 +74,8 @@ cl_interface: name=swp1 ipv4=['10.1.1.1/24', '20.1.1.1/24'] applyconfig=yes
 ## configure a bridge interface with a few trunk members and access port
 cl_interface: name=br0  bridgeports=['swp1-10.100', 'swp11'] applyconfig=yes
 
-## configure a bond interface with multiple contiguous ports
-cl_interface: name=bond1 bondslaves=['swp17-20'] applyconfig=yes
+## configure a bond interface with multiple contiguous ports. Don't activate the config
+cl_interface: name=bond1 bondslaves=['swp17-20']
 
 ## configure a bond interface with an IP address
 cl_interface:
@@ -84,7 +83,7 @@ cl_interface:
     bondslaves=['swp1', 'swp2']
     ipv4='10.1.1.1/24' applyconfig=yes
 
-## remove all configuration from an interface
+## remove all configuration from an interface. Don't activate the config
 cl_interface: name=br0 state=noconfig
 
 ## use complex args with ifaceattrs. restart networking only if a change occurs
@@ -94,7 +93,6 @@ cl_interface: name=br0 state=noconfig
 - name: configure multiple interfaces using interface.yml
 cl_interface:
     ifaceattrs: "{{ item.value }}"
-    applyconfig: 'no'
     name: "{{ item.key}}"
 with_dict:interfaces[ansible_hostname]
 register:  networking
@@ -548,7 +546,7 @@ def main():
             mtu=dict(type='str'),
             state=dict(type='str', choices=['noconfig', 'hasconfig'],
                        default='hasconfig'),
-            applyconfig=dict(required=True, type='str')
+            applyconfig=dict(type='str', default='no')
         ),
         mutually_exclusive=[
             ['bridgeports', 'bondslaves'],
