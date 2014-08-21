@@ -50,11 +50,18 @@ options:
     anchor_int:
         description:
             - Enables OSPF unnumbered on the interface. Define the name \
-of the interface with the IP the interface should anchor to. \
-If the anchor interface does not have an IP address, the command will fail
+of the interface with the IP the interface should anchor to. Module will
+add the IP address of the anchor interface to the /etc/network/interfaces config
+of the interface.\
+If the anchor interface does not have an IP address, the module will fail
     state:
         description:
             - Describes if OSPF should be present on a particular interface.\
+Module currently does not check that interface is not associated \
+with a bond or bridge. \
+User will have to manually clear the configuration of the interface \
+from the bond or bridge. \
+This will be implemented in a later release
         choices: [ 'present', 'absent']
         default: 'present'
         required_together:
@@ -79,6 +86,8 @@ interface with a cost of 65535
         with_sequence: start=1 end=5 format=swp%d
     - name: disable ospf on swp1
         cl_quagga_ospf: interface=swp1 state=absent
+    - name: enable ospf unnumbered on swp1
+        cl_quagga_ospf: interface=swp1 anchor_int=lo
 '''
 
 
@@ -90,6 +99,16 @@ def run_cl_cmd(module, cmd, check_rc=True):
     # trim last line as it is always empty
     ret = out.splitlines()
     return ret
+
+
+def check_dsl_dependencies(module):
+    for _param in ['cost', 'state', 'point2point', 'anchor_int']:
+        if module.params.get(_param):
+            if not module.params.get('interface'):
+                _msg = "incorrect syntax. %s must have an interface option." + \
+                    " Example 'cl_quagga_ospf: interface=swp1 %s=%s'" % \
+                    (_param, _param, module.params.get(_param))
+                module.fail_json(msg=_msg)
 
 
 def main():
@@ -106,7 +125,11 @@ def main():
             point2point=dict(choices=BOOLEANS, default=False),
             anchor_int=dict(type='str'),
             saveconfig=dict(choices=BOOLEANS, default=False)
-        ))
+        ),
+        mutually_exclusive=[['reference_bandwidth', 'interface'],
+                            ['router_id', 'interface']]
+    )
+    check_dsl_dependencies(module)
 
 
 # import module snippets
