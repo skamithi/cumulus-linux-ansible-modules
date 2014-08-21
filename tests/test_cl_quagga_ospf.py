@@ -1,6 +1,5 @@
 import mock
 from mock import MagicMock
-import mock
 from nose.tools import set_trace
 from dev_modules.cl_quagga_ospf import check_dsl_dependencies, main
 from asserts import assert_equals
@@ -41,4 +40,26 @@ def test_check_mod_args(mock_module,
     )
 
 
+def check_dsl_args(arg):
+    values = {
+        'cost': None,
+        'state':  None,
+        'point2point': 'yes',
+        'anchor_int': None,
+        'interface': None,
+    }
+    return values[arg]
 
+
+@mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
+def test_check_dsl_dependencies(mock_module):
+    instance = mock_module.return_value
+    instance.params.get.side_effect = check_dsl_args
+    _input_options = ['point2point', 'cost']
+    _depends = 'interface'
+    check_dsl_dependencies(instance, _input_options, _depends, 'swp1')
+    instance.fail_json.assert_called_with(
+        msg="incorrect syntax. point2point must have an " +\
+        "interface option. Example 'cl_quagga_ospf: interface=swp1 " + \
+        "point2point=yes'"
+    )

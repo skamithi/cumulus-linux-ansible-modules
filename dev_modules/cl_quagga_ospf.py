@@ -50,8 +50,9 @@ options:
     anchor_int:
         description:
             - Enables OSPF unnumbered on the interface. Define the name \
-of the interface with the IP the interface should anchor to. Module will
-add the IP address of the anchor interface to the /etc/network/interfaces config
+of the interface with the IP the interface should anchor to. Module will \
+add the IP address of the anchor interface to the \
+/etc/network/interfaces config
 of the interface.\
 If the anchor interface does not have an IP address, the module will fail
     state:
@@ -101,15 +102,16 @@ def run_cl_cmd(module, cmd, check_rc=True):
     return ret
 
 
-def check_dsl_dependencies(module):
-    for _param in ['cost', 'state', 'point2point', 'anchor_int']:
+def check_dsl_dependencies(module, input_options,
+                           dependency, _depend_value):
+    for _param in input_options:
         if module.params.get(_param):
-            if not module.params.get('interface'):
-                _msg = "incorrect syntax. %s must have an interface option." + \
-                    " Example 'cl_quagga_ospf: interface=swp1 %s=%s'" % \
-                    (_param, _param, module.params.get(_param))
+            if not module.params.get(dependency):
+                _param_output = module.params.get(_param)
+                _msg = "incorrect syntax. " + _param + " must have an interface option." + \
+                    " Example 'cl_quagga_ospf: " + dependency + "=" + _depend_value + " " + \
+                    _param + "=" + _param_output + "'"
                 module.fail_json(msg=_msg)
-
 
 def main():
     module = AnsibleModule(
@@ -129,8 +131,10 @@ def main():
         mutually_exclusive=[['reference_bandwidth', 'interface'],
                             ['router_id', 'interface']]
     )
-    check_dsl_dependencies(module)
-
+    check_dsl_dependencies(module, ['cost', 'state', 'cost', 'area',
+                                    'point2point', 'anchor_int'],
+                           'interface', 'swp1')
+    check_dsl_dependencies(module, ['interface'], 'area', '0')
 
 # import module snippets
 from ansible.module_utils.basic import *
