@@ -9,10 +9,10 @@ module: cl_quagga_ospf
 author: Stanley Karunditu
 short_description: Configure basic OSPF parameters and interfaces
 description:
-    - Used to configure basic OSPF parameters such as \
+    - Configures basic OSPF global parameters such as \
 router id and bandwidth cost, or OSPF interface configuration \
 like point-to-point settings or enabling OSPF on an interface. \
-This configuration is applied to single OSPF instance. \
+Configuration is applied to single OSPF instance. \
 Multiple OSPF instance configuration is currently not supported.
 options:
     router_id:
@@ -22,28 +22,43 @@ options:
     reference_bandwidth:
         description:
             - Set the OSPF reference bandwidth
+        default: 40000
     saveconfig:
         description:
-            - Save the config after apply it
+            - Boolean. Issue write memory to save the config
         choices: ['yes', 'no']
         default: ['no']
-    ifacename:
+    interface:
         description:
-            - Configure OSPF on a particular interface
+            - define the name the interface to apply OSPF services.
     point2point:
         description:
-            - Configure OSPF point to point on a particular interface. \
-Requires 'ifacename'.
+            - Boolean. enable OSPF point2point on the interface
+        choices: ['yes', 'no']
+        default: ['no']
+        require_together:
+            - with interface option
+    area:
+        description:
+            - defines the area the interface is in
+        default: '0'
     cost:
         description:
-            - define ospf cost. Requires 'ifacename'
+            - define ospf cost.
+        required_together:
+            - with interface option
+    anchor_int:
+        description:
+            - Enables OSPF unnumbered on the interface. Define the name \
+of the interface with the IP the interface should anchor to. \
+If the anchor interface does not have an IP address, the command will fail
     state:
         description:
-            - Describes if OSPF should be present on a particular interface. \
-Requires 'ifacename' be configured
+            - Describes if OSPF should be present on a particular interface.\
         choices: [ 'present', 'absent']
-
-
+        default: 'present'
+        required_together:
+            - with interface option
 notes:
     - Quagga Routing Documentation - \
         http://cumulusnetworks.com/docs/2.1/user-guide/layer_3/index.html \
@@ -51,22 +66,19 @@ notes:
     - Contact Cumulus Networks @ http://cumulusnetworks.com/contact/
 '''
 EXAMPLES = '''
-Example playbook entries using the cl_quagga module
+Example playbook entries using the cl_quagga_ospf module
 
     tasks:
-    - name: activate ospfv2
-        cl_quagga_ospf router_id=10.1.1.1
-    - name: deactivate ospfv3
-        cl_quagga_protocol name="ospf6d" state=absent
-    - name: enable bgp v4/v6
-        cl_quagga_protocol name="bgpd" state=present
-    - name: activate ospf then restart quagga right away. don't use notify \
-as this might not start quagga when you want it to
-        cl_quagga_protocol name="ospfd" state=present
-        register: ospf_service
-    - name: restart Quagga right away after setting it
-        service: name=quagga state=restarted
-        when: ospf_service.changed == True
+    - name: configure ospf router_id
+        cl_quagga_ospf: router_id=10.1.1.1
+    - name: enable OSPF on swp1 and set it be a point2point OSPF \
+interface with a cost of 65535
+        cl_quagga_ospf: interface=swp1 point2point=yes cost=65535
+    - name: enable ospf on swp1-5
+        cl_quagga_ospf: interface={{ item }}
+        with_sequence: start=1 end=5 format=swp%d
+    - name: disable ospf on swp1
+        cl_quagga_ospf: interface=swp1 state=absent
 '''
 
 
@@ -80,106 +92,28 @@ def run_cl_cmd(module, cmd, check_rc=True):
     return ret
 
 
-def convert_to_yes_or_no(_state):
-    if _state == 'present':
-        _str = 'yes'
-    else:
-        _str = 'no'
-    return _str
-
-
-def read_daemon_file(module):
-    f = open(module.quagga_daemon_file)
-    if f:
-        return f.readlines()
-    else:
-        return []
-
-
-def setting_is_configured(module):
-    _protocol = module.params.get('name')
-    _state = module.params.get('state')
-    _state = convert_to_yes_or_no(_state)
-    _daemon_output = read_daemon_file(module)
-    _str = "(%s)=(%s)" % (_protocol, 'yes|no')
-    _daemonstr = re.compile("\w+=yes")
-    _zebrastr = re.compile("zebra=(yes|no)")
-    _matchstr = re.compile(_str)
-    daemoncount = 0
-    module.disable_zebra = False
-    for _line in _daemon_output:
-        _match = re.match(_matchstr, _line)
-        _active_daemon_match = re.match(_daemonstr, _line)
-        _zebramatch = re.match(_zebrastr, _line)
-        if _active_daemon_match:
-            daemoncount += 1
-        if _zebramatch:
-            if _zebramatch.group(1) == 'no' and _state == 'yes':
-                return False
-        elif _match:
-            if _state == _match.group(2):
-                _msg = "%s is configured and is %s" % \
-                    (_protocol, module.params.get('state'))
-                module.exit_json(msg=_msg, changed=False)
-    # for nosetests purposes only
-    if daemoncount < 3 and _state == 'no':
-        module.disable_zebra = True
-    return False
-
-
-def modify_config(module):
-    _protocol = module.params.get('name')
-    _state = module.params.get('state')
-    _state = convert_to_yes_or_no(_state)
-    _daemon_output = read_daemon_file(module)
-    _str = "(%s)=(%s)" % (_protocol, 'yes|no')
-    _zebrastr = re.compile("zebra=(yes|no)")
-    _matchstr = re.compile(_str)
-    write_to_file = open(module.quagga_daemon_file, 'w')
-    for _line in _daemon_output:
-        _match = re.match(_matchstr, _line)
-        _zebramatch = re.match(_zebrastr, _line)
-        if _zebramatch:
-            if module.disable_zebra is True and _state == 'no':
-                write_to_file.write('zebra=no\n')
-            elif _state == 'yes':
-                write_to_file.write('zebra=yes\n')
-            else:
-                write_to_file.write(_line)
-        elif _match:
-            if _state != _match.group(2):
-                _str = "%s=%s\n" % (_protocol, _state)
-                write_to_file.write(_str)
-        else:
-            write_to_file.write(_line)
-    write_to_file.close()
-
-
 def main():
     module = AnsibleModule(
         argument_spec=dict(
-            name=dict(type='str',
-                      choices=['ospfd', 'ospf6d', 'bgpd'],
-                      required=True),
+            reference_bandwidth=dict(type='str',
+                                     default='40000'),
+            router_id=dict(type='str'),
+            interface=dict(type='str'),
+            cost=dict(type='str'),
+            area=dict(type='str', default='0'),
             state=dict(type='str',
-                       choices=['present', 'absent'],
-                       required=True)),
-    )
-    module.quagga_daemon_file = '/etc/quagga/daemons'
-    setting_is_configured(module)
-    modify_config(module)
-    _protocol = module.params.get('name')
-    _state = module.params.get('state')
-    _state = convert_to_yes_or_no(_state)
-    _msg = "%s protocol setting modified to %s" % \
-        (_protocol, _state)
-    module.exit_json(msg=_msg, changed=True)
+                       choices=['present', 'absent']),
+            point2point=dict(choices=BOOLEANS, default=False),
+            anchor_int=dict(type='str'),
+            saveconfig=dict(choices=BOOLEANS, default=False)
+        ))
+
 
 # import module snippets
 from ansible.module_utils.basic import *
 # incompatible with ansible 1.4.4 - ubuntu 12.04 version
 # from ansible.module_utils.urls import *
-import re
+
 
 if __name__ == '__main__':
     main()
