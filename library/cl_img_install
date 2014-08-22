@@ -151,8 +151,6 @@ def install_img(module):
         module.exit_json(changed=_changed, msg=_msg)
 
 
-
-
 def switch_slot(module, slotnum):
     _switch_slot = module.params.get('switch_slot')
     if _switch_slot == 'yes':
@@ -204,9 +202,15 @@ def check_sw_version(module):
                             "switch_slot keyword set to 'no'."
                         module.exit_json(changed=False, msg=_msg)
                 else:
-                    _msg = _msg + \
-                        "Next reboot, switch will load " + _version + "."
-                    module.exit_json(changed=False, msg=_msg)
+                    if perform_switch_slot == 'yes':
+                        _msg = _msg + \
+                            "Next reboot, switch will load " + _version + "."
+                        module.exit_json(changed=True, msg=_msg)
+                    else:
+                        _msg = _msg + \
+                            'switch_slot set to "no". ' + \
+                            'No further action to take'
+                        module.exit_json(changed=False, msg=_msg)
 
 
 def main():
@@ -231,7 +235,7 @@ def main():
 # import module snippets
 from ansible.module_utils.basic import *
 # incompatible with ansible 1.4.4 - ubuntu 12.04 version
-#from ansible.module_utils.urls import *
+# from ansible.module_utils.urls import *
 from urlparse import urlparse
 import re
 
