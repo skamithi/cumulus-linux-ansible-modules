@@ -218,14 +218,14 @@ def main():
         ),
     )
 
-    _version = determine_sw_version(module)
+    determine_sw_version(module)
     _url = module.params.get('src')
 
-    check_sw_version(module, _version)
+    check_sw_version(module)
 
     check_url(module, _url)
 
-    install_img(module, _version)
+    install_img(module)
 
 
 # import module snippets
