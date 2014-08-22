@@ -29,16 +29,27 @@ def mod_args_version_in_file(arg):
     return values[arg]
 
 
+def mod_args_version_in_file_dev(arg):
+    values = {'version': None,
+              'src': 'http://10.1.1.1/CumulusLinux-2-2-x.bin',
+              'switch_slot': 'None'
+              }
+    return values[arg]
+
+
 @mock.patch('dev_modules.cl_img_install.AnsibleModule')
 def test_determine_sw_version(mock_module):
     instance = mock_module.return_value
     instance.params.get.side_effect = mod_args
-    _version = determine_sw_version(instance)
-    assert_equals(_version, '2.0.0')
+    determine_sw_version(instance)
+    assert_equals(instance.sw_version, '2.0.0')
     instance = mock_module.return_value
     instance.params.get.side_effect = mod_args_version_in_file
-    _version = determine_sw_version(instance)
-    assert_equals(_version, '2.3.1')
+    determine_sw_version(instance)
+    assert_equals(instance.sw_version, '2.3.1')
+    instance.params.get.side_effect = mod_args_version_in_file_dev
+    determine_sw_version(instance)
+    assert_equals(instance.sw_version, '2.2.x')
 
 
 @mock.patch('dev_modules.cl_img_install.AnsibleModule')
@@ -82,6 +93,13 @@ def test_check_mnt_root_lsb_release():
         mock_open.sideffect = Exception
         assert_equals(check_mnt_root_lsb_release(2), None)
 
+    # test with dev image
+    lsb_release = open('tests/lsb-release_dev.txt')
+    with mock.patch('__builtin__.open') as mock_open:
+        mock_open.return_value = lsb_release
+        assert_equals(check_mnt_root_lsb_release(slot_num),
+                      '2.2.x')
+
 
 @mock.patch('dev_modules.cl_img_install.run_cl_cmd')
 @mock.patch('dev_modules.cl_img_install.AnsibleModule')
@@ -101,14 +119,27 @@ def test_get_slot_version(mock_from_onie,
                           mock_from_etc,
                           mock_module):
     instance = mock_module.return_value
+    instance.sw_version == '2.2.0'
     mock_from_etc.return_value = '2.0.2'
     mock_from_onie.return_value = '2.0.10'
     assert_equals(get_slot_version(instance, '1'), '2.0.2')
-    assert_equals(mock_from_onie.call_count, 0)
+    assert_equals(mock_from_onie.call_count, 1)
 
     mock_from_etc.return_value = None
     assert_equals(get_slot_version(instance, '1'), '2.0.10')
-    assert_equals(mock_from_onie.call_count, 1)
+    assert_equals(mock_from_onie.call_count, 2)
+
+    # /etc/lsb-release matches version provided by user
+    instance.sw_version = '2.2.x'
+    mock_from_etc.return_value = '2.2.x'
+    mock_from_onie.return_value = '2.0.10'
+    assert_equals(get_slot_version(instance, '1'), '2.2.x')
+
+    # onie image version matches what user provided
+    instance.sw_version = '2.0.1'
+    mock_from_etc.return_value = '2.2.2'
+    mock_from_onie.return_value = '2.0.1'
+    assert_equals(get_slot_version(instance, '1'), '2.0.1')
 
 
 def slotvers(module, arg):
@@ -155,27 +186,27 @@ def test_get_slot_info(mock_module,
 def test_check_sw_version(mock_module, mock_get_slot_info, mock_switch_slot):
     instance = mock_module.return_value
     mock_get_slot_info.return_value = slot_info()
-    ver = '2.0.10'
-    check_sw_version(instance, ver)
+    instance.sw_version = '2.0.10'
+    check_sw_version(instance)
     _msg = 'Version 2.0.10 is installed in the alternate slot. ' +\
         'Next reboot, switch will load 2.0.10.'
     instance.exit_json.assert_called_with(msg=_msg, changed=False)
 
-    ver = '2.0.3'
-    check_sw_version(instance, ver)
+    instance.sw_version = '2.0.3'
+    check_sw_version(instance)
     _msg = 'Version 2.0.3 is installed in the active slot'
     instance.exit_json.assert_called_with(msg=_msg, changed=False)
 
-    ver = '2.0.3'
+    instance.sw_version = '2.0.3'
     mock_get_slot_info.return_value = slot_info2()
-    check_sw_version(instance, ver)
+    check_sw_version(instance)
     instance.exit_json.assert_called_with(
         msg="Version 2.0.3 is installed in the alternate slot." +
         ' Next reboot will not load 2.0.3. ' +
         "switch_slot keyword set to 'no'.", changed=False)
 
     instance.params.get.return_value = 'yes'
-    check_sw_version(instance, ver)
+    check_sw_version(instance)
     instance.exit_json.assert_called_with(
         msg='Version 2.0.3 is installed in the alternate slot. ' +
         'cl-img-select has made the alternate slot the primary slot. ' +
@@ -245,7 +276,8 @@ def test_img_install(mock_module, mock_run_cl_cmd,
     """
     instance = mock_module.return_value
     instance.params.get.side_effect = mod_args_no_switch_slot
-    install_img(instance, '2.0.3')
+    instance.sw_version = '2.0.3'
+    install_img(instance)
     cmd = '/usr/cumulus/bin/cl-img-install -f %s' % \
         (mod_args_no_switch_slot('src'))
     mock_run_cl_cmd.assert_called_with(instance, cmd)
@@ -259,7 +291,8 @@ def test_img_install(mock_module, mock_run_cl_cmd,
                                              'active': True,
                                              'primary': True},
                                        '2': {'version': '2.0.3'}}
-    install_img(instance, '2.0.3')
+    instance.sw_version = '2.0.3'
+    install_img(instance)
     assert_equals(mock_switch_slot.call_count, 1)
 
 
