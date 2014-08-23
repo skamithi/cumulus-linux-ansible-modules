@@ -296,7 +296,7 @@ def config_speed(module, iface):
             speedattr = ifaceattrs['speed']
         else:
             return
-    if speedattr.lower() == 'none':
+    if str(speedattr).lower() == 'none':
         speedattr = None
     iface['config']['speed'] = speedattr
 
@@ -309,7 +309,7 @@ def config_mtu(module, iface):
             mtuattr = ifaceattrs['mtu']
         else:
             return
-    if mtuattr.lower() == 'none':
+    if str(mtuattr).lower() == 'none':
         mtuattr = None
     iface['config']['mtu'] = mtuattr
 

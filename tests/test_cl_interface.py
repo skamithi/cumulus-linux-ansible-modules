@@ -744,10 +744,10 @@ def test_config_speed(mock_module):
     """
     instance = mock_module.return_value
     # speed set in module.param not empty
-    instance.params = {'speed': '1000'}
+    instance.params = {'speed': 1000}
     iface = {'config': {}}
     config_speed(instance, iface)
-    assert_equals(iface, {'config': {'speed': '1000'}})
+    assert_equals(iface, {'config': {'speed': 1000}})
     # speed set in module.param is 'none'
     instance.params = {'speed': 'none'}
     iface = {'config': {}}
@@ -772,10 +772,10 @@ def test_config_mtu(mock_module):
     """
     instance = mock_module.return_value
     # mtu set in module.param not empty
-    instance.params = {'mtu': '1000'}
+    instance.params = {'mtu': 1000}
     iface = {'config': {}}
     config_mtu(instance, iface)
-    assert_equals(iface, {'config': {'mtu': '1000'}})
+    assert_equals(iface, {'config': {'mtu': 1000}})
     # mtu set in module.param is 'none'
     instance.params = {'mtu': 'none'}
     iface = {'config': {}}
