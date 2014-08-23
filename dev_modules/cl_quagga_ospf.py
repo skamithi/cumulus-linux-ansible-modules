@@ -120,6 +120,25 @@ def check_dsl_dependencies(module, input_options,
                     _param + "=" + _param_output + "'"
                 module.fail_json(msg=_msg)
 
+
+def has_interface_config(module):
+    modparams = []
+    for k, v in module.params.iteritems():
+        modparams.append(k)
+    if 'interface' in modparams:
+        return True
+    else:
+        return False
+
+
+def add_global_ospf_config(module):
+    pass
+
+
+def config_ospf_interface_config(module):
+    pass
+
+
 def main():
     module = AnsibleModule(
         argument_spec=dict(
@@ -142,7 +161,10 @@ def main():
                                     'point2point', 'anchor_int', 'passive'],
                            'interface', 'swp1')
     check_dsl_dependencies(module, ['interface'], 'area', '0.0.0.0')
-
+    if has_interface_config(module):
+        add_global_ospf_config(module)
+    else:
+        config_ospf_interface_config(module)
 
 # import module snippets
 from ansible.module_utils.basic import *

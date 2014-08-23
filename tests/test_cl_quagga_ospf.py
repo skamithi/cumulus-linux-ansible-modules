@@ -1,7 +1,8 @@
 import mock
 from mock import MagicMock
 from nose.tools import set_trace
-from dev_modules.cl_quagga_ospf import check_dsl_dependencies, main
+from dev_modules.cl_quagga_ospf import check_dsl_dependencies, main, \
+    has_interface_config
 from asserts import assert_equals
 
 
@@ -44,6 +45,15 @@ def test_check_mod_args(mock_module,
                             'interface', 'swp1'))
     assert_equals(mock_check_dsl_dependencies.call_args_list[1],
                   mock.call(instance, ['interface'], 'area', '0.0.0.0'))
+
+
+@mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
+def test_has_int_config(mock_module):
+    instance = mock_module.return_value
+    instance.params = { 'interface': '', 'state': '' }
+    assert_equals(has_interface_config(instance), True)
+    instance.params = { 'state': '' }
+    assert_equals(has_interface_config(instance), False)
 
 
 def check_dsl_args(arg):
