@@ -74,7 +74,8 @@ cl_interface: name=swp1 ipv4=['10.1.1.1/24', '20.1.1.1/24'] applyconfig=yes
 ## configure a bridge interface with a few trunk members and access port
 cl_interface: name=br0  bridgeports=['swp1-10.100', 'swp11'] applyconfig=yes
 
-## configure a bond interface with multiple contiguous ports. Don't activate the config
+## configure a bond interface with multiple contiguous ports. \
+Don't activate the config
 cl_interface: name=bond1 bondslaves=['swp17-20']
 
 ## configure a bond interface with an IP address
@@ -501,9 +502,9 @@ def check_if_applyconfig_name_defined_only(module):
         if v:
             modparams.append(k)
     modparams = sorted(modparams)
-    _msg = "when ifaceattr is defined, only name " +  \
-        "and applyconfig options are allowed"
-    if modparams != ['applyconfig', 'ifaceattrs', 'name']:
+    _msg = "when ifaceattrs is defined, only addition options allowed " + \
+        " are 'name' and 'applyconfig'"
+    if modparams != ['applyconfig', 'ifaceattrs', 'name', 'state']:
         module.fail_json(msg=_msg)
 
 
