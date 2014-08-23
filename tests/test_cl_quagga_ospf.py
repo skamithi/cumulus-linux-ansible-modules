@@ -8,7 +8,7 @@ from asserts import assert_equals
 @mock.patch('dev_modules.cl_quagga_ospf.check_dsl_dependencies')
 @mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
 def test_check_mod_args(mock_module,
-                   mock_check_dsl_dependencies):
+                        mock_check_dsl_dependencies):
     """
     cl_quagga_ospf - check mod args
     """
@@ -38,6 +38,12 @@ def test_check_mod_args(mock_module,
             ['reference_bandwidth', 'interface'],
             ['router_id', 'interface']]
     )
+    assert_equals(mock_check_dsl_dependencies.call_args_list[0],
+                  mock.call(instance, ['cost', 'state', 'area',
+                                       'point2point', 'anchor_int', 'passive'],
+                            'interface', 'swp1'))
+    assert_equals(mock_check_dsl_dependencies.call_args_list[1],
+                  mock.call(instance, ['interface'], 'area', '0.0.0.0'))
 
 
 def check_dsl_args(arg):
@@ -59,7 +65,7 @@ def test_check_dsl_dependencies(mock_module):
     _depends = 'interface'
     check_dsl_dependencies(instance, _input_options, _depends, 'swp1')
     instance.fail_json.assert_called_with(
-        msg="incorrect syntax. point2point must have an " +\
-        "interface option. Example 'cl_quagga_ospf: interface=swp1 " + \
+        msg="incorrect syntax. point2point must have an " +
+        "interface option. Example 'cl_quagga_ospf: interface=swp1 " +
         "point2point=yes'"
     )

@@ -41,10 +41,17 @@ options:
     area:
         description:
             - defines the area the interface is in
-        default: '0'
+        default: '0.0.0.0'
     cost:
         description:
             - define ospf cost.
+        required_together:
+            - with interface option
+    passive:
+        description:
+            - make OSPF interface passive
+        default: 'no'
+        choices: ['yes', 'no']
         required_together:
             - with interface option
     anchor_int:
@@ -131,10 +138,11 @@ def main():
         mutually_exclusive=[['reference_bandwidth', 'interface'],
                             ['router_id', 'interface']]
     )
-    check_dsl_dependencies(module, ['cost', 'state', 'cost', 'area',
-                                    'point2point', 'anchor_int'],
+    check_dsl_dependencies(module, ['cost', 'state', 'area',
+                                    'point2point', 'anchor_int', 'passive'],
                            'interface', 'swp1')
-    check_dsl_dependencies(module, ['interface'], 'area', '0')
+    check_dsl_dependencies(module, ['interface'], 'area', '0.0.0.0')
+
 
 # import module snippets
 from ansible.module_utils.basic import *
