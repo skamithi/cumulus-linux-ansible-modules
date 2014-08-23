@@ -88,10 +88,14 @@ def get_slot_info(module):
 
 def get_slot_version(module, slot_num):
     lsb_release = check_mnt_root_lsb_release(slot_num)
-    if lsb_release:
+    switch_firm_ver = check_fw_print_env(module, slot_num)
+    _version = module.sw_version
+    if lsb_release == _version or switch_firm_ver == _version:
+        return _version
+    elif lsb_release:
         return lsb_release
     else:
-        return check_fw_print_env(module, slot_num)
+        return switch_firm_ver
 
 
 def check_mnt_root_lsb_release(slot_num):
@@ -132,20 +136,19 @@ def get_active_slot(module):
     return None
 
 
-def install_img(module, _version):
+def install_img(module):
     src = module.params.get('src')
+    _version = module.sw_version
     app_path = '/usr/cumulus/bin/cl-img-install -f %s' % (src)
     run_cl_cmd(module, app_path)
     perform_switch_slot = module.params.get('switch_slot')
     if perform_switch_slot == 'yes':
-        check_sw_version(module, _version)
+        check_sw_version(module)
     else:
         _changed = True
         _msg = "Cumulus Linux Version " + _version + " successfully" + \
             " installed in alternate slot"
         module.exit_json(changed=_changed, msg=_msg)
-
-
 
 
 def switch_slot(module, slotnum):
@@ -160,18 +163,21 @@ def determine_sw_version(module):
     _filename = ''
     # Use _version if user defines it
     if _version:
-        return _version
+        module.sw_version = _version
+        return
     else:
         _filename = module.params.get('src').split('/')[-1]
-        _match = re.search('\d+\W\d+\W\d+', _filename)
+        _match = re.search('\d+\W\d+\W\w+', _filename)
         if _match:
-            return re.sub('\W', '.', _match.group())
-    _msg = 'Unable to determine version from file %s' %  (_filename)
+            module.sw_version = re.sub('\W', '.', _match.group())
+            return
+    _msg = 'Unable to determine version from file %s' % (_filename)
     module.exit_json(changed=False, msg=_msg)
 
 
-def check_sw_version(module, _version):
+def check_sw_version(module):
     slots = get_slot_info(module)
+    _version = module.sw_version
     perform_switch_slot = module.params.get('switch_slot')
     for _num, slot in slots.items():
         if slot['version'] == _version:
@@ -196,9 +202,15 @@ def check_sw_version(module, _version):
                             "switch_slot keyword set to 'no'."
                         module.exit_json(changed=False, msg=_msg)
                 else:
-                    _msg = _msg + \
-                        "Next reboot, switch will load " + _version + "."
-                    module.exit_json(changed=False, msg=_msg)
+                    if perform_switch_slot == 'yes':
+                        _msg = _msg + \
+                            "Next reboot, switch will load " + _version + "."
+                        module.exit_json(changed=True, msg=_msg)
+                    else:
+                        _msg = _msg + \
+                            'switch_slot set to "no". ' + \
+                            'No further action to take'
+                        module.exit_json(changed=False, msg=_msg)
 
 
 def main():
@@ -210,20 +222,20 @@ def main():
         ),
     )
 
-    _version = determine_sw_version(module)
+    determine_sw_version(module)
     _url = module.params.get('src')
 
-    check_sw_version(module, _version)
+    check_sw_version(module)
 
     check_url(module, _url)
 
-    install_img(module, _version)
+    install_img(module)
 
 
 # import module snippets
 from ansible.module_utils.basic import *
 # incompatible with ansible 1.4.4 - ubuntu 12.04 version
-#from ansible.module_utils.urls import *
+# from ansible.module_utils.urls import *
 from urlparse import urlparse
 import re
 

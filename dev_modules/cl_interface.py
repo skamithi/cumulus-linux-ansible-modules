@@ -20,7 +20,6 @@ options:
             - apply interface change
         choices: ['yes', 'no']
         default: 'no'
-        required: true
     alias:
         description:
             - add a port description
@@ -53,6 +52,11 @@ options:
     mtu:
         description:
             - set MTU. Configure Jumbo Frame by setting MTU to 9000.
+    state:
+        description:
+            - set to 'noconfig' to remove all config from an interface.
+        choices: ['noconfig', 'hasconfig']
+        default: 'hasconfig'
 notes:
     - Cumulus Linux Interface Documentation - \
         http://cumulusnetworks.com/docs/2.0/user-guide/layer_1_2/interfaces.html
@@ -70,35 +74,57 @@ cl_interface: name=swp1 ipv4=['10.1.1.1/24', '20.1.1.1/24'] applyconfig=yes
 ## configure a bridge interface with a few trunk members and access port
 cl_interface: name=br0  bridgeports=['swp1-10.100', 'swp11'] applyconfig=yes
 
+## configure a bond interface with multiple contiguous ports. \
+Don't activate the config
+cl_interface: name=bond1 bondslaves=['swp17-20']
+
 ## configure a bond interface with an IP address
 cl_interface:
     name=br0
     bondslaves=['swp1', 'swp2']
     ipv4='10.1.1.1/24' applyconfig=yes
 
-## use complex args with ifaceattrs
+## remove all configuration from an interface. Don't activate the config
+cl_interface: name=br0 state=noconfig
+
+## use complex args with ifaceattrs. restart networking only if a change occurs
+## notify doesn't work well because its asynchronous and networking must be \
+## started synchronously. More efficient when doing lots of config changes \
+## to apply the changes, then run 'ifup -a' once at the end
+- name: configure multiple interfaces using interface.yml
 cl_interface:
     ifaceattrs: "{{ item.value }}"
-    applyconfig: 'no'
     name: "{{ item.key}}"
 with_dict:interfaces[ansible_hostname]
-notify:
-    - reload networking
+register:  networking
+- name: apply all network changes if change occured. faster than doing per \
+interface restart using applyconfig option.
+  service: name=networking state=reloaded
+  when: networking.changed == True
 
 ## interfaces.yml file for complex args
 interfaces:
     sw1:
-        bonds:
-            bond0:
-                alias: 'to switch1'
-                bondslaves:
-                    - swp1
-                    - swp3
-            bond3
-                alias: 'to switch10'
-                bondslaves:
-                    -swp2
-                    -swp4
+        vlan1:
+            bridgeports:
+                - bond0.1
+                - bond3.1
+            ipv4: "10.1.1.1/24"
+            alias: "tagged vlan 1"
+        swp1:
+            mtu: 9000
+        swp3:
+            mtu: 9000
+        bond0:
+            alias: 'to switch1'
+            bondslaves:
+                - swp1
+                - swp3
+        bond3
+            alias: 'to switch10'
+            bondslaves:
+                -swp2
+                -swp4
 '''
 
 
@@ -270,7 +296,7 @@ def config_speed(module, iface):
             speedattr = ifaceattrs['speed']
         else:
             return
-    if speedattr.lower() == 'none':
+    if str(speedattr).lower() == 'none':
         speedattr = None
     iface['config']['speed'] = speedattr
 
@@ -283,7 +309,7 @@ def config_mtu(module, iface):
             mtuattr = ifaceattrs['mtu']
         else:
             return
-    if mtuattr.lower() == 'none':
+    if str(mtuattr).lower() == 'none':
         mtuattr = None
     iface['config']['mtu'] = mtuattr
 
@@ -327,9 +353,9 @@ def config_bond_iface(module, iface):
     add_bondslaves(module, iface)
 
 
-def add_glob(bridgeports):
+def add_glob(ports):
     newarr = []
-    for i in bridgeports:
+    for i in ports:
         if re.search('-\d+', i):
             newarr.append('glob ' + i)
         else:
@@ -357,6 +383,7 @@ def add_bondslaves(module, iface):
         bondslaves = [bondslaves]
     except:
         pass
+    bondslaves = add_glob(bondslaves)
     add_bond_config(iface, bondslaves)
 
 
@@ -475,14 +502,17 @@ def check_if_applyconfig_name_defined_only(module):
         if v:
             modparams.append(k)
     modparams = sorted(modparams)
-    _msg = "when ifaceattr is defined, only name " +  \
-        "and applyconfig options are allowed"
-    if modparams != ['applyconfig', 'ifaceattrs', 'name']:
+    _msg = "when ifaceattrs is defined, only addition options allowed " + \
+        " are 'name' and 'applyconfig'"
+    if modparams != ['applyconfig', 'ifaceattrs', 'name', 'state']:
         module.fail_json(msg=_msg)
 
 
 def config_iface(module, iface, _ifacetype):
-    if _ifacetype == 'loopback':
+    if module.params.get('state') == 'noconfig':
+        iface.get('config')['alias'] = 'noconfig'
+        return
+    elif _ifacetype == 'loopback':
         config_lo_iface(module, iface)
     elif _ifacetype == 'swp':
         config_swp_iface(module, iface)
@@ -515,7 +545,9 @@ def main():
             dhcp=dict(type='str', choices=["yes", "no"]),
             speed=dict(type='str'),
             mtu=dict(type='str'),
-            applyconfig=dict(required=True, type='str')
+            state=dict(type='str', choices=['noconfig', 'hasconfig'],
+                       default='hasconfig'),
+            applyconfig=dict(type='str', default='no')
         ),
         mutually_exclusive=[
             ['bridgeports', 'bondslaves'],
