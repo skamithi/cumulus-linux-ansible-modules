@@ -135,6 +135,8 @@ def get_running_config(module):
     running_config = run_cl_cmd(module, '/usr/bin/vtysh -c "show run"')
     f = StringIO.StringIO(''.join(running_config))
     got_global_config = False
+    got_interface_config = False
+    module.interface_config = {}
     module.global_config = []
     for line in f:
         line = line.strip()
@@ -142,13 +144,24 @@ def get_running_config(module):
         if len(line.strip()) <= 1:
             if got_global_config:
                 got_global_config = False
+            if got_interface_config:
+                got_interface_config = False
             continue
         # make all char lowercase
         line = line.lower()
         # begin capturing global config
-        if re.match('router\s+ospf', line):
+        m0 = re.match('router\s+ospf', line)
+        if m0:
             got_global_config = True
             continue
+        m1 = re.match('^interface\s+(\w+)', line)
+        if m1:
+            module.ifacename = m1.group(1)
+            module.interface_config[module.ifacename] = []
+            got_interface_config = True
+            continue
+        if got_interface_config:
+            module.interface_config[module.ifacename].append(line)
         if got_global_config:
             module.global_config.append(line)
             continue

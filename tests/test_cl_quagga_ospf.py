@@ -57,6 +57,13 @@ def test_get_running_config(mock_module,
     assert_equals(instance.global_config,
                   ['ospf router-id 10.100.1.1',
                    'auto-cost reference-bandwidth 40000'])
+    ## check that interface config is done right
+    assert_equals(len(instance.interface_config.keys()), 57)
+    assert_equals(instance.interface_config.get('swp52s0'),
+                  ['ip ospf area 0.0.0.0',
+                   'ip ospf network point-to-point',
+                   'ipv6 nd suppress-ra', 'link-detect'])
+
 
 @mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
 def test_has_int_config(mock_module):
