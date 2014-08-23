@@ -2,7 +2,7 @@ import mock
 from mock import MagicMock
 from nose.tools import set_trace
 from dev_modules.cl_quagga_ospf import check_dsl_dependencies, main, \
-    has_interface_config
+    has_interface_config, get_running_config
 from asserts import assert_equals
 
 
@@ -46,6 +46,17 @@ def test_check_mod_args(mock_module,
     assert_equals(mock_check_dsl_dependencies.call_args_list[1],
                   mock.call(instance, ['interface'], 'area', '0.0.0.0'))
 
+@mock.patch('dev_modules.cl_quagga_ospf.run_cl_cmd')
+@mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
+def test_get_running_config(mock_module,
+                            mock_run_cl_cmd):
+    mock_run_cl_cmd.return_value = open('tests/vtysh.txt').\
+        readlines()
+    instance = mock_module.return_value
+    get_running_config(instance)
+    assert_equals(instance.global_config,
+                  ['ospf router-id 10.100.1.1',
+                   'auto-cost reference-bandwidth 40000'])
 
 @mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
 def test_has_int_config(mock_module):
