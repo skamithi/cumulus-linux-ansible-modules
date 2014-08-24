@@ -19,7 +19,7 @@ def test_check_mod_args(mock_module,
     main()
     mock_module.assert_called_with(argument_spec={
         'router_id': {'type': 'str'},
-        'area': {'default': '0', 'type': 'str'},
+        'area': {'default': '0.0.0.0', 'type': 'str'},
         'anchor_int': {'type': 'str'},
         'reference_bandwidth': {
             'default': '40000',

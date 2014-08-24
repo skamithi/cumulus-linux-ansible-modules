@@ -225,7 +225,7 @@ def main():
             router_id=dict(type='str'),
             interface=dict(type='str'),
             cost=dict(type='str'),
-            area=dict(type='str', default='0'),
+            area=dict(type='str', default='0.0.0.0'),
             state=dict(type='str',
                        choices=['present', 'absent']),
             point2point=dict(choices=BOOLEANS, default=False),
