@@ -371,6 +371,15 @@ def test_config_changed_different_state_absent(mock_module,
     assert_equals(config_changed(instance, iface), True)
 
 
+def empty_iface():
+    iface = {
+        'name': 'swp1',
+        'ifacetype': 'unknown',
+        'config': {}
+    }
+    return iface
+
+
 def loop_iface():
     iface = {
         'name': 'lo',
@@ -433,6 +442,18 @@ def test_modify_switch_config(mock_module, mock_os):
     fstr += 'iface lo inet loopback\n'
     fstr += '    address 10:3:3::3/128\n'
     fstr += '    address 10.3.3.3/32\n'
+    output = open('/tmp/test.me').readlines()
+    assert_equals(''.join(output), fstr)
+
+    # test when addr_method is not present
+    iface = empty_iface()
+    testwrite = open('/tmp/test.me', 'w')
+    with mock.patch('__builtin__.open') as mock_open:
+        mock_open.return_value = testwrite
+        modify_switch_config(instance, iface)
+        mock_open.assert_called_with('/etc/network/ansible/swp1', 'w')
+    fstr = 'auto swp1\n'
+    fstr += 'iface swp1\n'
     output = open('/tmp/test.me').readlines()
     assert_equals(''.join(output), fstr)
 
@@ -863,12 +884,12 @@ def mod_arg_add_bond_slaves_none(arg):
               }
     return values[arg]
 
+
 def mod_arg_add_bond_slaves_single(arg):
     values = {'bondslaves': ['swp1', 'swp2'],
               'ifaceattrs': None
               }
     return values[arg]
-
 
 
 @mock.patch('dev_modules.cl_interface.AnsibleModule')
