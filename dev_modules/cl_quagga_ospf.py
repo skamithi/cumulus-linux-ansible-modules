@@ -184,12 +184,21 @@ def update_router_id(module):
         cmd_line = "/usr/bin/cl-ospf router-id set %s" %\
                    (module.params.get('router_id'))
         run_cl_cmd(module, cmd_line)
-        module.exit_msg = 'router-id updated'
+        module.exit_msg += 'router-id updated '
         module.has_changed = True
 
 
 def update_reference_bandwidth(module):
-    pass
+    bandwidth_stmt = 'auto-cost reference-bandwidth'
+    actual_bandwidth_stmt = get_config_line(module, bandwidth_stmt)
+    bandwidth_stmt = bandwidth_stmt + ' ' + \
+        module.params.get('reference_bandwidth')
+    if bandwidth_stmt != actual_bandwidth_stmt:
+        cmd_line = "/usr/bin/cl-ospf auto-cost set reference-bandwidth %s" %\
+                   (module.params.get('reference_bandwidth'))
+        run_cl_cmd(module, cmd_line)
+        module.exit_msg += 'reference bandwidth updated '
+        module.has_changed = True
 
 
 def add_global_ospf_config(module):

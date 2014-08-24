@@ -3,7 +3,7 @@ from mock import MagicMock
 from nose.tools import set_trace
 from dev_modules.cl_quagga_ospf import check_dsl_dependencies, main, \
     has_interface_config, get_running_config, update_router_id, \
-    add_global_ospf_config
+    add_global_ospf_config, update_reference_bandwidth
 from asserts import assert_equals
 
 
@@ -52,6 +52,9 @@ def test_check_mod_args(mock_module,
 @mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
 def test_get_running_config(mock_module,
                             mock_run_cl_cmd):
+    """
+    cl_quagga_ospf - test getting vtysh running config
+    """
     mock_run_cl_cmd.return_value = open('tests/vtysh.txt').\
         readlines()
     instance = mock_module.return_value
@@ -68,6 +71,7 @@ def test_get_running_config(mock_module,
     mock_run_cl_cmd.assert_called_with(instance,
                                        '/usr/bin/vtysh -c "show run"')
 
+
 def mod_args_global_ospf_config(arg):
     values = {
         'router_id': '10.1.1.1',
@@ -75,39 +79,79 @@ def mod_args_global_ospf_config(arg):
     }
     return values[arg]
 
+
 @mock.patch('dev_modules.cl_quagga_ospf.run_cl_cmd')
 @mock.patch('dev_modules.cl_quagga_ospf.get_config_line')
 @mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
 def test_update_router_id(mock_module,
                           mock_get_config_line,
                           mock_run_cl_cmd):
+    """
+    cl_quagga_ospf - updating router_id
+    """
     instance = mock_module.return_value
+    instance.exit_msg = ''
     instance.params.get.return_value = '10.1.1.1'
     # no router id defined
     mock_get_config_line.return_value = None
     update_router_id(instance)
-    assert_equals(instance.exit_msg, 'router-id updated')
+    assert_equals(instance.exit_msg, 'router-id updated ')
     assert_equals(instance.has_changed, True)
     cmd_line = '/usr/bin/cl-ospf router-id set 10.1.1.1'
     mock_run_cl_cmd.assert_called_with(instance, cmd_line)
     # router id is different
-    instance.exit_msg = None
+    instance.exit_msg = ''
     instance.has_changed = False
     mock_get_config_line.return_value = 'ospf router-id 10.2.2.2'
     update_router_id(instance)
-    assert_equals(instance.exit_msg, 'router-id updated')
+    assert_equals(instance.exit_msg, 'router-id updated ')
     assert_equals(instance.has_changed, True)
     cmd_line = '/usr/bin/cl-ospf router-id set 10.1.1.1'
     mock_run_cl_cmd.assert_called_with(instance, cmd_line)
     # router id is the same
-    instance.exit_msg = None
+    instance.exit_msg = ''
     instance.has_changed = False
     mock_get_config_line.return_value = 'ospf router-id 10.1.1.1'
     update_router_id(instance)
-    assert_equals(instance.exit_msg, None)
+    assert_equals(instance.exit_msg, '')
     assert_equals(instance.has_changed, False)
 
 
+@mock.patch('dev_modules.cl_quagga_ospf.run_cl_cmd')
+@mock.patch('dev_modules.cl_quagga_ospf.get_config_line')
+@mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
+def test_update_reference_bandwidth(mock_module,
+                                    mock_get_config_line,
+                                    mock_run_cl_cmd):
+    """
+    cl_quagga_ospf - test updating reference bandwidth
+    """
+    instance = mock_module.return_value
+    instance.exit_msg = ''
+    instance.params.get.return_value = '40000'
+    # no reference bandwidth defined - highly unlikely since default is set
+    mock_get_config_line.return_value = None
+    change_msg = 'reference bandwidth updated '
+    update_reference_bandwidth(instance)
+    assert_equals(instance.exit_msg, change_msg)
+    assert_equals(instance.has_changed, True)
+    cmd_line = '/usr/bin/cl-ospf auto-cost set reference-bandwidth 40000'
+    mock_run_cl_cmd.assert_called_with(instance, cmd_line)
+    # reference bandwidth is different
+    instance.exit_msg = ''
+    instance.has_changed = False
+    mock_get_config_line.return_value = 'auto-cost reference-bandwidth 45000'
+    update_reference_bandwidth(instance)
+    assert_equals(instance.exit_msg, change_msg)
+    assert_equals(instance.has_changed, True)
+    mock_run_cl_cmd.assert_called_with(instance, cmd_line)
+    # router id is the same
+    instance.exit_msg = ''
+    instance.has_changed = False
+    mock_get_config_line.return_value = 'auto-cost reference-bandwidth 40000'
+    update_reference_bandwidth(instance)
+    assert_equals(instance.exit_msg, '')
+    assert_equals(instance.has_changed, False)
 
 
 @mock.patch('dev_modules.cl_quagga_ospf.update_reference_bandwidth')
@@ -118,6 +162,9 @@ def test_add_global_ospf_config(mock_module,
                                 mock_update_router_id,
                                 mock_get_running_config,
                                 mock_reference_bandwidth):
+    """
+    cl_quagga_ospf - test setting global ospfv2 config
+    """
     instance = mock_module.return_value
     instance.params.get.side_effect = mod_args_global_ospf_config
     manager = mock.Mock()
@@ -137,6 +184,9 @@ def test_add_global_ospf_config(mock_module,
 
 @mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
 def test_has_int_config(mock_module):
+    """
+    cl_quagga_ospf - get interface config from quagga. TODO get from ifquery
+    """
     instance = mock_module.return_value
     instance.params = {'interface': '', 'state': ''}
     assert_equals(has_interface_config(instance), True)
@@ -157,6 +207,9 @@ def check_dsl_args(arg):
 
 @mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
 def test_check_dsl_dependencies(mock_module):
+    """
+    cl_quagga_ospf - check dsl dependencies
+    """
     instance = mock_module.return_value
     instance.params.get.side_effect = check_dsl_args
     _input_options = ['point2point', 'cost']
