@@ -20,7 +20,6 @@ def test_check_mod_args(mock_module,
     mock_module.assert_called_with(argument_spec={
         'router_id': {'type': 'str'},
         'area': {'default': '0.0.0.0', 'type': 'str'},
-        'anchor_int': {'type': 'str'},
         'reference_bandwidth': {
             'default': '40000',
             'type': 'str'
@@ -42,7 +41,7 @@ def test_check_mod_args(mock_module,
     )
     assert_equals(mock_check_dsl_dependencies.call_args_list[0],
                   mock.call(instance, ['cost', 'state', 'area',
-                                       'point2point', 'anchor_int', 'passive'],
+                                       'point2point', 'passive'],
                             'interface', 'swp1'))
     assert_equals(mock_check_dsl_dependencies.call_args_list[1],
                   mock.call(instance, ['interface'], 'area', '0.0.0.0'))
@@ -199,7 +198,6 @@ def check_dsl_args(arg):
         'cost': None,
         'state':  None,
         'point2point': 'yes',
-        'anchor_int': None,
         'interface': None,
     }
     return values[arg]

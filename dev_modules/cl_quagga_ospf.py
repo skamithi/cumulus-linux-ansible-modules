@@ -54,14 +54,6 @@ options:
         choices: ['yes', 'no']
         required_together:
             - with interface option
-    anchor_int:
-        description:
-            - Enables OSPF unnumbered on the interface. Define the name \
-of the interface with the IP the interface should anchor to. Module will \
-add the IP address of the anchor interface to the \
-/etc/network/interfaces config
-of the interface.\
-If the anchor interface does not have an IP address, the module will fail
     state:
         description:
             - Describes if OSPF should be present on a particular interface.\
@@ -228,14 +220,13 @@ def main():
             state=dict(type='str',
                        choices=['present', 'absent']),
             point2point=dict(choices=BOOLEANS, default=False),
-            anchor_int=dict(type='str'),
             saveconfig=dict(choices=BOOLEANS, default=False)
         ),
         mutually_exclusive=[['reference_bandwidth', 'interface'],
                             ['router_id', 'interface']]
     )
     check_dsl_dependencies(module, ['cost', 'state', 'area',
-                                    'point2point', 'anchor_int', 'passive'],
+                                    'point2point', 'passive'],
                            'interface', 'swp1')
     check_dsl_dependencies(module, ['interface'], 'area', '0.0.0.0')
     if has_interface_config(module):
