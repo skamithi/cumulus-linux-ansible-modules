@@ -180,6 +180,12 @@ def update_router_id(module):
     router_id_stmt = 'ospf router-id '
     actual_router_id_stmt = get_config_line(module, router_id_stmt)
     router_id_stmt = 'ospf router-id ' + module.params.get('router_id')
+    if router_id_stmt != actual_router_id_stmt:
+        cmd_line = "/usr/bin/cl-ospf router-id set %s" %\
+                   (module.params.get('router_id'))
+        run_cl_cmd(module, cmd_line)
+        module.exit_msg = 'router-id updated'
+        module.has_changed = True
 
 
 def update_reference_bandwidth(module):

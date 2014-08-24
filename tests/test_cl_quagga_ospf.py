@@ -75,6 +75,41 @@ def mod_args_global_ospf_config(arg):
     }
     return values[arg]
 
+@mock.patch('dev_modules.cl_quagga_ospf.run_cl_cmd')
+@mock.patch('dev_modules.cl_quagga_ospf.get_config_line')
+@mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
+def test_update_router_id(mock_module,
+                          mock_get_config_line,
+                          mock_run_cl_cmd):
+    instance = mock_module.return_value
+    instance.params.get.return_value = '10.1.1.1'
+    # no router id defined
+    mock_get_config_line.return_value = None
+    update_router_id(instance)
+    assert_equals(instance.exit_msg, 'router-id updated')
+    assert_equals(instance.has_changed, True)
+    cmd_line = '/usr/bin/cl-ospf router-id set 10.1.1.1'
+    mock_run_cl_cmd.assert_called_with(instance, cmd_line)
+    # router id is different
+    instance.exit_msg = None
+    instance.has_changed = False
+    mock_get_config_line.return_value = 'ospf router-id 10.2.2.2'
+    update_router_id(instance)
+    assert_equals(instance.exit_msg, 'router-id updated')
+    assert_equals(instance.has_changed, True)
+    cmd_line = '/usr/bin/cl-ospf router-id set 10.1.1.1'
+    mock_run_cl_cmd.assert_called_with(instance, cmd_line)
+    # router id is the same
+    instance.exit_msg = None
+    instance.has_changed = False
+    mock_get_config_line.return_value = 'ospf router-id 10.1.1.1'
+    update_router_id(instance)
+    assert_equals(instance.exit_msg, None)
+    assert_equals(instance.has_changed, False)
+
+
+
+
 @mock.patch('dev_modules.cl_quagga_ospf.update_reference_bandwidth')
 @mock.patch('dev_modules.cl_quagga_ospf.get_running_config')
 @mock.patch('dev_modules.cl_quagga_ospf.update_router_id')
