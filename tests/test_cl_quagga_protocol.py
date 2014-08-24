@@ -17,7 +17,7 @@ def mod_args(arg):
 def test_module_args(mock_module,
                      mock_check_setting,
                      mock_modify_config):
-    """ cl_quagga - Test module argument specs"""
+    """ cl_quagga_protocol - Test module argument specs"""
     instance = mock_module.return_value
     instance.params.get.side_effect = mod_args
     main()
@@ -70,6 +70,9 @@ def check_setting_args_bgp_absent(arg):
 @mock.patch('dev_modules.cl_quagga_protocol.AnsibleModule')
 def test_setting_is_configured(mock_module,
                                mock_read_daemon_file):
+    """
+    cl_quagga_protocol - test setting is configured
+    """
     instance = mock_module.return_value
     instance.params.get.side_effect = check_setting_args
     daemon_output = open('tests/quagga_daemon.txt').readlines()
@@ -99,6 +102,9 @@ def test_setting_is_configured(mock_module,
 @mock.patch('dev_modules.cl_quagga_protocol.AnsibleModule')
 def test_modify_config(mock_module,
                        mock_read_daemon_file):
+    """
+    cl_quagga_protocol - test modifying quagga daemon config
+    """
     instance = mock_module.return_value
     # ospf is disabled. Should enable zebra and ospf
     instance.params.get.side_effect = check_setting_args
@@ -144,7 +150,7 @@ def test_modify_config(mock_module,
 
 def test_convert_to_yes_or_no():
     """
-    cl_quagga - convert state from present/absent to yes/no
+    cl_quagga_protocol - convert state from present/absent to yes/no
     """
     state = 'absent'
     assert_equals(convert_to_yes_or_no(state), 'no')
