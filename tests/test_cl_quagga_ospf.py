@@ -55,8 +55,8 @@ def test_get_running_config(mock_module,
     """
     cl_quagga_ospf - test getting vtysh running config
     """
-    mock_run_cl_cmd.return_value = open('tests/vtysh.txt').\
-        readlines()
+    output = open('tests/vtysh.txt').read()
+    mock_run_cl_cmd.return_value = output.split('\n')
     instance = mock_module.return_value
     get_running_config(instance)
     assert_equals(instance.global_config,

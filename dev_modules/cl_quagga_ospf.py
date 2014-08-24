@@ -133,12 +133,11 @@ def has_interface_config(module):
 
 def get_running_config(module):
     running_config = run_cl_cmd(module, '/usr/bin/vtysh -c "show run"')
-    f = StringIO.StringIO(''.join(running_config))
     got_global_config = False
     got_interface_config = False
     module.interface_config = {}
     module.global_config = []
-    for line in f:
+    for line in running_config:
         line = line.lower().strip()
         # ignore the '!' lines or blank lines
         if len(line.strip()) <= 1:
@@ -246,7 +245,6 @@ def main():
 
 # import module snippets
 from ansible.module_utils.basic import *
-import StringIO
 import re
 # incompatible with ansible 1.4.4 - ubuntu 12.04 version
 # from ansible.module_utils.urls import *
