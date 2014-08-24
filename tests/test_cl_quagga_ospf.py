@@ -2,7 +2,8 @@ import mock
 from mock import MagicMock
 from nose.tools import set_trace
 from dev_modules.cl_quagga_ospf import check_dsl_dependencies, main, \
-    has_interface_config, get_running_config
+    has_interface_config, get_running_config, update_router_id, \
+    add_global_ospf_config
 from asserts import assert_equals
 
 
@@ -46,6 +47,7 @@ def test_check_mod_args(mock_module,
     assert_equals(mock_check_dsl_dependencies.call_args_list[1],
                   mock.call(instance, ['interface'], 'area', '0.0.0.0'))
 
+
 @mock.patch('dev_modules.cl_quagga_ospf.run_cl_cmd')
 @mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
 def test_get_running_config(mock_module,
@@ -57,20 +59,53 @@ def test_get_running_config(mock_module,
     assert_equals(instance.global_config,
                   ['ospf router-id 10.100.1.1',
                    'auto-cost reference-bandwidth 40000'])
-    ## check that interface config is done right
+    # check that interface config is done right
     assert_equals(len(instance.interface_config.keys()), 57)
     assert_equals(instance.interface_config.get('swp52s0'),
                   ['ip ospf area 0.0.0.0',
                    'ip ospf network point-to-point',
                    'ipv6 nd suppress-ra', 'link-detect'])
+    mock_run_cl_cmd.assert_called_with(instance,
+                                       '/usr/bin/vtysh -c "show run"')
+
+def mod_args_global_ospf_config(arg):
+    values = {
+        'router_id': '10.1.1.1',
+        'reference_bandwidth': '40000'
+    }
+    return values[arg]
+
+@mock.patch('dev_modules.cl_quagga_ospf.update_reference_bandwidth')
+@mock.patch('dev_modules.cl_quagga_ospf.get_running_config')
+@mock.patch('dev_modules.cl_quagga_ospf.update_router_id')
+@mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
+def test_add_global_ospf_config(mock_module,
+                                mock_update_router_id,
+                                mock_get_running_config,
+                                mock_reference_bandwidth):
+    instance = mock_module.return_value
+    instance.params.get.side_effect = mod_args_global_ospf_config
+    manager = mock.Mock()
+    manager.attach_mock(mock_get_running_config, 'get_running_config')
+    manager.attach_mock(mock_update_router_id, 'update_router_id')
+    manager.attach_mock(mock_reference_bandwidth, 'update_reference_bandwidth')
+    add_global_ospf_config(instance)
+    expected_calls = [mock.call.get_running_config(instance),
+                      mock.call.update_router_id(instance),
+                      mock.call.update_reference_bandwidth(instance)]
+    # check order of functions called
+    assert_equals(manager.method_calls, expected_calls)
+    # ensure exit_json is called at the end of the function with a change or no
+    # change
+    assert_equals(instance.exit_json.call_count, 1)
 
 
 @mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
 def test_has_int_config(mock_module):
     instance = mock_module.return_value
-    instance.params = { 'interface': '', 'state': '' }
+    instance.params = {'interface': '', 'state': ''}
     assert_equals(has_interface_config(instance), True)
-    instance.params = { 'state': '' }
+    instance.params = {'state': ''}
     assert_equals(has_interface_config(instance), False)
 
 

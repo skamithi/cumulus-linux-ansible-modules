@@ -21,7 +21,7 @@ options:
         required: true
     reference_bandwidth:
         description:
-            - Set the OSPF reference bandwidth
+            - Set the OSPF auto cost reference bandwidth
         default: 40000
     saveconfig:
         description:
@@ -139,7 +139,7 @@ def get_running_config(module):
     module.interface_config = {}
     module.global_config = []
     for line in f:
-        line = line.strip()
+        line = line.lower().strip()
         # ignore the '!' lines or blank lines
         if len(line.strip()) <= 1:
             if got_global_config:
@@ -147,8 +147,6 @@ def get_running_config(module):
             if got_interface_config:
                 got_interface_config = False
             continue
-        # make all char lowercase
-        line = line.lower()
         # begin capturing global config
         m0 = re.match('router\s+ospf', line)
         if m0:
@@ -162,15 +160,42 @@ def get_running_config(module):
             continue
         if got_interface_config:
             module.interface_config[module.ifacename].append(line)
+            continue
         if got_global_config:
             module.global_config.append(line)
             continue
 
-def get_global_config(module):
-    get_running_config()
+
+def get_config_line(module, stmt, ifacename=None):
+    if ifacename:
+        pass
+    else:
+        for i in module.global_config:
+            if re.match(stmt, i):
+                return i
+    return None
+
+
+def update_router_id(module):
+    router_id_stmt = 'ospf router-id '
+    actual_router_id_stmt = get_config_line(module, router_id_stmt)
+    router_id_stmt = 'ospf router-id ' + module.params.get('router_id')
+
+
+def update_reference_bandwidth(module):
+    pass
+
 
 def add_global_ospf_config(module):
-    get_global_config(module)
+    module.has_changed = False
+    get_running_config(module)
+    if module.params.get('router_id'):
+        update_router_id(module)
+    if module.params.get('reference_bandwidth'):
+        update_reference_bandwidth(module)
+    if module.has_changed is False:
+        module.exit_msg = 'No change in OSPF global config'
+    module.exit_json(msg=module.exit_msg, changed=module.has_changed)
 
 
 def config_ospf_interface_config(module):
