@@ -156,7 +156,13 @@ def get_running_config(module):
             module.interface_config[module.ifacename].append(line)
             continue
         if got_global_config:
-            module.global_config.append(line)
+            m3 = re.match('\s*passive-interface\s+(\w+)', line)
+            if m3:
+                ifaceconfig = module.interface_config.get(m3.group(1))
+                if ifaceconfig:
+                    ifaceconfig.append('passive-interface')
+            else:
+                module.global_config.append(line)
             continue
 
 

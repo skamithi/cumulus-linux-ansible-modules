@@ -108,7 +108,8 @@ def test_get_running_config(mock_module,
     assert_equals(instance.interface_config.get('swp52s0'),
                   ['ip ospf area 0.0.0.0',
                    'ip ospf network point-to-point',
-                   'ipv6 nd suppress-ra', 'link-detect'])
+                   'ipv6 nd suppress-ra', 'link-detect',
+                   'passive-interface'])
     mock_run_cl_cmd.assert_called_with(instance,
                                        '/usr/bin/vtysh -c "show run"')
 
