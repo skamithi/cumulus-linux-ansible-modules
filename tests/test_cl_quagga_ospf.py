@@ -3,14 +3,55 @@ from mock import MagicMock
 from nose.tools import set_trace
 from dev_modules.cl_quagga_ospf import check_dsl_dependencies, main, \
     has_interface_config, get_running_config, update_router_id, \
-    add_global_ospf_config, update_reference_bandwidth
+    add_global_ospf_config, update_reference_bandwidth, \
+    get_interface_addr_config, check_ip_addr_show
 from asserts import assert_equals
 
 
+@mock.patch('dev_modules.cl_quagga_ospf.run_cl_cmd')
+@mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
+def test_check_ip_addr_show(mock_module,
+                            mock_run_cl_cmd):
+    instance = mock_module.return_value
+    mock_run_cl_cmd.return_value = \
+        ['55: swp52s0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 9000 qdisc ',
+         '    link/ether 44:38:39:00:26:14 brd ff:ff:ff:ff:ff:ff',
+         '    inet 10.1.1.1/24 scope global swp52s0']
+    assert_equals(check_ip_addr_show(instance), True)
+    # no ip address found in ip addr show
+    mock_run_cl_cmd.return_value = \
+        ['55: swp52s0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 9000 qdisc ',
+         '    link/ether 44:38:39:00:26:14 brd ff:ff:ff:ff:ff:ff']
+    assert_equals(check_ip_addr_show(instance), False)
+
+
+@mock.patch('dev_modules.cl_quagga_ospf.run_cl_cmd')
+@mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
+def test_get_interface_address_config(mock_module,
+                                      mock_run_cl_cmd):
+    """
+    cl_quagga_ospf - test if interface addr is present
+    """
+    instance = mock_module.return_value
+    mock_run_cl_cmd.return_value = ''.join(
+        ['[', '    {', '        "auto": true,',
+         '        "config": {', '            "address": "10.1.1.1/24",',
+         '            "mtu": "9000"', '        },',
+         '        "addr_method": null,', '        "name": "swp52s0",',
+         '        "addr_family": null', '    }', ']'])
+    assert_equals(get_interface_addr_config(instance), True)
+
+
+@mock.patch('dev_modules.cl_quagga_ospf.config_ospf_interface_config')
+@mock.patch('dev_modules.cl_quagga_ospf.add_global_ospf_config')
+@mock.patch('dev_modules.cl_quagga_ospf.has_interface_config')
 @mock.patch('dev_modules.cl_quagga_ospf.check_dsl_dependencies')
 @mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
 def test_check_mod_args(mock_module,
-                        mock_check_dsl_dependencies):
+                        mock_check_dsl_dependencies,
+                        mock_has_interface_config,
+                        mock_add_global_ospf,
+                        mock_config_ospf_int):
     """
     cl_quagga_ospf - check mod args
     """

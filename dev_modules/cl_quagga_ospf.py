@@ -91,13 +91,16 @@ interface with a cost of 65535
 '''
 
 
-def run_cl_cmd(module, cmd, check_rc=True):
+def run_cl_cmd(module, cmd, check_rc=True, split_lines=True):
     try:
         (rc, out, err) = module.run_command(cmd, check_rc=check_rc)
     except Exception, e:
         module.fail_json(msg=e.strerror)
     # trim last line as it is always empty
-    ret = out.splitlines()
+    if split_lines:
+        ret = out.splitlines()
+    else:
+        ret = out
     return ret
 
 
@@ -204,8 +207,68 @@ def add_global_ospf_config(module):
     module.exit_json(msg=module.exit_msg, changed=module.has_changed)
 
 
-def config_ospf_interface_config(module):
+def enable_or_disable_ospf_on_int(module):
     pass
+    # ifacename = module.params.get('interface')
+    # ifaceconfig = module.interface_config.get(ifacename)
+    # check if ospf needs to be removed or added
+    # areaid = module.params.get('area')
+
+
+def check_ip_addr_show(module):
+    cmd_line = "/sbin/ip addr show %s" % (module.params.get('interface'))
+    result = run_cl_cmd(module, cmd_line)
+    for _line in result:
+        m0 = re.match('\s+inet\s+\w+', _line)
+        if m0:
+            return True
+    return False
+
+
+def get_interface_addr_config(module):
+    ifacename = module.params.get('interface')
+    cmd_line = "/sbin/ifquery --format json %s" % (ifacename)
+    int_config = run_cl_cmd(module, cmd_line, True, False)
+    ifquery_obj = json.loads(int_config)[0]
+    iface_has_address = False
+    if 'address' in ifquery_obj.get('config'):
+        for addr in ifquery_obj.get('config').get('address'):
+            try:
+                socket.inet_aton(addr.split('/')[0])
+                iface_has_address = True
+                break
+            except socket.error:
+                pass
+    else:
+        iface_has_address = check_ip_addr_show(module)
+        if iface_has_address is False:
+            _msg = "interface %s does not have an IP configured. " +\
+                "Required for OSPFv2 to work"
+            module.fail_json(msg=_msg)
+    # for test purposes only
+    return iface_has_address
+
+
+def update_point2point(module):
+    pass
+
+
+def update_cost(module):
+    pass
+
+
+def update_passive(module):
+    pass
+
+
+def config_ospf_interface_config(module):
+    module.has_changed = False
+    get_running_config(module)
+    get_interface_addr_config(module)
+    if enable_or_disable_ospf_on_int(module):
+        update_point2point(module)
+        update_cost(module)
+        update_passive(module)
 
 
 def main():
@@ -237,6 +300,7 @@ def main():
 # import module snippets
 from ansible.module_utils.basic import *
 import re
+import socket
 # incompatible with ansible 1.4.4 - ubuntu 12.04 version
 # from ansible.module_utils.urls import *
 
