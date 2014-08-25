@@ -4,7 +4,8 @@ from nose.tools import set_trace
 from dev_modules.cl_quagga_ospf import check_dsl_dependencies, main, \
     has_interface_config, get_running_config, update_router_id, \
     add_global_ospf_config, update_reference_bandwidth, \
-    get_interface_addr_config, check_ip_addr_show
+    get_interface_addr_config, check_ip_addr_show, \
+    config_ospf_interface_config
 from asserts import assert_equals
 
 
@@ -192,6 +193,54 @@ def test_update_reference_bandwidth(mock_module,
     update_reference_bandwidth(instance)
     assert_equals(instance.exit_msg, '')
     assert_equals(instance.has_changed, False)
+
+
+@mock.patch('dev_modules.cl_quagga_ospf.get_running_config')
+@mock.patch('dev_modules.cl_quagga_ospf.get_interface_addr_config')
+@mock.patch('dev_modules.cl_quagga_ospf.enable_or_disable_ospf_on_int')
+@mock.patch('dev_modules.cl_quagga_ospf.update_point2point')
+@mock.patch('dev_modules.cl_quagga_ospf.update_cost')
+@mock.patch('dev_modules.cl_quagga_ospf.update_passive')
+@mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
+def test_config_ospf_interface_config(mock_module,
+                                      mock_update_passive,
+                                      mock_update_cost,
+                                      mock_update_point2point,
+                                      mock_ospf_on_int,
+                                      mock_get_interface_addr,
+                                      mock_get_running_config):
+    instance = mock_module.return_value
+    manager = mock.Mock()
+    manager.attach_mock(mock_get_running_config, 'get_running_config')
+    manager.attach_mock(mock_get_interface_addr, 'get_interface_addr_config')
+    manager.attach_mock(mock_ospf_on_int, 'enable_or_disable_ospf_on_int')
+    manager.attach_mock(mock_update_point2point, 'update_point2point')
+    manager.attach_mock(mock_update_cost, 'update_cost')
+    manager.attach_mock(mock_update_passive, 'update_passive')
+    # enable the ospf interface
+    expected_calls = [mock.call.get_running_config(instance),
+                      mock.call.get_interface_addr_config(instance),
+                      mock.call.enable_or_disable_ospf_on_int(instance),
+                      mock.call.update_point2point(instance),
+                      mock.call.update_cost(instance),
+                      mock.call.update_passive(instance)]
+    config_ospf_interface_config(instance)
+    assert_equals(manager.method_calls, expected_calls)
+    # disable ospf on the interface
+    mock_ospf_on_int.return_value = False
+    manager = mock.Mock()
+    manager.attach_mock(mock_get_running_config, 'get_running_config')
+    manager.attach_mock(mock_get_interface_addr, 'get_interface_addr_config')
+    manager.attach_mock(mock_ospf_on_int, 'enable_or_disable_ospf_on_int')
+    manager.attach_mock(mock_update_point2point, 'update_point2point')
+    manager.attach_mock(mock_update_cost, 'update_cost')
+    manager.attach_mock(mock_update_passive, 'update_passive')
+    expected_calls = [mock.call.get_running_config(instance),
+                      mock.call.get_interface_addr_config(instance),
+                      mock.call.enable_or_disable_ospf_on_int(instance)]
+    config_ospf_interface_config(instance)
+    assert_equals(manager.method_calls, expected_calls)
+
 
 
 @mock.patch('dev_modules.cl_quagga_ospf.update_reference_bandwidth')
