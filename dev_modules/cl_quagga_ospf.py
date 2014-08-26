@@ -304,7 +304,30 @@ def update_point2point(module):
 
 
 def update_passive(module):
-    pass
+    ifacename = module.params.get('interface')
+    passive = module.params.get('passive')
+    iface_config = module.interface_config.get(ifacename)
+    found_passive = None
+    for i in iface_config:
+        m0 = re.search('passive-interface', i)
+        if m0:
+            found_passive = True
+    if passive:
+        if not found_passive:
+            cmd_line = '/usr/bin/cl-ospf interface set %s passive' % \
+                (ifacename)
+            run_cl_cmd(cmd_line)
+            module.has_changed = True
+            module.exit_msg += '%s is now OSPFv2 passive ' % (ifacename)
+    else:
+        if found_passive:
+            cmd_line = '/usr/bin/cl-ospf interface clear %s passive' % \
+                (ifacename)
+            run_cl_cmd(cmd_line)
+            module.has_changed = True
+            module.exit_msg += '%s is no longer OSPFv2 passive ' % \
+                (ifacename)
+
 
 def update_cost(module):
     pass
@@ -325,6 +348,13 @@ def config_ospf_interface_config(module):
         update_passive(module)
 
 
+def saveconfig(module):
+    if module.params.get('saveconfig') and\
+            module.has_changed:
+        run_cl_cmd('/usr/bin/vtysh -c "wr mem"')
+        module.exit_msg += 'Saving Config '
+
+
 def main():
     module = AnsibleModule(
         argument_spec=dict(
@@ -337,7 +367,8 @@ def main():
             state=dict(type='str',
                        choices=['present', 'absent']),
             point2point=dict(choices=BOOLEANS, default=False),
-            saveconfig=dict(choices=BOOLEANS, default=False)
+            saveconfig=dict(choices=BOOLEANS, default=False),
+            passive=dict(choices=BOOLEANS, default=False)
         ),
         mutually_exclusive=[['reference_bandwidth', 'interface'],
                             ['router_id', 'interface']]
@@ -352,6 +383,10 @@ def main():
         add_global_ospf_config(module)
     else:
         config_ospf_interface_config(module)
+    saveconfig(module)
+    if module.has_changed:
+        module.exit_json(msg=module.exit_msg, changed=module.has_changed)
+
 
 # import module snippets
 from ansible.module_utils.basic import *

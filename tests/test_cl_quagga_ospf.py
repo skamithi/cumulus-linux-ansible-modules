@@ -6,7 +6,7 @@ from dev_modules.cl_quagga_ospf import check_dsl_dependencies, main, \
     add_global_ospf_config, update_reference_bandwidth, \
     get_interface_addr_config, check_ip_addr_show, \
     config_ospf_interface_config, enable_or_disable_ospf_on_int, \
-    update_point2point
+    update_point2point, update_passive
 from asserts import assert_equals
 
 
@@ -32,6 +32,9 @@ def mod_enable_disable_ospf_v2(arg):
 @mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
 def test_enable_or_disable_ospf_on_int(mock_module,
                                        mock_run_cl_cmd):
+    """
+    cl_quagga_ospf - test enabling or disabling ospf
+    """
     instance = mock_module.return_value
     # when state is absent and ospf is enabled
     instance.params.get.side_effect = mod_enable_disable_ospf
@@ -70,18 +73,11 @@ def test_enable_or_disable_ospf_on_int(mock_module,
 
 def mod_arg_update_p2p_off(arg):
     values = {
-        'point2point': True,
-        'interface': 'swp2'
-    }
-    return values[arg]
-
-
-def mod_arg_update_p2p_off_v2(arg):
-    values = {
         'point2point': False,
         'interface': 'swp2'
     }
     return values[arg]
+
 
 def mod_arg_update_p2p_on(arg):
     values = {
@@ -90,14 +86,18 @@ def mod_arg_update_p2p_on(arg):
     }
     return values[arg]
 
+
 @mock.patch('dev_modules.cl_quagga_ospf.run_cl_cmd')
 @mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
 def test_update_p2p(mock_module, mock_run_cl_cmd):
+    """
+    cl_quagga_ospf - test updating p2p status of ospf int
+    """
     instance = mock_module.return_value
     instance.has_changed = False
     instance.exit_msg = ''
     # point2point is not configured but request to set
-    instance.params.get.side_effect = mod_arg_update_p2p_off
+    instance.params.get.side_effect = mod_arg_update_p2p_on
     instance.interface_config.get.return_value = []
     update_point2point(instance)
     assert_equals(instance.has_changed, True)
@@ -107,14 +107,14 @@ def test_update_p2p(mock_module, mock_run_cl_cmd):
     # point2point is not configured but request set to clear
     instance.has_changed = False
     instance.exit_msg = ''
-    instance.params.get.side_effect = mod_arg_update_p2p_off_v2
+    instance.params.get.side_effect = mod_arg_update_p2p_off
     instance.interface_config.get.return_value = []
     update_point2point(instance)
     assert_equals(instance.has_changed, False)
     # point2point is configured and request not set
     instance.has_changed = False
     instance.exit_msg = ''
-    instance.params.get.side_effect = mod_arg_update_p2p_off_v2
+    instance.params.get.side_effect = mod_arg_update_p2p_off
     instance.interface_config.get.return_value = \
         ['ip ospf network point-to-point']
     update_point2point(instance)
@@ -144,10 +144,86 @@ def test_update_p2p(mock_module, mock_run_cl_cmd):
     assert_equals(instance.has_changed, False)
 
 
+def mod_arg_update_passive_off(arg):
+    values = {
+        'passive': False,
+        'interface': 'swp2'
+    }
+    return values[arg]
+
+
+def mod_arg_update_passive_on(arg):
+    values = {
+        'passive': True,
+        'interface': 'swp2'
+    }
+    return values[arg]
+
+
+@mock.patch('dev_modules.cl_quagga_ospf.run_cl_cmd')
+@mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
+def test_update_passive(mock_module, mock_run_cl_cmd):
+    """
+    cl_quagga_ospf - test updating ospfv2 passive status
+    """
+    instance = mock_module.return_value
+    instance.has_changed = False
+    instance.exit_msg = ''
+    # passive is not configured but request to set
+    instance.params.get.side_effect = mod_arg_update_passive_on
+    instance.interface_config.get.return_value = []
+    update_passive(instance)
+    assert_equals(instance.has_changed, True)
+    assert_equals(instance.exit_msg, 'swp2 is now OSPFv2 passive ')
+    mock_run_cl_cmd.assert_called_with(
+        '/usr/bin/cl-ospf interface set swp2 passive')
+    # passive-int is not configured but request set to clear
+    instance.has_changed = False
+    instance.exit_msg = ''
+    instance.params.get.side_effect = mod_arg_update_passive_off
+    instance.interface_config.get.return_value = []
+    update_passive(instance)
+    assert_equals(instance.has_changed, False)
+    # passive-int is configured and request not set
+    instance.has_changed = False
+    instance.exit_msg = ''
+    instance.params.get.side_effect = mod_arg_update_passive_off
+    instance.interface_config.get.return_value = \
+        ['passive-interface']
+    update_passive(instance)
+    assert_equals(instance.has_changed, True)
+    mock_run_cl_cmd.assert_called_with(
+        '/usr/bin/cl-ospf interface clear swp2 passive')
+    assert_equals(instance.exit_msg,
+                  'swp2 is no longer OSPFv2 passive ')
+    # point2point not configured request is set
+    instance.has_changed = False
+    instance.exit_msg = ''
+    instance.params.get.side_effect = mod_arg_update_passive_on
+    instance.interface_config.get.return_value = []
+    update_passive(instance)
+    assert_equals(instance.has_changed, True)
+    mock_run_cl_cmd.assert_called_with(
+        '/usr/bin/cl-ospf interface set swp2 passive')
+    assert_equals(instance.exit_msg,
+                  'swp2 is now OSPFv2 passive ')
+    # point2point configured, request is set
+    instance.has_changed = False
+    instance.exit_msg = ''
+    instance.params.get.side_effect = mod_arg_update_passive_on
+    instance.interface_config.get.return_value = [
+        'passive-interface']
+    update_passive(instance)
+    assert_equals(instance.has_changed, False)
+
+
 @mock.patch('dev_modules.cl_quagga_ospf.run_cl_cmd')
 @mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
 def test_check_ip_addr_show(mock_module,
                             mock_run_cl_cmd):
+    """
+    cl_quagga_ospf  - test checking for ip address in kernel
+    """
     instance = mock_module.return_value
     mock_run_cl_cmd.return_value = \
         ['55: swp52s0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 9000 qdisc ',
@@ -208,6 +284,10 @@ def test_check_mod_args(mock_module,
                         'false', 0]},
         'state': {'type': 'str', 'choices': ['present', 'absent']},
         'cost': {'type': 'str'}, 'interface': {'type': 'str'},
+        'passive': {'default': False,
+                    'choices': ['yes', 'on', '1',
+                                'true', 1, 'no',
+                                'off', '0', 'false', 0]},
         'point2point': {'default': False,
                         'choices': ['yes', 'on', '1',
                                     'true', 1, 'no',
@@ -345,6 +425,9 @@ def test_config_ospf_interface_config(mock_module,
                                       mock_ospf_on_int,
                                       mock_get_interface_addr,
                                       mock_get_running_config):
+    """
+    cl_quagga_ospf - test configuring ospf interface
+    """
     instance = mock_module.return_value
     manager = mock.Mock()
     manager.attach_mock(mock_get_running_config, 'get_running_config')
