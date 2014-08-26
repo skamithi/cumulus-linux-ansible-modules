@@ -17,6 +17,16 @@ def mod_enable_disable_ospf(arg):
     return values[arg]
 
 
+def mod_enable_disable_ospf_v2(arg):
+    values = {
+        'interface': 'swp1',
+        'state': 'present',
+        'area': '0.0.0.0'
+
+    }
+    return values[arg]
+
+
 @mock.patch('dev_modules.cl_quagga_ospf.run_cl_cmd')
 @mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
 def test_enable_or_disable_ospf_on_int(mock_module,
@@ -37,7 +47,21 @@ def test_enable_or_disable_ospf_on_int(mock_module,
     enable_or_disable_ospf_on_int(instance)
     assert_equals(instance.has_changed, False)
     assert_equals(instance.exit_msg, '')
-
+    # when state is present and ospf is disabled and area exists
+    instance.params.get.side_effect = mod_enable_disable_ospf_v2
+    instance.interface_config.get.return_value = []
+    enable_or_disable_ospf_on_int(instance)
+    assert_equals(instance.exit_msg,
+                  'OSPFv2 now enabled on swp1 area 0.0.0.0 ')
+    assert_equals(instance.has_changed, True)
+    # when state is present and ospf is enabled and area is the same
+    instance.has_changed = False
+    instance.exit_msg = ''
+    instance.params.get.side_effect = mod_enable_disable_ospf_v2
+    instance.interface_config.get.return_value = ['ip ospf area 0.0.0.0']
+    enable_or_disable_ospf_on_int(instance)
+    assert_equals(instance.exit_msg, '')
+    assert_equals(instance.has_changed, False)
 
 @mock.patch('dev_modules.cl_quagga_ospf.run_cl_cmd')
 @mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
@@ -271,7 +295,6 @@ def test_config_ospf_interface_config(mock_module,
                       mock.call.enable_or_disable_ospf_on_int(instance)]
     config_ospf_interface_config(instance)
     assert_equals(manager.method_calls, expected_calls)
-
 
 
 @mock.patch('dev_modules.cl_quagga_ospf.update_reference_bandwidth')

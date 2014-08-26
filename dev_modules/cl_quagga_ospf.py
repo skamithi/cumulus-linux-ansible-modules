@@ -263,20 +263,29 @@ def enable_or_disable_ospf_on_int(module):
     ifacename = module.params.get('interface')
     _state = module.params.get('state')
     iface_config = module.interface_config.get(ifacename)
+    found_area = None
+    for i in iface_config:
+        m0 = re.search('ip\s+ospf\s+area\s+([0-9.]+)', i)
+        if m0:
+            found_area = m0.group(1)
+            break
     if _state == 'absent':
         for i in iface_config:
-            m0 = re.search('ip\s+ospf\s+area\s+([0-9.]+)', i)
-            if m0:
-                cmd_line = '/usr/bin/cl-ospf clear %s area %s' % \
-                    (ifacename, m0.group(1))
+            if found_area:
+                cmd_line = '/usr/bin/cl-ospf clear %s area' % \
+                    (ifacename)
                 run_cl_cmd(cmd_line)
                 module.has_changed = True
                 module.exit_msg += "OSPFv2 now disabled on %s " % (ifacename)
         # for test purposes only
         return
-    ifaceconfig = module.interface_config.get(ifacename)
-    # check if ospf needs to be removed or added
-    areaid = module.params.get('area')
+    area_id = module.params.get('area')
+    if found_area != area_id:
+        cmd_line = '/usr/bin/cl-ospf set %s area %s' % \
+            (ifacename, area_id)
+        module.has_changed = True
+        module.exit_msg +=  "OSPFv2 now enabled on %s area %s " % \
+            (ifacename, area_id)
 
 
 def config_ospf_interface_config(module):
