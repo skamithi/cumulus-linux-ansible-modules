@@ -6,7 +6,7 @@ from dev_modules.cl_quagga_ospf import check_dsl_dependencies, main, \
     add_global_ospf_config, update_reference_bandwidth, \
     get_interface_addr_config, check_ip_addr_show, \
     config_ospf_interface_config, enable_or_disable_ospf_on_int, \
-    update_point2point, update_passive
+    update_point2point, update_passive, update_cost, saveconfig
 from asserts import assert_equals
 
 
@@ -215,6 +215,115 @@ def test_update_passive(mock_module, mock_run_cl_cmd):
         'passive-interface']
     update_passive(instance)
     assert_equals(instance.has_changed, False)
+
+
+def mod_arg_update_cost_on(arg):
+    values = {
+        'interface': 'swp1',
+        'cost': '32267'
+    }
+    return values[arg]
+
+
+def mod_arg_update_cost_off(arg):
+    values = {
+        'interface': 'swp1',
+        'cost': None
+    }
+    return values[arg]
+
+
+@mock.patch('dev_modules.cl_quagga_ospf.run_cl_cmd')
+@mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
+def test_update_cost(mock_module, mock_run_cl_cmd):
+    """
+    cl_quagga_ospf - test updating ospfv2 cost status
+    """
+    instance = mock_module.return_value
+    instance.has_changed = False
+    instance.exit_msg = ''
+    # cost is not configured but request to set
+    instance.params.get.side_effect = mod_arg_update_cost_on
+    instance.interface_config.get.return_value = []
+    update_cost(instance)
+    assert_equals(instance.has_changed, True)
+    assert_equals(instance.exit_msg,
+                  'OSPFv2 cost on swp1 changed to 32267 ')
+    mock_run_cl_cmd.assert_called_with(
+        '/usr/bin/cl-ospf interface set swp1 cost 32267')
+    # cost is not configured but request set to clear
+    instance.has_changed = False
+    instance.exit_msg = ''
+    instance.params.get.side_effect = mod_arg_update_cost_off
+    instance.interface_config.get.return_value = []
+    update_cost(instance)
+    assert_equals(instance.has_changed, False)
+    # cost is configured and request not set
+    instance.has_changed = False
+    instance.exit_msg = ''
+    instance.params.get.side_effect = mod_arg_update_cost_off
+    instance.interface_config.get.return_value = \
+        ['ip ospf cost 32267']
+    update_cost(instance)
+    assert_equals(instance.has_changed, True)
+    mock_run_cl_cmd.assert_called_with(
+        '/usr/bin/cl-ospf interface clear swp1 cost')
+    assert_equals(instance.exit_msg,
+                  'OSPFv2 cost on swp1 changed to default ')
+    # cost not configured request is set
+    instance.has_changed = False
+    instance.exit_msg = ''
+    instance.params.get.side_effect = mod_arg_update_cost_on
+    instance.interface_config.get.return_value = []
+    update_cost(instance)
+    assert_equals(instance.has_changed, True)
+    mock_run_cl_cmd.assert_called_with(
+        '/usr/bin/cl-ospf interface set swp1 cost 32267')
+    assert_equals(instance.exit_msg,
+                  'OSPFv2 cost on swp1 changed to 32267 ')
+    # cost configured, request is set
+    instance.has_changed = False
+    instance.exit_msg = ''
+    instance.params.get.side_effect = mod_arg_update_cost_on
+    instance.interface_config.get.return_value = [
+        'ip ospf cost 32267']
+    update_cost(instance)
+    assert_equals(instance.has_changed, False)
+
+
+@mock.patch('dev_modules.cl_quagga_ospf.run_cl_cmd')
+@mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
+def test_saveconfig(mock_module,
+                    mock_run_cl_cmd):
+    """
+    cl_quagga_ospf - test saving config
+    """
+    instance = mock_module.return_value
+    # saveconfig - true has_changed - False
+    instance.exit_msg = ''
+    instance.params.get.return_value = True
+    instance.has_changed = False
+    saveconfig(instance)
+    assert_equals(instance.exit_msg, '')
+    # saveconfig - true has_changed - True
+    instance.exit_msg = ''
+    instance.params.get.return_value = True
+    instance.has_changed = True
+    saveconfig(instance)
+    mock_run_cl_cmd.assert_called_with('/usr/bin/vtysh -c "wr mem"')
+    assert_equals(instance.exit_msg, 'Saving Config ')
+    # saveconfig - False has_changed - True
+    instance.exit_msg = ''
+    instance.params.get.return_value = False
+    instance.has_changed = True
+    saveconfig(instance)
+    assert_equals(instance.exit_msg, '')
+    # saveconfig - False has_changed - False
+    instance.exit_msg = ''
+    instance.params.get.return_value = False
+    instance.has_changed = False
+    saveconfig(instance)
+    assert_equals(instance.exit_msg, '')
 
 
 @mock.patch('dev_modules.cl_quagga_ospf.run_cl_cmd')

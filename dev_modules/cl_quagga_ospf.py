@@ -286,6 +286,7 @@ def update_point2point(module):
         m0 = re.search('ip\s+ospf\s+network\s+point-to-point', i)
         if m0:
             found_point2point = True
+            break
     if point2point:
         if not found_point2point:
             cmd_line = '/usr/bin/cl-ospf interface set %s network point-to-point' % \
@@ -312,6 +313,7 @@ def update_passive(module):
         m0 = re.search('passive-interface', i)
         if m0:
             found_passive = True
+            break
     if passive:
         if not found_passive:
             cmd_line = '/usr/bin/cl-ospf interface set %s passive' % \
@@ -330,7 +332,31 @@ def update_passive(module):
 
 
 def update_cost(module):
-    pass
+    ifacename = module.params.get('interface')
+    cost = module.params.get('cost')
+    iface_config = module.interface_config.get(ifacename)
+    found_cost = None
+    for i in iface_config:
+        m0 = re.search('ip\s+ospf\s+cost\s+(\d+)', i)
+        if m0:
+            found_cost = m0.group(1)
+            break
+
+    if cost != found_cost and cost is not None:
+        cmd_line = '/usr/bin/cl-ospf interface set %s cost %s' % \
+            (ifacename, cost)
+        run_cl_cmd(cmd_line)
+        module.has_changed = True
+        module.exit_msg += 'OSPFv2 cost on %s changed to %s ' % \
+            (ifacename, cost)
+    elif cost is None and found_cost is not None:
+        cmd_line = '/usr/bin/cl-ospf interface clear %s cost' % \
+            (ifacename)
+        run_cl_cmd(cmd_line)
+        module.has_changed = True
+        module.exit_msg += 'OSPFv2 cost on %s changed to default ' % \
+            (ifacename)
+
 
 def config_ospf_interface_config(module):
     module.has_changed = False
