@@ -1,0 +1,257 @@
+Building configuration...
+
+Current configuration:
+!
+hostname zebra
+log file /var/log/quagga/zebra.log
+hostname ospfd
+log file /var/log/quagga/ospfd.log
+log timestamp precision 6
+hostname quagga
+!
+service integrated-vtysh-config
+!
+password cn321
+enable password cn321
+!
+interface eth0
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface lo
+ link-detect
+!
+interface swp1
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp2
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp3
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp4
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp5
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp6
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp7
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp8
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp9
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp10
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp11
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp12
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp13
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp14
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp15
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp16
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp17
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp18
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp19
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp20
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp21
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp22
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp23
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp24
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp25
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp26
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp27
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp28
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp29
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp30
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp31
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp32
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp33
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp34
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp35
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp36
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp37
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp38
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp39
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp40
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp41
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp42
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp43
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp44
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp45
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp46
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp47
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp48
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp49
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp50
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp51
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp52s0
+ ip ospf area 0.0.0.0
+ ip ospf network point-to-point
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp52s1
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp52s2
+ ipv6 nd suppress-ra
+ link-detect
+!
+interface swp52s3
+ ipv6 nd suppress-ra
+ link-detect
+!
+router ospf
+ ospf router-id 10.100.1.1
+ auto-cost reference-bandwidth 40000
+ passive-interface swp52s0
+ passive-interface swp52s1
+!
+ip forwarding
+ipv6 forwarding
+!
+line vty
+!
+end
