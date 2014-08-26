@@ -247,18 +247,6 @@ def get_interface_addr_config(module):
     return iface_has_address
 
 
-def update_point2point(module):
-    pass
-
-
-def update_cost(module):
-    pass
-
-
-def update_passive(module):
-    pass
-
-
 def enable_or_disable_ospf_on_int(module):
     ifacename = module.params.get('interface')
     _state = module.params.get('state')
@@ -283,10 +271,41 @@ def enable_or_disable_ospf_on_int(module):
     if found_area != area_id:
         cmd_line = '/usr/bin/cl-ospf set %s area %s' % \
             (ifacename, area_id)
+        run_cl_cmd(cmd_line)
         module.has_changed = True
-        module.exit_msg +=  "OSPFv2 now enabled on %s area %s " % \
+        module.exit_msg += "OSPFv2 now enabled on %s area %s " % \
             (ifacename, area_id)
 
+
+def update_point2point(module):
+    ifacename = module.params.get('interface')
+    point2point = module.params.get('point2point')
+    iface_config = module.interface_config.get(ifacename)
+    found_point2point = None
+    for i in iface_config:
+        m0 = re.search('ip\s+ospf\s+network\s+point-to-point', i)
+        if m0:
+            found_point2point = True
+    if point2point:
+        if not found_point2point:
+            cmd_line = '/usr/bin/cl-ospf interface set %s network point-to-point' % \
+                (ifacename)
+            run_cl_cmd(cmd_line)
+            module.has_changed = True
+            module.exit_msg += 'OSPFv2 point2point set on %s ' % (ifacename)
+    else:
+        if found_point2point:
+            cmd_line = '/usr/bin/cl-ospf interface clear %s network' % (ifacename)
+            run_cl_cmd(cmd_line)
+            module.has_changed = True
+            module.exit_msg += 'OSPFv2 point2point removed on %s ' % (ifacename)
+
+
+def update_passive(module):
+    pass
+
+def update_cost(module):
+    pass
 
 def config_ospf_interface_config(module):
     module.has_changed = False

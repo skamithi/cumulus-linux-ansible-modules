@@ -5,7 +5,8 @@ from dev_modules.cl_quagga_ospf import check_dsl_dependencies, main, \
     has_interface_config, get_running_config, update_router_id, \
     add_global_ospf_config, update_reference_bandwidth, \
     get_interface_addr_config, check_ip_addr_show, \
-    config_ospf_interface_config, enable_or_disable_ospf_on_int
+    config_ospf_interface_config, enable_or_disable_ospf_on_int, \
+    update_point2point
 from asserts import assert_equals
 
 
@@ -38,6 +39,7 @@ def test_enable_or_disable_ospf_on_int(mock_module,
     instance.exit_msg = ''
     instance.interface_config.get.return_value = ['ip ospf area 0.0.0.0']
     enable_or_disable_ospf_on_int(instance)
+    mock_run_cl_cmd.assert_called_with('/usr/bin/cl-ospf clear swp1 area')
     assert_equals(instance.exit_msg, 'OSPFv2 now disabled on swp1 ')
     assert_equals(instance.has_changed, True)
     # when state is absent and ospf is disabled
@@ -54,6 +56,7 @@ def test_enable_or_disable_ospf_on_int(mock_module,
     assert_equals(instance.exit_msg,
                   'OSPFv2 now enabled on swp1 area 0.0.0.0 ')
     assert_equals(instance.has_changed, True)
+    mock_run_cl_cmd.assert_called_with('/usr/bin/cl-ospf set swp1 area 0.0.0.0')
     # when state is present and ospf is enabled and area is the same
     instance.has_changed = False
     instance.exit_msg = ''
@@ -62,6 +65,53 @@ def test_enable_or_disable_ospf_on_int(mock_module,
     enable_or_disable_ospf_on_int(instance)
     assert_equals(instance.exit_msg, '')
     assert_equals(instance.has_changed, False)
+
+
+def mod_arg_update_p2p_off(arg):
+    values = {
+        'point2point': True,
+        'interface': 'swp2'
+    }
+    return values[arg]
+
+def mod_arg_update_p2p_off_v2(arg):
+    values = {
+        'point2point': False,
+        'interface': 'swp2'
+    }
+    return values[arg]
+
+
+@mock.patch('dev_modules.cl_quagga_ospf.run_cl_cmd')
+@mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
+def test_update_p2p(mock_module, mock_run_cl_cmd):
+    instance = mock_module.return_value
+    instance.has_changed = False
+    instance.exit_msg = ''
+    # point2point is not configured but request to set
+    instance.params.get.side_effect = mod_arg_update_p2p_off
+    instance.interface_config.get.return_value = []
+    update_point2point(instance)
+    assert_equals(instance.has_changed, True)
+    assert_equals(instance.exit_msg, 'OSPFv2 point2point set on swp2 ')
+    mock_run_cl_cmd.assert_called_with('/usr/bin/cl-ospf interface set swp2 network point-to-point')
+    # point2point is not configured but request set to clear
+    instance.has_changed = False
+    instance.exit_msg = ''
+    instance.params.get.side_effect = mod_arg_update_p2p_off_v2
+    instance.interface_config.get.return_value = []
+    update_point2point(instance)
+    assert_equals(instance.has_changed, False)
+    # point2point is configured and request not set
+    instance.has_changed = False
+    instance.exit_msg = ''
+    instance.params.get.side_effect = mod_arg_update_p2p_off_v2
+    instance.interface_config.get.return_value = ['ip ospf network point-to-point']
+    update_point2point(instance)
+    assert_equals(instance.has_changed, True)
+    mock_run_cl_cmd.assert_called_with(
+        '/usr/bin/cl-ospf interface clear swp2 network')
+
 
 @mock.patch('dev_modules.cl_quagga_ospf.run_cl_cmd')
 @mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
