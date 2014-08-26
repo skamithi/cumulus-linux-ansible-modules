@@ -56,7 +56,8 @@ def test_enable_or_disable_ospf_on_int(mock_module,
     assert_equals(instance.exit_msg,
                   'OSPFv2 now enabled on swp1 area 0.0.0.0 ')
     assert_equals(instance.has_changed, True)
-    mock_run_cl_cmd.assert_called_with('/usr/bin/cl-ospf set swp1 area 0.0.0.0')
+    mock_run_cl_cmd.assert_called_with('/usr/bin/cl-ospf set swp1' +
+                                       ' area 0.0.0.0')
     # when state is present and ospf is enabled and area is the same
     instance.has_changed = False
     instance.exit_msg = ''
@@ -73,6 +74,7 @@ def mod_arg_update_p2p_off(arg):
         'interface': 'swp2'
     }
     return values[arg]
+
 
 def mod_arg_update_p2p_off_v2(arg):
     values = {
