@@ -213,14 +213,6 @@ def add_global_ospf_config(module):
     module.exit_json(msg=module.exit_msg, changed=module.has_changed)
 
 
-def enable_or_disable_ospf_on_int(module):
-    pass
-    # ifacename = module.params.get('interface')
-    # ifaceconfig = module.interface_config.get(ifacename)
-    # check if ospf needs to be removed or added
-    # areaid = module.params.get('area')
-
-
 def check_ip_addr_show(module):
     cmd_line = "/sbin/ip addr show %s" % (module.params.get('interface'))
     result = run_cl_cmd(module, cmd_line)
@@ -267,13 +259,39 @@ def update_passive(module):
     pass
 
 
+def enable_or_disable_ospf_on_int(module):
+    ifacename = module.params.get('interface')
+    _state = module.params.get('state')
+    iface_config = module.interface_config.get(ifacename)
+    if _state == 'absent':
+        for i in iface_config:
+            m0 = re.search('ip\s+ospf\s+area\s+([0-9.]+)', i)
+            if m0:
+                cmd_line = '/usr/bin/cl-ospf clear %s area %s' % \
+                    (ifacename, m0.group(1))
+                run_cl_cmd(cmd_line)
+                module.has_changed = True
+                module.exit_msg += "OSPFv2 now disabled on %s " % (ifacename)
+        # for test purposes only
+        return
+    ifaceconfig = module.interface_config.get(ifacename)
+    # check if ospf needs to be removed or added
+    areaid = module.params.get('area')
+
+
 def config_ospf_interface_config(module):
     module.has_changed = False
+    # get all ospf related config from quagga both globally and iface based
     get_running_config(module)
+    # if interface does not have ipv4 address module should fail
     get_interface_addr_config(module)
+    # if ospf should be enabled, continue to check for the remaining attrs
     if enable_or_disable_ospf_on_int(module):
+        # update ospf point-to-point setting if needed
         update_point2point(module)
+        # update ospf interface cost if needed
         update_cost(module)
+        # update ospf interface passive setting
         update_passive(module)
 
 
@@ -298,6 +316,8 @@ def main():
                                     'point2point', 'passive'],
                            'interface', 'swp1')
     check_dsl_dependencies(module, ['interface'], 'area', '0.0.0.0')
+    module.has_changed = False
+    module.exit_msg = ''
     if has_interface_config(module):
         add_global_ospf_config(module)
     else:
