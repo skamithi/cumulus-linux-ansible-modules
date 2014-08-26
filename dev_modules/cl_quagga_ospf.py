@@ -295,10 +295,12 @@ def update_point2point(module):
             module.exit_msg += 'OSPFv2 point2point set on %s ' % (ifacename)
     else:
         if found_point2point:
-            cmd_line = '/usr/bin/cl-ospf interface clear %s network' % (ifacename)
+            cmd_line = '/usr/bin/cl-ospf interface clear %s network' % \
+                (ifacename)
             run_cl_cmd(cmd_line)
             module.has_changed = True
-            module.exit_msg += 'OSPFv2 point2point removed on %s ' % (ifacename)
+            module.exit_msg += 'OSPFv2 point2point removed on %s ' % \
+                (ifacename)
 
 
 def update_passive(module):

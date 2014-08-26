@@ -83,6 +83,12 @@ def mod_arg_update_p2p_off_v2(arg):
     }
     return values[arg]
 
+def mod_arg_update_p2p_on(arg):
+    values = {
+        'point2point': True,
+        'interface': 'swp2'
+    }
+    return values[arg]
 
 @mock.patch('dev_modules.cl_quagga_ospf.run_cl_cmd')
 @mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
@@ -96,7 +102,8 @@ def test_update_p2p(mock_module, mock_run_cl_cmd):
     update_point2point(instance)
     assert_equals(instance.has_changed, True)
     assert_equals(instance.exit_msg, 'OSPFv2 point2point set on swp2 ')
-    mock_run_cl_cmd.assert_called_with('/usr/bin/cl-ospf interface set swp2 network point-to-point')
+    mock_run_cl_cmd.assert_called_with(
+        '/usr/bin/cl-ospf interface set swp2 network point-to-point')
     # point2point is not configured but request set to clear
     instance.has_changed = False
     instance.exit_msg = ''
@@ -108,11 +115,33 @@ def test_update_p2p(mock_module, mock_run_cl_cmd):
     instance.has_changed = False
     instance.exit_msg = ''
     instance.params.get.side_effect = mod_arg_update_p2p_off_v2
-    instance.interface_config.get.return_value = ['ip ospf network point-to-point']
+    instance.interface_config.get.return_value = \
+        ['ip ospf network point-to-point']
     update_point2point(instance)
     assert_equals(instance.has_changed, True)
     mock_run_cl_cmd.assert_called_with(
         '/usr/bin/cl-ospf interface clear swp2 network')
+    assert_equals(instance.exit_msg,
+                  'OSPFv2 point2point removed on swp2 ')
+    # point2point not configured request is set
+    instance.has_changed = False
+    instance.exit_msg = ''
+    instance.params.get.side_effect = mod_arg_update_p2p_on
+    instance.interface_config.get.return_value = []
+    update_point2point(instance)
+    assert_equals(instance.has_changed, True)
+    mock_run_cl_cmd.assert_called_with(
+        '/usr/bin/cl-ospf interface set swp2 network point-to-point')
+    assert_equals(instance.exit_msg,
+                  'OSPFv2 point2point set on swp2 ')
+    # point2point configured, request is set
+    instance.has_changed = False
+    instance.exit_msg = ''
+    instance.params.get.side_effect = mod_arg_update_p2p_on
+    instance.interface_config.get.return_value = [
+        'ip ospf network point-to-point']
+    update_point2point(instance)
+    assert_equals(instance.has_changed, False)
 
 
 @mock.patch('dev_modules.cl_quagga_ospf.run_cl_cmd')
