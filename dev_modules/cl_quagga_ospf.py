@@ -261,8 +261,7 @@ def enable_or_disable_ospf_on_int(module):
                 run_cl_cmd(module, cmd_line)
                 module.has_changed = True
                 module.exit_msg += "OSPFv2 now disabled on %s " % (ifacename)
-        # for test purposes only
-        return
+        return False
     area_id = module.params.get('area')
     if found_area != area_id:
         cmd_line = '/usr/bin/cl-ospf interface set %s area %s' % \
@@ -271,6 +270,7 @@ def enable_or_disable_ospf_on_int(module):
         module.has_changed = True
         module.exit_msg += "OSPFv2 now enabled on %s area %s " % \
             (ifacename, area_id)
+    return True
 
 
 def update_point2point(module):

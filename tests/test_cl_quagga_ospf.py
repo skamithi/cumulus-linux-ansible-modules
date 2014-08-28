@@ -41,7 +41,7 @@ def test_enable_or_disable_ospf_on_int(mock_module,
     instance.has_changed = False
     instance.exit_msg = ''
     instance.interface_config.get.return_value = ['ip ospf area 0.0.0.0']
-    enable_or_disable_ospf_on_int(instance)
+    assert_equals(enable_or_disable_ospf_on_int(instance), False)
     mock_run_cl_cmd.assert_called_with(instance,
                                        '/usr/bin/cl-ospf clear swp1 area')
     assert_equals(instance.exit_msg, 'OSPFv2 now disabled on swp1 ')
@@ -56,7 +56,7 @@ def test_enable_or_disable_ospf_on_int(mock_module,
     # when state is present and ospf is disabled and area exists
     instance.params.get.side_effect = mod_enable_disable_ospf_v2
     instance.interface_config.get.return_value = []
-    enable_or_disable_ospf_on_int(instance)
+    assert_equals(enable_or_disable_ospf_on_int(instance), True)
     assert_equals(instance.exit_msg,
                   'OSPFv2 now enabled on swp1 area 0.0.0.0 ')
     assert_equals(instance.has_changed, True)
@@ -68,7 +68,7 @@ def test_enable_or_disable_ospf_on_int(mock_module,
     instance.exit_msg = ''
     instance.params.get.side_effect = mod_enable_disable_ospf_v2
     instance.interface_config.get.return_value = ['ip ospf area 0.0.0.0']
-    enable_or_disable_ospf_on_int(instance)
+    assert_equals(enable_or_disable_ospf_on_int(instance), True)
     assert_equals(instance.exit_msg, '')
     assert_equals(instance.has_changed, False)
 
