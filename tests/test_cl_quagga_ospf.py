@@ -71,6 +71,14 @@ def test_enable_or_disable_ospf_on_int(mock_module,
     assert_equals(enable_or_disable_ospf_on_int(instance), True)
     assert_equals(instance.exit_msg, '')
     assert_equals(instance.has_changed, False)
+    # return failure message when int is not in kernel
+    instance.params.get.side_effect = mod_enable_disable_ospf
+    instance.has_changed = False
+    instance.exit_msg = ''
+    instance.interface_config.get.return_value = None
+    assert_equals(enable_or_disable_ospf_on_int(instance), False)
+    instance.fail_json.assert_called_with(msg='swp1 is not found in ' +\
+                                          'Quagga config. Check that swp1 is active in kernel')
 
 
 def mod_arg_update_p2p_off(arg):

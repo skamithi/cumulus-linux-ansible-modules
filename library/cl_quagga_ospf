@@ -247,6 +247,11 @@ def enable_or_disable_ospf_on_int(module):
     ifacename = module.params.get('interface')
     _state = module.params.get('state')
     iface_config = module.interface_config.get(ifacename)
+    if iface_config is None:
+        _msg = "%s is not found in Quagga config. " % (ifacename) + \
+            "Check that %s is active in kernel" % (ifacename)
+        module.fail_json(msg=_msg)
+        return False  # for test purposes
     found_area = None
     for i in iface_config:
         m0 = re.search('ip\s+ospf\s+area\s+([0-9.]+)', i)
