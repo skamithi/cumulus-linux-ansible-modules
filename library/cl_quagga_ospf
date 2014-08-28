@@ -412,7 +412,8 @@ def main():
     saveconfig(module)
     if module.has_changed:
         module.exit_json(msg=module.exit_msg, changed=module.has_changed)
-
+    else:
+        module.exit_json(msg='no change', changed=False)
 
 # import module snippets
 from ansible.module_utils.basic import *

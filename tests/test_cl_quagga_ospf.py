@@ -413,7 +413,7 @@ def test_check_mod_args(mock_module,
                             'interface', 'swp1'))
     assert_equals(mock_check_dsl_dependencies.call_args_list[1],
                   mock.call(instance, ['interface'], 'area', '0.0.0.0'))
-
+    instance.exit_json.assert_called_with(msg='no change', changed=False)
 
 @mock.patch('dev_modules.cl_quagga_ospf.run_cl_cmd')
 @mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
