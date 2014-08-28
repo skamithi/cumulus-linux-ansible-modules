@@ -406,9 +406,9 @@ def main():
     module.has_changed = False
     module.exit_msg = ''
     if has_interface_config(module):
-        add_global_ospf_config(module)
-    else:
         config_ospf_interface_config(module)
+    else:
+        add_global_ospf_config(module)
     saveconfig(module)
     if module.has_changed:
         module.exit_json(msg=module.exit_msg, changed=module.has_changed)
