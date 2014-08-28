@@ -262,7 +262,7 @@ def enable_or_disable_ospf_on_int(module):
             if found_area:
                 cmd_line = '/usr/bin/cl-ospf clear %s area' % \
                     (ifacename)
-                run_cl_cmd(cmd_line)
+                run_cl_cmd(module, cmd_line)
                 module.has_changed = True
                 module.exit_msg += "OSPFv2 now disabled on %s " % (ifacename)
         # for test purposes only
@@ -271,7 +271,7 @@ def enable_or_disable_ospf_on_int(module):
     if found_area != area_id:
         cmd_line = '/usr/bin/cl-ospf interface set %s area %s' % \
             (ifacename, area_id)
-        run_cl_cmd(cmd_line)
+        run_cl_cmd(module, cmd_line)
         module.has_changed = True
         module.exit_msg += "OSPFv2 now enabled on %s area %s " % \
             (ifacename, area_id)
@@ -291,14 +291,14 @@ def update_point2point(module):
         if not found_point2point:
             cmd_line = '/usr/bin/cl-ospf interface set %s network point-to-point' % \
                 (ifacename)
-            run_cl_cmd(cmd_line)
+            run_cl_cmd(module, cmd_line)
             module.has_changed = True
             module.exit_msg += 'OSPFv2 point2point set on %s ' % (ifacename)
     else:
         if found_point2point:
             cmd_line = '/usr/bin/cl-ospf interface clear %s network' % \
                 (ifacename)
-            run_cl_cmd(cmd_line)
+            run_cl_cmd(module, cmd_line)
             module.has_changed = True
             module.exit_msg += 'OSPFv2 point2point removed on %s ' % \
                 (ifacename)
@@ -318,14 +318,14 @@ def update_passive(module):
         if not found_passive:
             cmd_line = '/usr/bin/cl-ospf interface set %s passive' % \
                 (ifacename)
-            run_cl_cmd(cmd_line)
+            run_cl_cmd(module, cmd_line)
             module.has_changed = True
             module.exit_msg += '%s is now OSPFv2 passive ' % (ifacename)
     else:
         if found_passive:
             cmd_line = '/usr/bin/cl-ospf interface clear %s passive' % \
                 (ifacename)
-            run_cl_cmd(cmd_line)
+            run_cl_cmd(module, cmd_line)
             module.has_changed = True
             module.exit_msg += '%s is no longer OSPFv2 passive ' % \
                 (ifacename)
@@ -345,14 +345,14 @@ def update_cost(module):
     if cost != found_cost and cost is not None:
         cmd_line = '/usr/bin/cl-ospf interface set %s cost %s' % \
             (ifacename, cost)
-        run_cl_cmd(cmd_line)
+        run_cl_cmd(module, cmd_line)
         module.has_changed = True
         module.exit_msg += 'OSPFv2 cost on %s changed to %s ' % \
             (ifacename, cost)
     elif cost is None and found_cost is not None:
         cmd_line = '/usr/bin/cl-ospf interface clear %s cost' % \
             (ifacename)
-        run_cl_cmd(cmd_line)
+        run_cl_cmd(module, cmd_line)
         module.has_changed = True
         module.exit_msg += 'OSPFv2 cost on %s changed to default ' % \
             (ifacename)
@@ -377,7 +377,7 @@ def config_ospf_interface_config(module):
 def saveconfig(module):
     if module.params.get('saveconfig') and\
             module.has_changed:
-        run_cl_cmd('/usr/bin/vtysh -c "wr mem"')
+        run_cl_cmd(module, '/usr/bin/vtysh -c "wr mem"')
         module.exit_msg += 'Saving Config '
 
 

@@ -42,7 +42,8 @@ def test_enable_or_disable_ospf_on_int(mock_module,
     instance.exit_msg = ''
     instance.interface_config.get.return_value = ['ip ospf area 0.0.0.0']
     enable_or_disable_ospf_on_int(instance)
-    mock_run_cl_cmd.assert_called_with('/usr/bin/cl-ospf clear swp1 area')
+    mock_run_cl_cmd.assert_called_with(instance,
+                                       '/usr/bin/cl-ospf clear swp1 area')
     assert_equals(instance.exit_msg, 'OSPFv2 now disabled on swp1 ')
     assert_equals(instance.has_changed, True)
     # when state is absent and ospf is disabled
@@ -59,7 +60,8 @@ def test_enable_or_disable_ospf_on_int(mock_module,
     assert_equals(instance.exit_msg,
                   'OSPFv2 now enabled on swp1 area 0.0.0.0 ')
     assert_equals(instance.has_changed, True)
-    mock_run_cl_cmd.assert_called_with('/usr/bin/cl-ospf interface set swp1' +
+    mock_run_cl_cmd.assert_called_with(instance,
+                                       '/usr/bin/cl-ospf interface set swp1' +
                                        ' area 0.0.0.0')
     # when state is present and ospf is enabled and area is the same
     instance.has_changed = False
@@ -102,8 +104,8 @@ def test_update_p2p(mock_module, mock_run_cl_cmd):
     update_point2point(instance)
     assert_equals(instance.has_changed, True)
     assert_equals(instance.exit_msg, 'OSPFv2 point2point set on swp2 ')
-    mock_run_cl_cmd.assert_called_with(
-        '/usr/bin/cl-ospf interface set swp2 network point-to-point')
+    mock_run_cl_cmd.assert_called_with(instance,
+                                       '/usr/bin/cl-ospf interface set swp2 network point-to-point')
     # point2point is not configured but request set to clear
     instance.has_changed = False
     instance.exit_msg = ''
@@ -119,8 +121,8 @@ def test_update_p2p(mock_module, mock_run_cl_cmd):
         ['ip ospf network point-to-point']
     update_point2point(instance)
     assert_equals(instance.has_changed, True)
-    mock_run_cl_cmd.assert_called_with(
-        '/usr/bin/cl-ospf interface clear swp2 network')
+    mock_run_cl_cmd.assert_called_with(instance,
+                                       '/usr/bin/cl-ospf interface clear swp2 network')
     assert_equals(instance.exit_msg,
                   'OSPFv2 point2point removed on swp2 ')
     # point2point not configured request is set
@@ -130,7 +132,7 @@ def test_update_p2p(mock_module, mock_run_cl_cmd):
     instance.interface_config.get.return_value = []
     update_point2point(instance)
     assert_equals(instance.has_changed, True)
-    mock_run_cl_cmd.assert_called_with(
+    mock_run_cl_cmd.assert_called_with(instance,
         '/usr/bin/cl-ospf interface set swp2 network point-to-point')
     assert_equals(instance.exit_msg,
                   'OSPFv2 point2point set on swp2 ')
@@ -175,7 +177,7 @@ def test_update_passive(mock_module, mock_run_cl_cmd):
     update_passive(instance)
     assert_equals(instance.has_changed, True)
     assert_equals(instance.exit_msg, 'swp2 is now OSPFv2 passive ')
-    mock_run_cl_cmd.assert_called_with(
+    mock_run_cl_cmd.assert_called_with(instance,
         '/usr/bin/cl-ospf interface set swp2 passive')
     # passive-int is not configured but request set to clear
     instance.has_changed = False
@@ -192,7 +194,7 @@ def test_update_passive(mock_module, mock_run_cl_cmd):
         ['passive-interface']
     update_passive(instance)
     assert_equals(instance.has_changed, True)
-    mock_run_cl_cmd.assert_called_with(
+    mock_run_cl_cmd.assert_called_with(instance,
         '/usr/bin/cl-ospf interface clear swp2 passive')
     assert_equals(instance.exit_msg,
                   'swp2 is no longer OSPFv2 passive ')
@@ -203,7 +205,7 @@ def test_update_passive(mock_module, mock_run_cl_cmd):
     instance.interface_config.get.return_value = []
     update_passive(instance)
     assert_equals(instance.has_changed, True)
-    mock_run_cl_cmd.assert_called_with(
+    mock_run_cl_cmd.assert_called_with(instance,
         '/usr/bin/cl-ospf interface set swp2 passive')
     assert_equals(instance.exit_msg,
                   'swp2 is now OSPFv2 passive ')
@@ -249,7 +251,7 @@ def test_update_cost(mock_module, mock_run_cl_cmd):
     assert_equals(instance.has_changed, True)
     assert_equals(instance.exit_msg,
                   'OSPFv2 cost on swp1 changed to 32267 ')
-    mock_run_cl_cmd.assert_called_with(
+    mock_run_cl_cmd.assert_called_with(instance,
         '/usr/bin/cl-ospf interface set swp1 cost 32267')
     # cost is not configured but request set to clear
     instance.has_changed = False
@@ -266,7 +268,7 @@ def test_update_cost(mock_module, mock_run_cl_cmd):
         ['ip ospf cost 32267']
     update_cost(instance)
     assert_equals(instance.has_changed, True)
-    mock_run_cl_cmd.assert_called_with(
+    mock_run_cl_cmd.assert_called_with(instance,
         '/usr/bin/cl-ospf interface clear swp1 cost')
     assert_equals(instance.exit_msg,
                   'OSPFv2 cost on swp1 changed to default ')
@@ -277,7 +279,7 @@ def test_update_cost(mock_module, mock_run_cl_cmd):
     instance.interface_config.get.return_value = []
     update_cost(instance)
     assert_equals(instance.has_changed, True)
-    mock_run_cl_cmd.assert_called_with(
+    mock_run_cl_cmd.assert_called_with(instance,
         '/usr/bin/cl-ospf interface set swp1 cost 32267')
     assert_equals(instance.exit_msg,
                   'OSPFv2 cost on swp1 changed to 32267 ')
@@ -310,7 +312,7 @@ def test_saveconfig(mock_module,
     instance.params.get.return_value = True
     instance.has_changed = True
     saveconfig(instance)
-    mock_run_cl_cmd.assert_called_with('/usr/bin/vtysh -c "wr mem"')
+    mock_run_cl_cmd.assert_called_with(instance, '/usr/bin/vtysh -c "wr mem"')
     assert_equals(instance.exit_msg, 'Saving Config ')
     # saveconfig - False has_changed - True
     instance.exit_msg = ''
