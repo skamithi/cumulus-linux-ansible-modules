@@ -436,7 +436,7 @@ def add_bridgeports(module, iface):
 
 def modify_switch_config(module, iface):
     filestr = "auto %s\n" % (iface['name'])
-    if iface['addr_method'] is not None:
+    if iface.get('addr_method') is not None:
         filestr += "iface %s inet %s\n" % \
             (iface['name'], iface['addr_method'])
     else:
@@ -578,7 +578,7 @@ def main():
 # import module snippets
 from ansible.module_utils.basic import *
 # incompatible with ansible 1.4.4 ubuntu 12.04 version
-#from ansible.module_utils.urls import *
+# from ansible.module_utils.urls import *
 import copy
 import os
 
