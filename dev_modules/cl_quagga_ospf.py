@@ -35,13 +35,13 @@ options:
         description:
             - Boolean. enable OSPF point2point on the interface
         choices: ['yes', 'no']
-        default: ['no']
         require_together:
             - with interface option
     area:
         description:
             - defines the area the interface is in
-        default: '0.0.0.0'
+        required_together:
+            - with interface option
     cost:
         description:
             - define ospf cost.
@@ -50,7 +50,6 @@ options:
     passive:
         description:
             - make OSPF interface passive
-        default: 'no'
         choices: ['yes', 'no']
         required_together:
             - with interface option
@@ -117,10 +116,7 @@ def check_dsl_dependencies(module, input_options,
 
 
 def has_interface_config(module):
-    modparams = []
-    for k, v in module.params.iteritems():
-        modparams.append(k)
-    if 'interface' in modparams:
+    if module.params.get('interface') is not None:
         return True
     else:
         return False
@@ -389,12 +385,12 @@ def main():
             router_id=dict(type='str'),
             interface=dict(type='str'),
             cost=dict(type='str'),
-            area=dict(type='str', default='0.0.0.0'),
+            area=dict(type='str'),
             state=dict(type='str',
                        choices=['present', 'absent']),
-            point2point=dict(choices=BOOLEANS, default=False),
+            point2point=dict(choices=BOOLEANS),
             saveconfig=dict(choices=BOOLEANS, default=False),
-            passive=dict(choices=BOOLEANS, default=False)
+            passive=dict(choices=BOOLEANS)
         ),
         mutually_exclusive=[['reference_bandwidth', 'interface'],
                             ['router_id', 'interface']]

@@ -383,7 +383,7 @@ def test_check_mod_args(mock_module,
     main()
     mock_module.assert_called_with(argument_spec={
         'router_id': {'type': 'str'},
-        'area': {'default': '0.0.0.0', 'type': 'str'},
+        'area': { 'type': 'str'},
         'reference_bandwidth': {
             'default': '40000',
             'type': 'str'
@@ -395,12 +395,10 @@ def test_check_mod_args(mock_module,
                         'false', 0]},
         'state': {'type': 'str', 'choices': ['present', 'absent']},
         'cost': {'type': 'str'}, 'interface': {'type': 'str'},
-        'passive': {'default': False,
-                    'choices': ['yes', 'on', '1',
+        'passive': {'choices': ['yes', 'on', '1',
                                 'true', 1, 'no',
                                 'off', '0', 'false', 0]},
-        'point2point': {'default': False,
-                        'choices': ['yes', 'on', '1',
+        'point2point': {'choices': ['yes', 'on', '1',
                                     'true', 1, 'no',
                                     'off', '0', 'false', 0]}},
         mutually_exclusive=[
@@ -600,15 +598,30 @@ def test_add_global_ospf_config(mock_module,
     assert_equals(instance.exit_json.call_count, 1)
 
 
+def mod_arg_has_int_config(arg):
+    values = {
+        'interface': 'swp1',
+        'state': 'present'
+    }
+    return values[arg]
+
+def mod_arg_has_int_config_none(arg):
+    values = {
+        'interface': None,
+        'state': 'present'
+    }
+    return values[arg]
+
+
 @mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
 def test_has_int_config(mock_module):
     """
-    cl_quagga_ospf - get interface config from quagga. TODO get from ifquery
+    cl_quagga_ospf - test has interface config
     """
     instance = mock_module.return_value
-    instance.params = {'interface': '', 'state': ''}
+    instance.params.get.side_effect = mod_arg_has_int_config
     assert_equals(has_interface_config(instance), True)
-    instance.params = {'state': ''}
+    instance.params.get.side_effect = mod_arg_has_int_config_none
     assert_equals(has_interface_config(instance), False)
 
 
@@ -618,6 +631,8 @@ def check_dsl_args(arg):
         'state':  None,
         'point2point': 'yes',
         'interface': None,
+        'router_id': '10.1.1.1',
+        'area': '0.0.0.0'
     }
     return values[arg]
 
