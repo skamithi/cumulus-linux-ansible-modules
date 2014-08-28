@@ -269,7 +269,7 @@ def enable_or_disable_ospf_on_int(module):
         return
     area_id = module.params.get('area')
     if found_area != area_id:
-        cmd_line = '/usr/bin/cl-ospf set %s area %s' % \
+        cmd_line = '/usr/bin/cl-ospf interface set %s area %s' % \
             (ifacename, area_id)
         run_cl_cmd(cmd_line)
         module.has_changed = True
