@@ -20,6 +20,9 @@ options:
         description:
             - route/prefix that module is checking for.
         required: true
+    router:
+        description:
+            - router along the path you want to see or not see.
     state:
         description:
             - Describes if the prefix should be present.\
@@ -50,6 +53,9 @@ Example playbook entries using the cl_prefix_check module to check if a prefix e
 
     - name: install license from local filesystem restart switchd
       cl_prefix_check: prefix:1.2.3.4 timeout:10 interval:2 
+      
+    - name: install license from local filesystem restart switchd
+      cl_prefix_check: prefix:1.2.3.4 router: 5.5.5.5
 '''
 
 
@@ -90,6 +96,7 @@ def main():
     module = AnsibleModule(
         argument_spec=dict(
             prefix=dict(required=True, type='str'),
+            router=dict(type='str'),
             state=dict(default=present, type='str',
                        choices=['present', 'absent']),
             timeout=dict(default='2', type='str'),   
@@ -99,6 +106,7 @@ def main():
     )
 
     prefix = module.params.get('prefix')
+    router = module.params.get('router')
     state = module.params.get('state')
     timeout = module.params.get('timeout')
     interval = module.params.get('interval')
