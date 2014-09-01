@@ -92,8 +92,7 @@ def loop_route_check(module):
         time.sleep(poll_interval)
         count += 1
         if count == timeout:
-            break
-        return False
+            return False
 
 
 def main():
@@ -140,7 +139,6 @@ def main():
 from ansible.module_utils.basic import *
 import time
 # from ansible.module_utils.urls import *
-import time
 
 if __name__ == '__main__':
     main()

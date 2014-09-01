@@ -1,4 +1,5 @@
 import mock
+from timeit import timeit
 from nose.tools import set_trace
 from dev_modules.cl_prefix_check import main, \
     loop_route_check
@@ -36,7 +37,7 @@ def mock_loop_check_arg(arg):
     values = {
         'prefix': '10.1.1.1',
         'state': 'present',
-        'timeout': 10,
+        'timeout': '5',
         'poll_interval': '1'
     }
     return values[arg]
@@ -45,7 +46,29 @@ def mock_loop_check_arg(arg):
 @mock.patch('dev_modules.cl_prefix_check.AnsibleModule')
 def test_loop_route_check_state_present(mock_module,
                                         mock_run_cl_cmd):
+    """
+    cl_prefix_check - state is present route is present
+    """
     instance = mock_module.return_value
     instance.params.get.side_effect = mock_loop_check_arg
+    ## run_cl_cmd returns an array if there is match
+    ## returns any empty array if nothing is found.
     mock_run_cl_cmd.return_value = ['something']
+    # state is present, route is found
     assert_equals(loop_route_check(instance), True)
+
+@mock.patch('dev_modules.cl_prefix_check.run_cl_cmd')
+@mock.patch('dev_modules.cl_prefix_check.AnsibleModule')
+def test_loop_route_check_state_present_route_failed(mock_module,
+                                        mock_run_cl_cmd):
+
+    """
+    cl_prefix_check - state is present route is not present, timeout occurs
+    """
+    # state is present, object is not found
+    # function takes 10 seconds to run. Difficult to
+    # test timers in nose..havent found a good way yet
+    instance = mock_module.return_value
+    instance.params.get.side_effect = mock_loop_check_arg
+    mock_run_cl_cmd.return_value = []
+    assert_equals(loop_route_check(instance), False)
