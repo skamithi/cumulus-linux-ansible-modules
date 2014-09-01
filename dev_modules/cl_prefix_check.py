@@ -20,7 +20,8 @@ route traffic.
 options:
     prefix:
         description:
-            - route/prefix that module is checking for.
+            - route/prefix that module is checking for. Uses format \
+acceptable to "ip route show" command. See manpage of "ip-route" for more details
         required: true
     state:
         description:
@@ -30,15 +31,14 @@ options:
     timeout:
         description:
             - timeout for route to disappear, number of loops
-        default: 2
+        default: 5
     poll_interval:
         description:
             - interval to check in seconds
         default: 1
 
 notes:
-    - License Documentation - \
-http://cumulusnetworks.com/docs/2.1/quick-start/quick-start.html
+    - IP Route Documentation - [ add later ]\
     - Contact Cumulus Networks @ http://cumulusnetworks.com/contact/
 '''
 EXAMPLES = '''
@@ -46,14 +46,16 @@ Example playbook entries using the cl_prefix_check \
 module to check if a prefix exists
 
     tasks:
-    - name: install license using http url
-      cl_prefix_check: prefix:4.4.4.4
+    - name:  Test if prefix is present.
+      cl_prefix_check: prefix=4.4.4.0/24
 
-    - name: install license from local filesystem
-      cl_prefix_check: prefix:10.0.1.1 timeout:200 state=absent
+    - name: Test if route is absent. poll for 200 seconds. Poll interval \
+at default setting of 1 second
+      cl_prefix_check: prefix=10.0.1.0/24 timeout=200 state=absent
 
-    - name: install license from local filesystem restart switchd
-      cl_prefix_check: prefix:1.2.3.4 timeout:10 interval:2
+    - name: Test if route is present, with a timeout of 10 seconds and poll \
+interval of 2 seconds
+      cl_prefix_check: prefix=10.1.1.0/24 timeout=10 poll_interval=2
 
 '''
 
