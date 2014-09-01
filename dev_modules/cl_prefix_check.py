@@ -112,33 +112,16 @@ def main():
         ),
     )
 
-    state = module.params.get('state')
-    _changed = False
-    _msg = ""
+    _state = module.params.get('state')
+    _timeout = module.params.get('timeout')
+    _msg = "testing whether route is %s. " % (_state)
 
-    return_value = loop_route_check(module)
-
-    if state == 'present':
-        if return_value == 'present':
-            _msg = 'route was found successfully'
-        elif return_value == 'absent':
-            _msg = 'unsuccessful in finding route'
-            module.fail_json(msg=_msg)
-        else:
-            _msg = 'unexpected value, state=present, return_value = unknown'
-            module.fail.json(msg=_msg)
-    elif state == 'absent':
-        if return_value == 'present':
-            _msg = 'route was still found, unsuccessful removal'
-            module.fail_json(msg=_msg)
-        elif return_value == 'absent':
-            _msg = 'route was successfully removed'
-        else:
-            _msg = 'unexpected value, state=absent, return_value = unknown'
-            module.fail.json(msg=_msg)
-
-    module.exit_json(changed=_changed, msg=_msg)
-
+    if loop_route_check(module):
+        _msg += 'Condition meet'
+        module.exit_json(_msg, changed=True)
+    else:
+        _msg += 'Condition not met %s second timer expired' % (_timeout)
+        module.exit_json(_msg, changed=False)
 
 # import module snippets
 from ansible.module_utils.basic import *

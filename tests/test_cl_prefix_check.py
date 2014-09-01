@@ -32,6 +32,28 @@ def test_module_args(mock_module,
                                  'default': 'present',
                                  'choices': ['present', 'absent']}})
 
+@mock.patch('dev_modules.cl_prefix_check.loop_route_check')
+@mock.patch('dev_modules.cl_prefix_check.AnsibleModule')
+def test_printing_module_exit_msg_loop_passed(mock_module,
+                                              mock_loop_route_check):
+    """
+    cl_prefix_check - test exit_json messages when loop check is true or false
+    """
+    instance = mock_module.return_value
+    instance.params.get.side_effect = mod_args
+    # loop check is true, i.e condition is matched
+    mock_loop_route_check.return_value = True
+    main()
+    _msg = 'testing whether route is present. Condition meet'
+    instance.exit_json.assert_called_with(_msg, changed=True)
+    # loop check is false, i.e condition is not matched
+    mock_loop_route_check.return_value = False
+    main()
+    _msg = 'testing whether route is present. ' + \
+        'Condition not met 2 second timer expired'
+    instance.exit_json.assert_called_with(_msg, changed=False)
+
+
 def mock_loop_check_arg(arg):
     values = {
         'prefix': '10.1.1.1/24',
