@@ -88,7 +88,7 @@ def loop_route_check(module):
     # is missing from the table. ip route get tries longest prefix
     # match so may match default route.
     # command returns empty array if prefix is missing
-    cl_prefix_cmd = 'ip route show %s' % (prefix)
+    cl_prefix_cmd = '/sbin/ip route show %s' % (prefix)
     time_elapsed = 0
     while True:
         result = run_cl_cmd(module, cl_prefix_cmd)

@@ -122,7 +122,7 @@ def test_loop_route_check_state_absent_route_present(mock_module,
     assert_equals(loop_route_check(instance), False)
     # test command that outputs route
     mock_run_cl_cmd.assert_called_with(instance,
-                                       'ip route show 10.1.1.1/24')
+                                       '/sbin/ip route show 10.1.1.1/24')
 
 
 @mock.patch('dev_modules.cl_prefix_check.time.sleep')
