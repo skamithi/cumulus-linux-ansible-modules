@@ -37,8 +37,8 @@ def mock_loop_check_arg(arg):
     values = {
         'prefix': '10.1.1.1',
         'state': 'present',
-        'timeout': '5',
-        'poll_interval': '1'
+        'timeout': '10',
+        'poll_interval': '2'
     }
     return values[arg]
 
@@ -57,10 +57,12 @@ def test_loop_route_check_state_present(mock_module,
     # state is present, route is found
     assert_equals(loop_route_check(instance), True)
 
+@mock.patch('dev_modules.cl_prefix_check.time.sleep')
 @mock.patch('dev_modules.cl_prefix_check.run_cl_cmd')
 @mock.patch('dev_modules.cl_prefix_check.AnsibleModule')
 def test_loop_route_check_state_present_route_failed(mock_module,
-                                        mock_run_cl_cmd):
+                                        mock_run_cl_cmd,
+                                        mock_sleep):
 
     """
     cl_prefix_check - state is present route is not present, timeout occurs
@@ -72,3 +74,8 @@ def test_loop_route_check_state_present_route_failed(mock_module,
     instance.params.get.side_effect = mock_loop_check_arg
     mock_run_cl_cmd.return_value = []
     assert_equals(loop_route_check(instance), False)
+    # test sleep ! figured it out
+    # sleep should be called 5 times with a poll
+    # interval of 2
+    assert_equals(mock_sleep.call_count, 5)
+    mock_sleep.assert_called_with(2)

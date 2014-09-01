@@ -82,7 +82,7 @@ def loop_route_check(module):
     poll_interval = int(module.params.get('poll_interval'))
 
     cl_prefix_cmd = 'ip route get %s' % (prefix)
-    count = 0
+    time_elapsed = 0
     while True:
         result = run_cl_cmd(module, cl_prefix_cmd)
         if state == 'present' and route_is_present(result):
@@ -90,8 +90,8 @@ def loop_route_check(module):
         if state == 'absent' and route_is_absent(result):
             return True
         time.sleep(poll_interval)
-        count += 1
-        if count == timeout:
+        time_elapsed += poll_interval
+        if time_elapsed == timeout:
             return False
 
 
