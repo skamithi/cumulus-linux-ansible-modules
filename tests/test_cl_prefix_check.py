@@ -1,6 +1,7 @@
 import mock
 from nose.tools import set_trace
-from dev_modules.cl_prefix_check import main
+from dev_modules.cl_prefix_check import main, \
+    loop_route_check
 from asserts import assert_equals
 
 def mod_args(arg):
@@ -30,3 +31,21 @@ def test_module_args(mock_module,
                        'state': {'type': 'str',
                                  'default': 'present',
                                  'choices': ['present', 'absent']}})
+
+def mock_loop_check_arg(arg):
+    values = {
+        'prefix': '10.1.1.1',
+        'state': 'present',
+        'timeout': 10,
+        'poll_interval': '1'
+    }
+    return values[arg]
+
+@mock.patch('dev_modules.cl_prefix_check.run_cl_cmd')
+@mock.patch('dev_modules.cl_prefix_check.AnsibleModule')
+def test_loop_route_check_state_present(mock_module,
+                                        mock_run_cl_cmd):
+    instance = mock_module.return_value
+    instance.params.get.side_effect = mock_loop_check_arg
+    mock_run_cl_cmd.return_value = ['something']
+    assert_equals(loop_route_check(instance), True)

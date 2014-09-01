@@ -66,37 +66,34 @@ def run_cl_cmd(module, cmd, check_rc=True):
     # trim last line as it is always empty
     ret = out.splitlines()
     return ret[:-1]
+def route_is_present(result):
+    if len(result) > 0:
+        return True
 
+def route_is_absent(result):
+    if len(result) == 0:
+        return True
 
 def loop_route_check(module):
 
     prefix = module.params.get('prefix')
     state = module.params.get('state')
-    timeout = module.params.get('timeout')
-    interval = module.params.get('poll_interval')
+    timeout = int(module.params.get('timeout'))
+    poll_interval = int(module.params.get('poll_interval'))
 
-    if state == 'present':
-        return_state = "false"
-    elif state == 'absent':
-        return_state = "true"
-    else:
-        module.fail_json(msg=e.strerror)
-
-    cl_prefix_cmd = ('ip route show %s') % (prefix)
-    while(1):
-        run_cl_cmd(module, cl_prefix_cmd)
-        if prefix in out and state == 'present':
-            return_state = "true"
+    cl_prefix_cmd = 'ip route get %s' % (prefix)
+    count = 0
+    while True:
+        result = run_cl_cmd(module, cl_prefix_cmd)
+        if state == 'present' and route_is_present(result):
+            return True
+        if state == 'absent' and route_is_absent(result):
+            return True
+        time.sleep(poll_interval)
+        count += 1
+        if count == timeout:
             break
-        if prefix not in out and state == 'absent':
-            return_state = "false"
-            break
-        if timeout == 200:
-            print "timeout"
-            break
-    timeout = timeout + 1
-    sleep(interval)
-    return return_state
+        return False
 
 
 def main():
@@ -141,6 +138,7 @@ def main():
 
 # import module snippets
 from ansible.module_utils.basic import *
+import time
 # from ansible.module_utils.urls import *
 import time
 
