@@ -45,13 +45,13 @@ def test_printing_module_exit_msg_loop_passed(mock_module,
     mock_loop_route_check.return_value = True
     main()
     _msg = 'testing whether route is present. Condition meet'
-    instance.exit_json.assert_called_with(_msg, changed=True)
+    instance.exit_json.assert_called_with(msg=_msg, changed=True)
     # loop check is false, i.e condition is not matched
     mock_loop_route_check.return_value = False
     main()
     _msg = 'testing whether route is present. ' + \
         'Condition not met 2 second timer expired'
-    instance.exit_json.assert_called_with(_msg, changed=False)
+    instance.exit_json.assert_called_with(msg=_msg, changed=False)
 
 
 def mock_loop_check_arg(arg):
