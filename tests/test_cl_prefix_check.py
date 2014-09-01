@@ -1,8 +1,7 @@
 import mock
 from timeit import timeit
 from nose.tools import set_trace
-from dev_modules.cl_prefix_check import main, \
-    loop_route_check
+from dev_modules.cl_prefix_check import main, loop_route_check
 from asserts import assert_equals
 
 def mod_args(arg):
@@ -35,12 +34,22 @@ def test_module_args(mock_module,
 
 def mock_loop_check_arg(arg):
     values = {
-        'prefix': '10.1.1.1',
+        'prefix': '10.1.1.1/24',
         'state': 'present',
         'timeout': '10',
         'poll_interval': '2'
     }
     return values[arg]
+
+def mock_loop_check_arg_absent(arg):
+    values = {
+        'prefix': '10.1.1.1/24',
+        'state': 'absent',
+        'timeout': '10',
+        'poll_interval': '2'
+    }
+    return values[arg]
+
 
 @mock.patch('dev_modules.cl_prefix_check.run_cl_cmd')
 @mock.patch('dev_modules.cl_prefix_check.AnsibleModule')
@@ -56,6 +65,43 @@ def test_loop_route_check_state_present(mock_module,
     mock_run_cl_cmd.return_value = ['something']
     # state is present, route is found
     assert_equals(loop_route_check(instance), True)
+
+@mock.patch('dev_modules.cl_prefix_check.run_cl_cmd')
+@mock.patch('dev_modules.cl_prefix_check.AnsibleModule')
+def test_loop_route_check_state_absent(mock_module,
+                                        mock_run_cl_cmd):
+    """
+    cl_prefix_check - state is absent route is absent should return True
+    """
+    instance = mock_module.return_value
+    instance.params.get.side_effect = mock_loop_check_arg_absent
+    ## run_cl_cmd returns an array if there is match
+    ## returns any empty array if nothing is found.
+    mock_run_cl_cmd.return_value = []
+    # state is present, route is found
+    assert_equals(loop_route_check(instance), True)
+
+
+@mock.patch('dev_modules.cl_prefix_check.time.sleep')
+@mock.patch('dev_modules.cl_prefix_check.run_cl_cmd')
+@mock.patch('dev_modules.cl_prefix_check.AnsibleModule')
+def test_loop_route_check_state_absent_route_present(mock_module,
+                                                     mock_run_cl_cmd,
+                                                     mock_sleep):
+    """
+    cl_prefix_check - state is absent route is absent should return True
+    """
+    instance = mock_module.return_value
+    instance.params.get.side_effect = mock_loop_check_arg_absent
+    ## run_cl_cmd returns an array if there is match
+    ## returns any empty array if nothing is found.
+    mock_run_cl_cmd.return_value = ['something']
+    # state is present, route is found
+    assert_equals(loop_route_check(instance), False)
+    # test command that outputs route
+    mock_run_cl_cmd.assert_called_with(instance,
+                                       'ip route show 10.1.1.1/24')
+
 
 @mock.patch('dev_modules.cl_prefix_check.time.sleep')
 @mock.patch('dev_modules.cl_prefix_check.run_cl_cmd')

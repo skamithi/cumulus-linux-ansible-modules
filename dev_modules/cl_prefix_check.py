@@ -81,7 +81,12 @@ def loop_route_check(module):
     timeout = int(module.params.get('timeout'))
     poll_interval = int(module.params.get('poll_interval'))
 
-    cl_prefix_cmd = 'ip route get %s' % (prefix)
+    # using ip route show instead of ip route get
+    # because ip route show will be blank if the exact prefix
+    # is missing from the table. ip route get tries longest prefix
+    # match so may match default route.
+    # command returns empty array if prefix is missing
+    cl_prefix_cmd = 'ip route show %s' % (prefix)
     time_elapsed = 0
     while True:
         result = run_cl_cmd(module, cl_prefix_cmd)
