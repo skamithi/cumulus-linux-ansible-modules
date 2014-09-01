@@ -19,7 +19,7 @@ def mod_args(arg):
 def test_module_args(mock_module,
                      mock_loop_route_check):
     """
-    cl_prefix_check: test module arguments
+    cl_prefix_check - test module arguments
     """
     instance = mock_module.return_value
     instance.params.get.side_effect = mod_args
