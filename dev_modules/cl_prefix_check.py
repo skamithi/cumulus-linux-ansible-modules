@@ -30,11 +30,11 @@ acceptable to "ip route show" command. See manpage of "ip-route" for more detail
         default: ['present']
     timeout:
         description:
-            - timeout for route to disappear, number of loops
+            - timeout in seconds to wait for route condition to be met
         default: 5
     poll_interval:
         description:
-            - interval to check in seconds
+            - poll interval in seconds to check route.
         default: 1
 
 notes:
