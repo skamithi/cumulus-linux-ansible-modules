@@ -56,6 +56,15 @@ at default setting of 1 second
     - name: Test if route is present, with a timeout of 10 seconds and poll \
 interval of 2 seconds
       cl_prefix_check: prefix=10.1.1.0/24 timeout=10 poll_interval=2
+      
+    - name: Test if route is present, with a nexthop of 4.4.4.4 \
+     will fail if no nexthop of 4.4.4.4
+      cl_prefix_check: prefix=4.4.4.4 nexthop=5.5.5.5
+
+    - name: Test if route is present, with no nexthop of 3.3.3.3 \
+     will fail if there is a nexthop of 3.3.3.3
+      cl_prefix_check: prefix=3.3.3.3 nonexthop=6.6.6.6   
+
 
 '''
 
@@ -68,6 +77,7 @@ def run_cl_cmd(module, cmd, check_rc=True):
     # trim last line as it is always empty
     ret = out.splitlines()
     return ret[:-1]
+    
 def route_is_present(result):
     if len(result) > 0:
         return True
@@ -82,6 +92,8 @@ def loop_route_check(module):
     state = module.params.get('state')
     timeout = int(module.params.get('timeout'))
     poll_interval = int(module.params.get('poll_interval'))
+    nexthop = module.params.get('nexthop')
+    nonexthop = module.params.get('nonexthop')
 
     # using ip route show instead of ip route get
     # because ip route show will be blank if the exact prefix
@@ -110,6 +122,8 @@ def main():
                        choices=['present', 'absent']),
             timeout=dict(default=2, type='int'),
             poll_interval=dict(default=1, type='int'),
+            nexthop=dict(default='', type='str'),
+            nonexthop=dict(default='', type='str'),
 
         ),
     )
@@ -117,6 +131,12 @@ def main():
     _state = module.params.get('state')
     _timeout = module.params.get('timeout')
     _msg = "testing whether route is %s. " % (_state)
+
+	_nexthop = module.params.get('nexthop')
+	_nonexthop = module.params.get('nonexthop')
+	
+	if _nexthop == _nonexthop and _nexthop != '':
+		module.fail_json(msg='nexthop and nonexthop cannot be the same')
 
     if loop_route_check(module):
         _msg += 'Condition meet'
