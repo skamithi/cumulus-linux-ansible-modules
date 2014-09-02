@@ -120,10 +120,10 @@ def main():
 
     if loop_route_check(module):
         _msg += 'Condition meet'
-        module.exit_json(_msg, changed=True)
+        module.exit_json(msg=_msg, changed=True)
     else:
         _msg += 'Condition not met %s second timer expired' % (_timeout)
-        module.exit_json(_msg, changed=False)
+        module.exit_json(msg=_msg, changed=False)
 
 # import module snippets
 from ansible.module_utils.basic import *
