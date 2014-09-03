@@ -85,7 +85,8 @@ def run_cl_cmd(module, cmd, check_rc=True):
     # trim last line as it is always empty
     ret = out.splitlines()
     f = open('workfile', 'w')
-    f.write(ret[:-1])
+    for a in ret:
+    	f.write(a)
     return ret[:-1]
     
 def route_is_present(result):
