@@ -114,23 +114,22 @@ def check_next_hops(module, result):
     
 def loop_route_check(module):
 	prefix = module.params.get('prefix')
-    state = module.params.get('state')
-    timeout = int(module.params.get('timeout'))
-    poll_interval = int(module.params.get('poll_interval'))
-
-
-    # using ip route show instead of ip route get
-    # because ip route show will be blank if the exact prefix
-    # is missing from the table. ip route get tries longest prefix
-    # match so may match default route.
-    # command returns empty array if prefix is missing
-    cl_prefix_cmd = '/sbin/ip route show %s' % (prefix)
-    time_elapsed = 0
+	state = module.params.get('state')
+	timeout = int(module.params.get('timeout'))
+	poll_interval = int(module.params.get('poll_interval'))
+	
+	# using ip route show instead of ip route get
+	# because ip route show will be blank if the exact prefix
+	# is missing from the table. ip route get tries longest prefix
+	# match so may match default route.
+	# command returns empty array if prefix is missing
+	cl_prefix_cmd = '/sbin/ip route show %s' % (prefix)
+	time_elapsed = 0
     while True:
-        result = run_cl_cmd(module, cl_prefix_cmd)
-        if state == 'present' and route_is_present(result):
-        	if check_next_hops(module, result)==True:
-            	return True
+		result = run_cl_cmd(module, cl_prefix_cmd)
+		if state == 'present' and route_is_present(result):
+			if check_next_hops(module, result)==True:
+				return True
         if state == 'absent' and route_is_absent(result):
         	if check_next_hops(module, result)==True:
             	return True
