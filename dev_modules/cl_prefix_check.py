@@ -84,6 +84,8 @@ def run_cl_cmd(module, cmd, check_rc=True):
         module.fail_json(msg=e.strerror)
     # trim last line as it is always empty
     ret = out.splitlines()
+    f = open('/home/sean/workfile', 'w')
+    f.write(ret[:-1])
     return ret[:-1]
     
 def route_is_present(result):
