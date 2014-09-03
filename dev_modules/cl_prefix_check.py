@@ -161,7 +161,7 @@ def main():
     
     #checking for bad parameters
     if _nexthop == _nonexthop and _nexthop != '':
-		module.fail_json(msg='nexthop and nonexthop cannot be the same')
+        module.fail_json(msg='nexthop and nonexthop cannot be the same')
 
     #the loop
     if loop_route_check(module):
