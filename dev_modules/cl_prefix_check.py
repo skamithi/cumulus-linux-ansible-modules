@@ -125,18 +125,18 @@ def loop_route_check(module):
 	# command returns empty array if prefix is missing
 	cl_prefix_cmd = '/sbin/ip route show %s' % (prefix)
 	time_elapsed = 0
-    while True:
+	while True:
 		result = run_cl_cmd(module, cl_prefix_cmd)
 		if state == 'present' and route_is_present(result):
 			if check_next_hops(module, result)==True:
 				return True
-        if state == 'absent' and route_is_absent(result):
-        	if check_next_hops(module, result)==True:
-            	return True
-        time.sleep(poll_interval)
-        time_elapsed += poll_interval
-        if time_elapsed == timeout:
-            return False
+		if state == 'absent' and route_is_absent(result):
+			if check_next_hops(module, result)==True:
+				return True
+		time.sleep(poll_interval)
+		time_elapsed += poll_interval
+		if time_elapsed == timeout:
+			return False
 
 
 def main():
