@@ -157,9 +157,9 @@ def main():
     _timeout = module.params.get('timeout')
     _msg = "testing whether route is %s. " % (_state)
     _nexthop = module.params.get('nexthop')
-	_nonexthop = module.params.get('nonexthop')
-	
-	if _nexthop == _nonexthop and _nexthop != '':
+    _nonexthop = module.params.get('nonexthop')
+    
+    if _nexthop == _nonexthop and _nexthop != '':
 		module.fail_json(msg='nexthop and nonexthop cannot be the same')
 	
 	if loop_route_check(module):
