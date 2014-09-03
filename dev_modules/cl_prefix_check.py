@@ -99,16 +99,16 @@ def check_next_hops(module, result):
 	nonexthop = module.params.get('nonexthop')
 	prefix = module.params.get('prefix')
 	if not nexthop and not nonexthop:
-		return true
+		return True
 	elif not nexthop and nonexthop:
 		if nonexthop not in result:
-			return true
+			return True
 	elif nexthop and not nonexthop:
 		if nexthop in result:
-			return true
+			return True
 	elif nexthop and nonexthop:
 		if nexthop in result and nonexthop not in result:
-			return true
+			return True
 	else:
 		return false   
     
