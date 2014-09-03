@@ -156,19 +156,18 @@ def main():
     _state = module.params.get('state')
     _timeout = module.params.get('timeout')
     _msg = "testing whether route is %s. " % (_state)
-
-	_nexthop = module.params.get('nexthop')
+    _nexthop = module.params.get('nexthop')
 	_nonexthop = module.params.get('nonexthop')
 	
 	if _nexthop == _nonexthop and _nexthop != '':
 		module.fail_json(msg='nexthop and nonexthop cannot be the same')
-
-    if loop_route_check(module):
-        _msg += 'Condition meet'
-        module.exit_json(msg=_msg, changed=True)
-    else:
-        _msg += 'Condition not met %s second timer expired' % (_timeout)
-        module.exit_json(msg=_msg, changed=False)
+	
+	if loop_route_check(module):
+		_msg += 'Condition meet'
+		module.exit_json(msg=_msg, changed=True)
+	else:
+		_msg += 'Condition not met %s second timer expired' % (_timeout)
+		module.exit_json(msg=_msg, changed=False)
 
 # import module snippets
 from ansible.module_utils.basic import *
