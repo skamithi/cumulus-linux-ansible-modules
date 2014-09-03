@@ -36,7 +36,15 @@ acceptable to "ip route show" command. See manpage of "ip-route" for more detail
         description:
             - poll interval in seconds to check route.
         default: 1
-
+    nonexthop:
+        description:
+            - address of node is not desired in result to prefix
+        default: ""
+    nexthop:
+        description:
+            - address of node is desired in result to prefix
+        default: ""
+        
 notes:
     - IP Route Documentation - [ add later ]\
     - Contact Cumulus Networks @ http://cumulusnetworks.com/contact/
