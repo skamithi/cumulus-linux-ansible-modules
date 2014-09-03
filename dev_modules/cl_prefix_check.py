@@ -85,15 +85,32 @@ def route_is_present(result):
 def route_is_absent(result):
     if len(result) == 0:
         return True
-
+        
+def check_next_hops(module, result)
+	nexthop = module.params.get('nexthop')
+    nonexthop = module.params.get('nonexthop')
+    prefix = module.params.get('prefix')
+        
+    if not nexthop and not nonexthop:
+    	return true
+    elif not nexthop and nonexthop:
+    	if nonexthop not in result:
+    		return true
+    elif nexthop and not nonexthop:
+    	if nexthop in result:
+    		return true
+    elif nexthop and nonexthop:
+    	if nexthop in result and nonexthop not in result:
+    		return true
+ 	else:
+ 		return false   
+    
 def loop_route_check(module):
-
     prefix = module.params.get('prefix')
     state = module.params.get('state')
     timeout = int(module.params.get('timeout'))
     poll_interval = int(module.params.get('poll_interval'))
-    nexthop = module.params.get('nexthop')
-    nonexthop = module.params.get('nonexthop')
+
 
     # using ip route show instead of ip route get
     # because ip route show will be blank if the exact prefix
@@ -105,9 +122,11 @@ def loop_route_check(module):
     while True:
         result = run_cl_cmd(module, cl_prefix_cmd)
         if state == 'present' and route_is_present(result):
-            return True
+        	if check_next_hops(module, result)==True:
+            	return True
         if state == 'absent' and route_is_absent(result):
-            return True
+        	if check_next_hops(module, result)==True:
+            	return True
         time.sleep(poll_interval)
         time_elapsed += poll_interval
         if time_elapsed == timeout:
