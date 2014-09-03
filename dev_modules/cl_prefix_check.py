@@ -159,8 +159,11 @@ def main():
     _nexthop = module.params.get('nexthop')
     _nonexthop = module.params.get('nonexthop')
     
+    #checking for bad parameters
     if _nexthop == _nonexthop and _nexthop != '':
 		module.fail_json(msg='nexthop and nonexthop cannot be the same')
+
+	#the loop
 	if loop_route_check(module):
 		_msg += 'Condition meet'
 		module.exit_json(msg=_msg, changed=True)
