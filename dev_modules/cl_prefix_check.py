@@ -114,7 +114,7 @@ def check_next_hops(module, result):
  		return false   
     
 def loop_route_check(module):
-    prefix = module.params.get('prefix')
+	prefix = module.params.get('prefix')
     state = module.params.get('state')
     timeout = int(module.params.get('timeout'))
     poll_interval = int(module.params.get('poll_interval'))
