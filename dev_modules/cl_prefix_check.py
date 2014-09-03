@@ -98,20 +98,19 @@ def check_next_hops(module, result):
 	nexthop = module.params.get('nexthop')
 	nonexthop = module.params.get('nonexthop')
 	prefix = module.params.get('prefix')
-        
-    if not nexthop and not nonexthop:
-    	return true
-    elif not nexthop and nonexthop:
-    	if nonexthop not in result:
-    		return true
-    elif nexthop and not nonexthop:
-    	if nexthop in result:
-    		return true
-    elif nexthop and nonexthop:
-    	if nexthop in result and nonexthop not in result:
-    		return true
- 	else:
- 		return false   
+	if not nexthop and not nonexthop:
+		return true
+	elif not nexthop and nonexthop:
+		if nonexthop not in result:
+			return true
+	elif nexthop and not nonexthop:
+		if nexthop in result:
+			return true
+	elif nexthop and nonexthop:
+		if nexthop in result and nonexthop not in result:
+			return true
+	else:
+		return false   
     
 def loop_route_check(module):
 	prefix = module.params.get('prefix')
