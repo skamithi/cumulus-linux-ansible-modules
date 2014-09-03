@@ -94,7 +94,7 @@ def route_is_absent(result):
     if len(result) == 0:
         return True
         
-def check_next_hops(module, result)
+def check_next_hops(module, result):
 	nexthop = module.params.get('nexthop')
     nonexthop = module.params.get('nonexthop')
     prefix = module.params.get('prefix')
