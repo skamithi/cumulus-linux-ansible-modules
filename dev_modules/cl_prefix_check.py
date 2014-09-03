@@ -161,7 +161,6 @@ def main():
     
     if _nexthop == _nonexthop and _nexthop != '':
 		module.fail_json(msg='nexthop and nonexthop cannot be the same')
-	
 	if loop_route_check(module):
 		_msg += 'Condition meet'
 		module.exit_json(msg=_msg, changed=True)
