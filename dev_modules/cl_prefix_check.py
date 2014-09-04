@@ -107,14 +107,14 @@ def check_next_hops(module, result):
 	nexthop = module.params.get('nexthop')
 	nonexthop = module.params.get('nonexthop')
 	prefix = module.params.get('prefix')
-	if not nexthop and not nonexthop:
-		return True
+    if not nexthop and not nonexthop:
+        return True
     elif not nexthop and nonexthop:
         if check_hop(result,nonexthop)==False:
             return True
 	elif nexthop and not nonexthop:
-		if nexthop in result:
-			return True
+        if nexthop in result:
+            return True
 	elif nexthop and nonexthop:
 		if nexthop in result and nonexthop not in result:
 			return True
