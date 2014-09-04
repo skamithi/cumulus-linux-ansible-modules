@@ -109,7 +109,7 @@ def check_next_hops(module, result):
 	prefix = module.params.get('prefix')
 	if not nexthop and not nonexthop:
 		return True
-	elif not nexthop and nonexthop:
+    elif not nexthop and nonexthop:
         if check_hop(result,nonexthop)==False:
             return True
 	elif nexthop and not nonexthop:
