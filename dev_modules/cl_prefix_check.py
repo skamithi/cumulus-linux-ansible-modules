@@ -97,6 +97,12 @@ def route_is_absent(result):
     if len(result) == 0:
         return True
         
+def check_hop(result,hop):
+    for line in result:
+        if hop in line:
+            return True
+    return False
+        
 def check_next_hops(module, result):
 	nexthop = module.params.get('nexthop')
 	nonexthop = module.params.get('nonexthop')
@@ -104,7 +110,7 @@ def check_next_hops(module, result):
 	if not nexthop and not nonexthop:
 		return True
 	elif not nexthop and nonexthop:
-		if nonexthop not in result:
+        if check_hop(result,nonexthop)==False:
 			return True
 	elif nexthop and not nonexthop:
 		if nexthop in result:
