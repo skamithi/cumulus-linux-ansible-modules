@@ -86,7 +86,7 @@ def run_cl_cmd(module, cmd, check_rc=True):
     ret = out.splitlines()
     f = open('workfile', 'w')
     for a in ret:
-    	f.write(a)
+        f.write(a)
     return ret[:-1]
     
 def route_is_present(result):
@@ -113,40 +113,40 @@ def check_next_hops(module, result):
     elif not nexthop and nonexthop:
         if check_hop(result,nonexthop)==False:
             return True
-	elif nexthop and not nonexthop:
+    elif nexthop and not nonexthop:
         if nexthop in result:
             return True
-	elif nexthop and nonexthop:
-		if nexthop in result and nonexthop not in result:
-			return True
-	else:
-		return false   
+    elif nexthop and nonexthop:
+        if nexthop in result and nonexthop not in result:
+            return True
+	   else:
+		      return false   
     
 def loop_route_check(module):
-	prefix = module.params.get('prefix')
-	state = module.params.get('state')
-	timeout = int(module.params.get('timeout'))
-	poll_interval = int(module.params.get('poll_interval'))
+    prefix = module.params.get('prefix')
+	   state = module.params.get('state')
+	   timeout = int(module.params.get('timeout'))
+	   poll_interval = int(module.params.get('poll_interval'))
 	
-	# using ip route show instead of ip route get
-	# because ip route show will be blank if the exact prefix
-	# is missing from the table. ip route get tries longest prefix
-	# match so may match default route.
-	# command returns empty array if prefix is missing
-	cl_prefix_cmd = '/sbin/ip route show %s' % (prefix)
-	time_elapsed = 0
-	while True:
-		result = run_cl_cmd(module, cl_prefix_cmd)
-		if state == 'present' and route_is_present(result):
-			if check_next_hops(module, result)==True:
-				return True
-		if state == 'absent' and route_is_absent(result):
-			if check_next_hops(module, result)==True:
-				return True
-		time.sleep(poll_interval)
-		time_elapsed += poll_interval
-		if time_elapsed == timeout:
-			return False
+	   # using ip route show instead of ip route get
+	   # because ip route show will be blank if the exact prefix
+	   # is missing from the table. ip route get tries longest prefix
+	   # match so may match default route.
+	   # command returns empty array if prefix is missing
+	   cl_prefix_cmd = '/sbin/ip route show %s' % (prefix)
+	   time_elapsed = 0
+    while True:
+		      result = run_cl_cmd(module, cl_prefix_cmd)
+        if state == 'present' and route_is_present(result):
+	           if check_next_hops(module, result)==True:
+				            return True
+        if state == 'absent' and route_is_absent(result):
+			         if check_next_hops(module, result)==True:
+			             return True
+        time.sleep(poll_interval)
+		      time_elapsed += poll_interval
+	       if time_elapsed == timeout:
+		          return False
 
 
 def main():
@@ -175,11 +175,11 @@ def main():
 
     #the loop
     if loop_route_check(module):
-	    _msg += 'Condition meet'
-	    module.exit_json(msg=_msg, changed=False)
+	        _msg += 'Condition meet'
+	        module.exit_json(msg=_msg, changed=False)
     else:
-	    _msg += 'Condition not met %s second timer expired' % (_timeout)
-	    module.fail_json(msg='paremeters not found')
+	        _msg += 'Condition not met %s second timer expired' % (_timeout)
+	        module.fail_json(msg='paremeters not found')
 
 # import module snippets
 from ansible.module_utils.basic import *
