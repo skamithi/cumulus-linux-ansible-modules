@@ -111,7 +111,7 @@ def check_next_hops(module, result):
 		return True
 	elif not nexthop and nonexthop:
         if check_hop(result,nonexthop)==False:
-			return True
+            return True
 	elif nexthop and not nonexthop:
 		if nexthop in result:
 			return True
