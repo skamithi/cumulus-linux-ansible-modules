@@ -76,7 +76,6 @@ interval of 2 seconds
 
 '''
 
-
 def run_cl_cmd(module, cmd, check_rc=True):
     try:
         (rc, out, err) = module.run_command(cmd, check_rc=check_rc)
@@ -114,10 +113,10 @@ def check_next_hops(module, result):
         if check_hop(result,nonexthop)==False:
             return True
     elif nexthop and not nonexthop:
-        if check_hop(result,nexthop)==True
+        if check_hop(result,nexthop)==True:
             return True
     elif nexthop and nonexthop:
-        if check_hop(result,nexthop)==True and check_hop(result,nonexthop)==False::
+        if check_hop(result,nexthop)==True and check_hop(result,nonexthop)==False:
             return True
     else:
         return false   
