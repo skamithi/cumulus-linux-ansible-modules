@@ -86,7 +86,7 @@ def run_cl_cmd(module, cmd, check_rc=True):
     f = open('workfile', 'w')
     for a in ret:
         f.write(a)
-    return ret[:-1]
+    return ret
     
 def route_is_present(result):
     if len(result) > 0:
@@ -98,7 +98,7 @@ def route_is_absent(result):
         
 def check_hop(result,hop):
     for line in result:
-        if hop in line:
+        if hop in line.split():
             return True
     return False
         
@@ -164,7 +164,7 @@ def main():
 
     _state = module.params.get('state')
     _timeout = module.params.get('timeout')
-    _msg = "testing whether route is %s. " % (_state)
+    _msg = "Testing whether route is %s. " % (_state)
     _nexthop = module.params.get('nexthop')
     _nonexthop = module.params.get('nonexthop')
     
@@ -174,7 +174,7 @@ def main():
 
     #the loop
     if loop_route_check(module):
-	        _msg += 'Condition meet'
+	        _msg += 'Condition Met'
 	        module.exit_json(msg=_msg, changed=False)
     else:
 	        _msg += 'Condition not met %s second timer expired' % (_timeout)

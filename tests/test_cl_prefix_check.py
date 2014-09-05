@@ -4,15 +4,23 @@ from nose.tools import set_trace
 from dev_modules.cl_prefix_check import main, loop_route_check
 from asserts import assert_equals
 
-def mod_args(arg):
-    values = {
-        'prefix': '1.1.1.1/24',
+
+global_values = {
+ 'prefix': '1.1.1.1/24',
         'poll_interval': '1',
         'timeout': '2',
-        'state': 'present'
-    }
-    return values[arg]
-
+        'state': 'present',
+        'nexthop': '1.2.3.4',
+        'nonexthop': '1.2.3.4'
+}
+    
+    
+def mod_args_generator(values, *args):
+     newvalues = global_values.copy()
+     newvalues.update(values)
+     def mod_args(args):
+         return newvalues[args]
+     return mod_args
 
 @mock.patch('dev_modules.cl_prefix_check.loop_route_check')
 @mock.patch('dev_modules.cl_prefix_check.AnsibleModule')
@@ -22,7 +30,8 @@ def test_module_args(mock_module,
     cl_prefix_check - test module arguments
     """
     instance = mock_module.return_value
-    instance.params.get.side_effect = mod_args
+    values = {'nexthop': '1.1.1.1' } 
+    instance.params.get.side_effect = mod_args_generator(values)
     main()
     mock_module.assert_called_with(
         argument_spec={'prefix': {'required': True, 'type': 'str'},
@@ -30,7 +39,10 @@ def test_module_args(mock_module,
                        'timeout': {'type': 'int', 'default': 2},
                        'state': {'type': 'str',
                                  'default': 'present',
-                                 'choices': ['present', 'absent']}})
+                                 'choices': ['present', 'absent']},
+                       'nexthop': {'type': 'str', 'default': ''},
+                       'nonexthop': {'type': 'str', 'default': ''}
+                      })
 
 @mock.patch('dev_modules.cl_prefix_check.loop_route_check')
 @mock.patch('dev_modules.cl_prefix_check.AnsibleModule')
@@ -40,18 +52,18 @@ def test_printing_module_exit_msg_loop_passed(mock_module,
     cl_prefix_check - test exit_json messages when loop check is true or false
     """
     instance = mock_module.return_value
-    instance.params.get.side_effect = mod_args
+    values = { 'nexthop': '2.2.2.2' }
+    instance.params.get.side_effect = mod_args_generator(values)
     # loop check is true, i.e condition is matched
     mock_loop_route_check.return_value = True
     main()
-    _msg = 'testing whether route is present. Condition meet'
-    instance.exit_json.assert_called_with(msg=_msg, changed=True)
+    _msg = 'Testing whether route is present. Condition Met'
+    instance.exit_json.assert_called_with(msg=_msg, changed=False)
     # loop check is false, i.e condition is not matched
     mock_loop_route_check.return_value = False
     main()
-    _msg = 'testing whether route is present. ' + \
-        'Condition not met 2 second timer expired'
-    instance.exit_json.assert_called_with(msg=_msg, changed=False)
+    _msg = 'paremeters not found'
+    instance.fail_json.assert_called_with(msg=_msg)
 
 
 def mock_loop_check_arg(arg):
@@ -59,7 +71,9 @@ def mock_loop_check_arg(arg):
         'prefix': '10.1.1.1/24',
         'state': 'present',
         'timeout': '10',
-        'poll_interval': '2'
+        'poll_interval': '2',
+        'nexthop': '',
+        'nonexthop': ''
     }
     return values[arg]
 
@@ -68,7 +82,9 @@ def mock_loop_check_arg_absent(arg):
         'prefix': '10.1.1.1/24',
         'state': 'absent',
         'timeout': '10',
-        'poll_interval': '2'
+        'poll_interval': '2',
+        'nexthop': '',
+        'nonexthop': ''
     }
     return values[arg]
 
