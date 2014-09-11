@@ -547,7 +547,8 @@ def main():
             mtu=dict(type='str'),
             state=dict(type='str', choices=['noconfig', 'hasconfig'],
                        default='hasconfig'),
-            applyconfig=dict(type='str', default='no')
+            applyconfig=dict(choices=BOOLEANS, default=False),
+
         ),
         mutually_exclusive=[
             ['bridgeports', 'bondslaves'],
@@ -570,7 +571,7 @@ def main():
     config_changed(module, iface)
     modify_switch_config(module, iface)
     remove_config_from_etc_net_interfaces(module, iface)
-    if module.params.get('applyconfig') == 'yes':
+    if module.params.get('applyconfig') is True:
         apply_config(module, iface)
     _msg = 'interface successfully configured %s' % (iface['name'])
     module.exit_json(msg=_msg, changed=True)
