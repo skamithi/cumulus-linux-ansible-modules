@@ -9,37 +9,49 @@ module: cl_img_install
 author: Stanley Karunditu
 short_description: Install a different Cumulus Linux version.
 description:
-    - install a different version of Cumulus Linux in the inactive slot
+    - install a different version of Cumulus Linux in the inactive slot.
 options:
-    version:
-        description:
-            - cumulus linux version to install
     src:
         description:
-            - full path to binary image. Can be a local path, http or https URL
+            - full path to the Cumulus Linux binary image. \
+Can be a local path, http or https URL.  \
+If the code version is in the name of the file, the module will assume this \
+is the version of code you wish to install.
         required: true
+    version:
+        description:
+            -  inform the module of the exact version one is  installing. \
+This overrides the automatic check of version in the file name. \
+For example, if the binary file name \
+is called CumulusLinux-2.2.3.bin, and version is set to '2.5.0', \
+then the module will assume it \
+is installing '2.5.0' not '2.2.3'. If version is not included, \
+then the module will assume '2.2.3' \
+is the version to install.
     switch_slot:
         description:
-            - Switch slots after installing the image.\
-                Only a reboot is needed.\
-                Reboot can be done as a notification.
+            - Switch slots after installing the image. \
+To run the installed code, reboot the switch
         choices: ['yes', 'no']
         default: 'no'
+
 notes:
     - Image Management Documentation - \
-        http://cumulusnetworks.com/docs/2.0/user-guide/system_management_diagnostics/img-mgmt.html#upgrade
+http://cumulusnetworks.com/docs/2.2/user-guide/system_management_diagnostics/img-mgmt.html#upgrade
     - Contact Cumulus Networks @ http://cumulusnetworks.com/contact/
 '''
 EXAMPLES = '''
 Example playbook entries using the cl_img_install module
 
     tasks:
-    - name: install image using using http url. Use notify to reboot switch
+    - name: install image using using http url. Do not reboot the switch to \
+run the new release
       cl_img_install: version=2.0.1 \
           src='http://10.1.1.1/CumulusLinux-2.0.1.bin'
           switch_slot=yes
-      notify: reboot_switch
 
+## Copy the software using get_url to the switch local system and
+## install the software
     - name: download cumulus linux to local system
       get_url: src=ftp://cumuluslinux.bin dest=/root/CumulusLinux-2.0.1.bin
     - name: install image from local filesystem. Get version from the filename
@@ -142,7 +154,7 @@ def install_img(module):
     app_path = '/usr/cumulus/bin/cl-img-install -f %s' % (src)
     run_cl_cmd(module, app_path)
     perform_switch_slot = module.params.get('switch_slot')
-    if perform_switch_slot == 'yes':
+    if perform_switch_slot is True:
         check_sw_version(module)
     else:
         _changed = True
@@ -153,7 +165,7 @@ def install_img(module):
 
 def switch_slot(module, slotnum):
     _switch_slot = module.params.get('switch_slot')
-    if _switch_slot == 'yes':
+    if _switch_slot is True:
         app_path = '/usr/cumulus/bin/cl-img-select %s' % (slotnum)
         run_cl_cmd(module, app_path)
 
@@ -189,7 +201,7 @@ def check_sw_version(module):
                 _msg = "Version " + _version + \
                     " is installed in the alternate slot. "
                 if 'primary' not in slot:
-                    if perform_switch_slot == 'yes':
+                    if perform_switch_slot is True:
                         switch_slot(module, _num)
                         _msg = _msg + \
                             "cl-img-select has made the alternate " + \
@@ -218,7 +230,7 @@ def main():
         argument_spec=dict(
             src=dict(required=True, type='str'),
             version=dict(type='str'),
-            switch_slot=dict(default='no', choices=["yes", "no"])
+            switch_slot=dict(choices=BOOLEANS, default=False),
         ),
     )
 
