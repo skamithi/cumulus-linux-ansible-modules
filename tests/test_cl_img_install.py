@@ -7,47 +7,43 @@ from dev_modules.cl_img_install import install_img, \
 
 from asserts import assert_equals
 
-
-def mod_args(arg):
-    values = {'version': '2.0.0',
-              'src': 'http://10.1.1.1/cl.bin',
-              'switch_slot': 'yes'}
-    return values[arg]
+slot_values = {
+    '1': {'version': '2.0.3'},
+    '2': {'version': '2.0.10', 'primary': True, 'active': True}
+}
 
 
-def mod_args_no_switch_slot(arg):
-    values = {'version': None,
-              'switch_slot': 'no',
-              'src': '/usr/local/CumulusLinux-2.1.3.bin'}
-    return values[arg]
+arg_values = {
+    'version': None,
+    'switch_slot': 'no',
+    'src': '/root/CumulusLinux-2.1.3.bin'
+}
 
 
-def mod_args_version_in_file(arg):
-    values = {'version': None,
-              'src': 'http://10.1.1.1/CumulusLinux-2-3-1',
-              'switch_slot': 'yes'}
-    return values[arg]
-
-
-def mod_args_version_in_file_dev(arg):
-    values = {'version': None,
-              'src': 'http://10.1.1.1/CumulusLinux-2-2-x.bin',
-              'switch_slot': 'None'
-              }
-    return values[arg]
+def mod_args_generator(values, *args):
+    def mod_args(args):
+        return values[args]
+    return mod_args
 
 
 @mock.patch('dev_modules.cl_img_install.AnsibleModule')
 def test_determine_sw_version(mock_module):
     instance = mock_module.return_value
-    instance.params.get.side_effect = mod_args
+    values = arg_values.copy()
+    # version set in version otion
+    values['version'] = '2.0.0'
+    instance.params.get.side_effect = mod_args_generator(values)
     determine_sw_version(instance)
     assert_equals(instance.sw_version, '2.0.0')
+    # version set in filename
     instance = mock_module.return_value
-    instance.params.get.side_effect = mod_args_version_in_file
+    instance.params.get.side_effect = mod_args_generator(arg_values)
     determine_sw_version(instance)
-    assert_equals(instance.sw_version, '2.3.1')
-    instance.params.get.side_effect = mod_args_version_in_file_dev
+    assert_equals(instance.sw_version, '2.1.3')
+    # filename is a dev build so has a-z char in it
+    values = arg_values.copy()
+    values['src'] = '/root/CumulusLinux-2.2.x.bin'
+    instance.params.get.side_effect = mod_args_generator(values)
     determine_sw_version(instance)
     assert_equals(instance.sw_version, '2.2.x')
 
@@ -147,24 +143,6 @@ def slotvers(module, arg):
     return values[arg]
 
 
-def slot_info():
-    return {'1':
-            {'active': True,
-             'version': '2.0.3'},
-            '2':
-            {'version': '2.0.10',
-             'primary': True}}
-
-
-def slot_info2():
-    return {'1':
-            {'version': '2.0.3'},
-            '2':
-            {'version': '2.0.10',
-             'primary': True,
-             'active': True}}
-
-
 @mock.patch('dev_modules.cl_img_install.get_primary_slot_num')
 @mock.patch('dev_modules.cl_img_install.get_active_slot')
 @mock.patch('dev_modules.cl_img_install.get_slot_version')
@@ -174,10 +152,14 @@ def test_get_slot_info(mock_module,
                        mock_active_ver,
                        mock_primary_ver):
     instance = mock_module.return_value
-    mock_get_slot_ver.side_effect = slotvers
+    mock_get_slot_ver.side_effect = {'1': '2.0.3', '2': '2.0.10'}
     mock_active_ver.return_value = '1'
     mock_primary_ver.return_value = '2'
-    assert_equals(get_slot_info(instance), slot_info())
+    result_slot_values = {
+        '1': {'active': True, 'version': '1'},
+        '2': {'primary': True, 'version': '2'}
+    }
+    assert_equals(get_slot_info(instance), result_slot_values)
 
 
 @mock.patch('dev_modules.cl_img_install.switch_slot')
@@ -186,8 +168,12 @@ def test_get_slot_info(mock_module,
 def test_check_sw_version(mock_module, mock_get_slot_info, mock_switch_slot):
     instance = mock_module.return_value
     # switch_slots = yes , version found in alternate slots
-    instance.params.get.return_value = 'yes'
-    mock_get_slot_info.return_value = slot_info()
+    instance.params.get.return_value = True
+    slot_values = {
+        '1': {'version': '2.0.10', 'primary': True},
+        '2': {'version': '2.0.3',  'active': True}
+    }
+    mock_get_slot_info.return_value = slot_values
     instance.sw_version = '2.0.10'
     check_sw_version(instance)
     _msg = 'Version 2.0.10 is installed in the alternate slot. ' +\
@@ -195,8 +181,7 @@ def test_check_sw_version(mock_module, mock_get_slot_info, mock_switch_slot):
     instance.exit_json.assert_called_with(msg=_msg, changed=True)
 
     # switch slot = no , version found in alternate slot
-    instance.params.get.return_value = 'no'
-    mock_get_slot_info.return_value = slot_info()
+    instance.params.get.return_value = False
     instance.sw_version = '2.0.10'
     check_sw_version(instance)
     _msg = 'Version 2.0.10 is installed in the alternate slot. ' +\
@@ -204,33 +189,40 @@ def test_check_sw_version(mock_module, mock_get_slot_info, mock_switch_slot):
     instance.exit_json.assert_called_with(msg=_msg, changed=False)
 
     # switch_slot = yes code in active slot
-    instance.params.get.return_value = 'yes'
+    slot_values = {
+        '1': {'version': '2.0.10'},
+        '2': {'version': '2.0.3',  'primary': True, 'active': True}
+    }
+    mock_get_slot_info.return_value = slot_values
+    instance.params.get.return_value = True
     instance.sw_version = '2.0.3'
     check_sw_version(instance)
     _msg = 'Version 2.0.3 is installed in the active slot'
     instance.exit_json.assert_called_with(msg=_msg, changed=False)
 
     # switch_slot = no , code in active slot
-    instance.params.get.return_value = 'no'
+    instance.params.get.return_value = False
     instance.sw_version = '2.0.3'
     check_sw_version(instance)
     _msg = 'Version 2.0.3 is installed in the active slot'
     instance.exit_json.assert_called_with(msg=_msg, changed=False)
 
-
+    # switch_slot = no, code in alternate slot
+    slot_values = {
+        '1': {'version': '2.0.10', 'active': True},
+        '2': {'version': '2.0.3',  'primary': True}
+    }
+    mock_get_slot_info.return_value = slot_values
     instance.sw_version = '2.0.3'
-    mock_get_slot_info.return_value = slot_info2()
-    check_sw_version(instance)
-    instance.exit_json.assert_called_with(
-        msg="Version 2.0.3 is installed in the alternate slot." +
-        ' Next reboot will not load 2.0.3. ' +
-        "switch_slot keyword set to 'no'.", changed=False)
-
-    instance.params.get.return_value = 'yes'
     check_sw_version(instance)
     instance.exit_json.assert_called_with(
         msg='Version 2.0.3 is installed in the alternate slot. ' +
-        'cl-img-select has made the alternate slot the primary slot. ' +
+        'switch_slot set to "no". No further action to take', changed=False)
+
+    instance.params.get.return_value = True
+    check_sw_version(instance)
+    instance.exit_json.assert_called_with(
+        msg='Version 2.0.3 is installed in the alternate slot. ' +
         'Next reboot, switch will load 2.0.3.', changed=True)
 
 
@@ -246,13 +238,16 @@ def test_module_args(mock_module,
                      mock_install_img):
     """ cl_img_install - Test module argument specs"""
     instance = mock_module.return_value
-    instance.params.get.side_effect = mod_args
+    instance.params.get.side_effect = mod_args_generator(arg_values)
     main()
     mock_module.assert_called_with(
         argument_spec={'src': {'required': True, 'type': 'str'},
                        'version': {'type': 'str'},
-                       'switch_slot': {
-                           'default': 'no', 'choices': ['yes', 'no']}})
+                       'switch_slot':  {
+                           'default': False,
+                           'choices': ['yes', 'on', '1',
+                                       'true', 1, 'no',
+                                       'off', '0', 'false', 0]}})
 
 
 @mock.patch('dev_modules.cl_img_install.AnsibleModule')
@@ -276,16 +271,6 @@ def test_check_url(mock_module):
         msg=_msg)
 
 
-def mod_args_switch_slot_yes(arg):
-    values = {'switch_slot': 'yes'}
-    return values[arg]
-
-
-def mod_args_switch_slot_no(arg):
-    values = {'switch_slot': 'no'}
-    return values[arg]
-
-
 @mock.patch('dev_modules.cl_img_install.switch_slot')
 @mock.patch('dev_modules.cl_img_install.get_slot_info')
 @mock.patch('dev_modules.cl_img_install.run_cl_cmd')
@@ -296,18 +281,20 @@ def test_img_install(mock_module, mock_run_cl_cmd,
     Test install image
     """
     instance = mock_module.return_value
-    instance.params.get.side_effect = mod_args_no_switch_slot
+    instance.params.get.side_effect = mod_args_generator(arg_values)
     instance.sw_version = '2.0.3'
     install_img(instance)
     cmd = '/usr/cumulus/bin/cl-img-install -f %s' % \
-        (mod_args_no_switch_slot('src'))
+        (arg_values.get('src'))
     mock_run_cl_cmd.assert_called_with(instance, cmd)
     instance.exit_json.assert_called_with(
         msg='Cumulus Linux Version 2.0.3 ' +
         'successfully installed in alternate slot',
         changed=True)
     # test using when switching slots
-    instance.params.get.side_effect = mod_args
+    values = arg_values.copy()
+    values['switch_slot'] = True
+    instance.params.get.side_effect = mod_args_generator(values)
     mock_get_slot_info.return_value = {'1': {'version': '2.0.2',
                                              'active': True,
                                              'primary': True},
@@ -324,12 +311,13 @@ def test_switch_slot(mock_module, mock_run_cl_cmd):
     Test switching slots
     """
     instance = mock_module.return_value
-
-    instance.params.get.side_effect = mod_args_switch_slot_no
+    instance.params.get.side_effect = mod_args_generator(
+        {'switch_slot': 'no'})
     switch_slot(instance, 1)
     assert_equals(mock_run_cl_cmd.call_count, 0)
 
-    instance.params.get.side_effect = mod_args_switch_slot_yes
+    instance.params.get.side_effect = mod_args_generator(
+        {'switch_slot': True})
     switch_slot(instance, '1')
     runcmd = '/usr/cumulus/bin/cl-img-select 1'
     mock_run_cl_cmd.assert_called_with(instance, runcmd)

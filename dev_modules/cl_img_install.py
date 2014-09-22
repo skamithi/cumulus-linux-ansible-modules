@@ -35,6 +35,7 @@ To run the installed code, reboot the switch
         choices: ['yes', 'no']
         default: 'no'
 
+requirements: ["Cumulus Linux OS"]
 notes:
     - Image Management Documentation - \
 http://cumulusnetworks.com/docs/2.2/user-guide/system_management_diagnostics/img-mgmt.html#upgrade
@@ -214,7 +215,7 @@ def check_sw_version(module):
                             "switch_slot keyword set to 'no'."
                         module.exit_json(changed=False, msg=_msg)
                 else:
-                    if perform_switch_slot == 'yes':
+                    if perform_switch_slot is True:
                         _msg = _msg + \
                             "Next reboot, switch will load " + _version + "."
                         module.exit_json(changed=True, msg=_msg)
