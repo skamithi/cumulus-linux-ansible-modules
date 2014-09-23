@@ -9,7 +9,11 @@ module: cl_license
 author: Sean Cavanaugh & Stanley Karunditu
 short_description: Install Cumulus Linux license
 description:
-    - Install a Cumulus Linux license. The module checks for any existing license and if it is expired with replace it with the license been pushed to the switch. The module does not check that the license been installed is an active license.
+    - Install a Cumulus Linux license. If an existing license has expired, \
+it will be replaced with the new license. The module currently doesn't check \
+the new license expiration date. This will be done in a future release.  \
+For more details go the Cumulus Linux License Documentation @ \
+http://cumulusnetworks.com/docs/2.1/quick-start/quick-start.html
 options:
     src:
         description:
@@ -17,28 +21,34 @@ options:
         required: true
     restart_switchd:
         description:
-            - restart switchd process after installing the license
+            - restart switchd process after installing the license. \
+This is required to activate the license. It disrupts all network traffic so making this knob optionally
         choices: ['yes', 'no']
         default: 'no'
     force:
         description:
-            - force installation of the license
+            - force installation of the license. This does not active the new \
+license. It overwrites the existing license without checking if the license has expired or not.
         choices: ['yes', 'no']
         default: 'no'
-notes:
-    - License Documentation - http://cumulusnetworks.com/docs/2.1/quick-start/quick-start.html
-    - Contact Cumulus Networks @ http://cumulusnetworks.com/contact/
 '''
 EXAMPLES = '''
 Example playbook entries using the cl_license module to manage
 licenses on Cumulus Linux
 
-    tasks:
+## Install a license using a HTTP URL
+
     - name: install license using http url
       cl_license: src='http://10.1.1.1/license.txt'
 
+## Install a license from the local filesystem
+
+    - name: copy license to the switch
+      copy: license.txt dest=/tmp/license.txt
     - name: install license from local filesystem
-      cl_license: src='/home/nfsshare/license.txt'
+      cl_license: src='/tmp/license.txt'
+
+## Install a license and activate the license by restarting the switchd daemon
 
     - name: install license from local filesystem restart switchd
       cl_license: src='/home/nfsshare/licence.txt' restart_switchd=yes
