@@ -9,7 +9,9 @@ module: cl_img_install
 author: Stanley Karunditu
 short_description: Install a different Cumulus Linux version.
 description:
-    - install a different version of Cumulus Linux in the inactive slot.
+    - install a different version of Cumulus Linux in the inactive slot. For \
+more details go the Image Management User Guide @ \
+http://cumulusnetworks.com/latest/user-guide
 options:
     src:
         description:
@@ -36,27 +38,36 @@ To run the installed code, reboot the switch
         default: 'no'
 
 requirements: ["Cumulus Linux OS"]
-notes:
-    - Image Management Documentation - \
-http://cumulusnetworks.com/docs/2.2/user-guide/system_management_diagnostics/img-mgmt.html#upgrade
-    - Contact Cumulus Networks @ http://cumulusnetworks.com/contact/
+
 '''
 EXAMPLES = '''
 Example playbook entries using the cl_img_install module
 
-    tasks:
-    - name: install image using using http url. Do not reboot the switch to \
-run the new release
-      cl_img_install: version=2.0.1 \
+## Download and install the image from a webserver.
+
+   - name: install image using using http url. Switch slots so the subsequent \
+will load the new version
+      cl_img_install: version=2.0.1
           src='http://10.1.1.1/CumulusLinux-2.0.1.bin'
           switch_slot=yes
 
-## Copy the software using get_url to the switch local system and
-## install the software
+## Copy the software from the ansible server to the switch.
+## The module will get the code version from the filename
+## The code will be installed in the alternate slot but the slot will not be primary
+## A subsequent reload will not run the new code
+
     - name: download cumulus linux to local system
       get_url: src=ftp://cumuluslinux.bin dest=/root/CumulusLinux-2.0.1.bin
+
     - name: install image from local filesystem. Get version from the filename
       cl_img_install:  src='/root/CumulusLinux-2.0.1.bin'
+
+
+## If the image name has been changed from the original name, use the `version` option
+## to inform the module exactly what code version is been installed
+
+    - name: download cumulus linux to local system
+      get_url: src=ftp://CumulusLinux-2.0.1.bin dest=/root/image.bin
 
     - name: install image and switch slots. only reboot needed
       cl_img_install: version=2.0.1 src=/root/image.bin switch_slot=yes'
