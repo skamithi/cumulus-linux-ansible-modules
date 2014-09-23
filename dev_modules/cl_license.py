@@ -91,6 +91,8 @@ def license_is_current():
 
 
 def license_upto_date(module):
+    if module.params.get('force') is True:
+        return
     if os.path.exists(LICENSE_PATH) and license_is_current():
         module.exit_json(changed=False,
                          msg="license is installed and has not expired")
@@ -126,15 +128,16 @@ def main():
     module = AnsibleModule(
         argument_spec=dict(
             src=dict(required=True, type='str'),
-            restart_switchd=dict(default='no', choices=["yes", "no"]),
-            force=dict(default='no', choices=['yes', 'no'])
+            restart_switchd=dict(type='bool', choices=BOOLEANS, default=False),
+            force=dict(type='bool', choices=BOOLEANS, default=False)
         ),
     )
 
-    license_upto_date(module)
+
 
     license_url = module.params.get('src')
-    restart_switchd = module.params.get('restart_switchd')
+
+    license_upto_date(module)
 
     cl_license_path = '/usr/cumulus/bin/cl-license'
     _changed = False
@@ -144,15 +147,14 @@ def main():
 
     cl_lic_cmd = ('%s -i %s') % (cl_license_path, license_url)
     run_cl_cmd(module, cl_lic_cmd)
+    _changed = True
     _msg = 'license updated/installed. no request to restart switchd'
-    if restart_switchd == 'yes':
+    if module.params.get('restart_switchd') is True:
         if restart_switchd_now(module):
-            _changed = True
             _msg = 'license updated/installed. switchd restarted'
         else:
             _msg = 'license updated/installed. switchd failed to restart'
             module.fail_json(msg=_msg)
-    _changed = True
     module.exit_json(changed=_changed, msg=_msg)
 
 
