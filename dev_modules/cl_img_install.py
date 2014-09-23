@@ -218,7 +218,7 @@ def check_sw_version(module):
                     if perform_switch_slot is True:
                         _msg = _msg + \
                             "Next reboot, switch will load " + _version + "."
-                        module.exit_json(changed=True, msg=_msg)
+                        module.exit_json(changed=False, msg=_msg)
                     else:
                         _msg = _msg + \
                             'switch_slot set to "no". ' + \

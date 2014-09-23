@@ -167,18 +167,18 @@ def test_get_slot_info(mock_module,
 @mock.patch('dev_modules.cl_img_install.AnsibleModule')
 def test_check_sw_version(mock_module, mock_get_slot_info, mock_switch_slot):
     instance = mock_module.return_value
-    # switch_slots = yes , version found in alternate slots
+    # switch_slots = yes , version found in alternate slots and is primary
     instance.params.get.return_value = True
     slot_values = {
         '1': {'version': '2.0.10', 'primary': True},
-        '2': {'version': '2.0.3',  'active': True}
+        '2': {'version': '2.0.3', 'active': True}
     }
     mock_get_slot_info.return_value = slot_values
     instance.sw_version = '2.0.10'
     check_sw_version(instance)
     _msg = 'Version 2.0.10 is installed in the alternate slot. ' +\
         'Next reboot, switch will load 2.0.10.'
-    instance.exit_json.assert_called_with(msg=_msg, changed=True)
+    instance.exit_json.assert_called_with(msg=_msg, changed=False)
 
     # switch slot = no , version found in alternate slot
     instance.params.get.return_value = False
@@ -186,6 +186,25 @@ def test_check_sw_version(mock_module, mock_get_slot_info, mock_switch_slot):
     check_sw_version(instance)
     _msg = 'Version 2.0.10 is installed in the alternate slot. ' +\
         'switch_slot set to "no". No further action to take'
+    instance.exit_json.assert_called_with(msg=_msg, changed=False)
+
+    # switch_slots = yes , version found in alternate slots and not primary
+    instance.params.get.return_value = True
+    slot_values = {
+        '1': {'version': '2.0.10'},
+        '2': {'version': '2.0.3', 'primary': True, 'active': True}
+    }
+    mock_get_slot_info.return_value = slot_values
+    instance.sw_version = '2.0.10'
+    check_sw_version(instance)
+    _msg = 'Version 2.0.10 is installed in the alternate slot. cl-img-select has made the alternate slot the primary slot. Next reboot, switch will load 2.0.10.'
+    instance.exit_json.assert_called_with(msg=_msg, changed=True)
+
+    # switch slot = no , version found in alternate slot
+    instance.params.get.return_value = False
+    instance.sw_version = '2.0.10'
+    check_sw_version(instance)
+    _msg = "Version 2.0.10 is installed in the alternate slot. Next reboot will not load 2.0.10. switch_slot keyword set to 'no'."
     instance.exit_json.assert_called_with(msg=_msg, changed=False)
 
     # switch_slot = yes code in active slot
@@ -223,7 +242,7 @@ def test_check_sw_version(mock_module, mock_get_slot_info, mock_switch_slot):
     check_sw_version(instance)
     instance.exit_json.assert_called_with(
         msg='Version 2.0.3 is installed in the alternate slot. ' +
-        'Next reboot, switch will load 2.0.3.', changed=True)
+        'Next reboot, switch will load 2.0.3.', changed=False)
 
 
 @mock.patch('dev_modules.cl_img_install.install_img')
