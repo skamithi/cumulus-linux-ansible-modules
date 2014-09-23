@@ -547,7 +547,7 @@ def main():
             mtu=dict(type='str'),
             state=dict(type='str', choices=['noconfig', 'hasconfig'],
                        default='hasconfig'),
-            applyconfig=dict(choices=BOOLEANS, default=False),
+            applyconfig=dict(type='bool', choices=BOOLEANS, default=False),
 
         ),
         mutually_exclusive=[

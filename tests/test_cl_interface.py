@@ -63,11 +63,11 @@ def mod_args_unknown(arg):
               }
     return values[arg]
 
+
 def mod_args_generator(values, *args):
     def mod_args(args):
         return values[args]
     return mod_args
-
 
 
 @mock.patch('dev_modules.cl_interface.apply_config')
@@ -100,8 +100,11 @@ def test_module_args(mock_module,
         argument_spec={'bondslaves': {'type': 'list'},
                        'ipv6': {'type': 'list'},
                        'ipv4': {'type': 'list'},
-                       'applyconfig': {'choices': ['yes', 'on', '1',
-                                'true', 1, 'no', 'off', '0', 'false', 0], 'default': False},
+                       'applyconfig': {'type': 'bool',
+                                       'choices': ['yes', 'on', '1',
+                                                   'true', 1, 'no',
+                                                   'off', '0', 'false', 0],
+                                       'default': False},
                        'name': {'required': True, 'type': 'str'},
                        'ifaceattrs': {'type': 'dict'},
                        'alias': {'type': 'str'},
@@ -127,6 +130,7 @@ global_values = {
     'ifaceattrs': None,
     'state': 'present'
 }
+
 
 @mock.patch('dev_modules.cl_interface.apply_config')
 @mock.patch('dev_modules.cl_interface.remove_config_from_etc_net_interfaces')
