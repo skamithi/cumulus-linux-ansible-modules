@@ -231,7 +231,7 @@ def main():
         argument_spec=dict(
             src=dict(required=True, type='str'),
             version=dict(type='str'),
-            switch_slot=dict(choices=BOOLEANS, default=False),
+            switch_slot=dict(type='bool', choices=BOOLEANS, default=False),
         ),
     )
 

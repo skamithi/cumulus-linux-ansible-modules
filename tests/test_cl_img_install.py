@@ -244,6 +244,7 @@ def test_module_args(mock_module,
         argument_spec={'src': {'required': True, 'type': 'str'},
                        'version': {'type': 'str'},
                        'switch_slot':  {
+                           'type': 'bool',
                            'default': False,
                            'choices': ['yes', 'on', '1',
                                        'true', 1, 'no',
