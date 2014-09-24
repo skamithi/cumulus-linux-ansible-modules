@@ -376,7 +376,7 @@ def config_ospf_interface_config(module):
 
 
 def saveconfig(module):
-    if module.params.get('saveconfig') and\
+    if module.params.get('saveconfig') is True and\
             module.has_changed:
         run_cl_cmd(module, '/usr/bin/vtysh -c "wr mem"')
         module.exit_msg += 'Saving Config '
@@ -390,12 +390,13 @@ def main():
             router_id=dict(type='str'),
             interface=dict(type='str'),
             cost=dict(type='str'),
-            area=dict(type='str'),
+            area=dict(type='str', default='0.0.0.0'),
             state=dict(type='str',
-                       choices=['present', 'absent']),
-            point2point=dict(choices=BOOLEANS),
-            saveconfig=dict(choices=BOOLEANS, default=False),
-            passive=dict(choices=BOOLEANS)
+                       choices=['present', 'absent'],
+                       default='present'),
+            point2point=dict(type='bool', choices=BOOLEANS),
+            saveconfig=dict(type='bool', choices=BOOLEANS, default=False),
+            passive=dict(type='bool', choices=BOOLEANS)
         ),
         mutually_exclusive=[['reference_bandwidth', 'interface'],
                             ['router_id', 'interface']]
@@ -409,6 +410,8 @@ def main():
     if has_interface_config(module):
         config_ospf_interface_config(module)
     else:
+        # Set area to none before applying global config
+        module.params['area'] = None
         add_global_ospf_config(module)
     saveconfig(module)
     if module.has_changed:
