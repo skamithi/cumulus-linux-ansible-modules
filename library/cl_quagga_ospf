@@ -7,13 +7,16 @@ DOCUMENTATION = '''
 ---
 module: cl_quagga_ospf
 author: Stanley Karunditu
-short_description: Configure basic OSPF parameters and interfaces
+short_description: Configure basic OSPF parameters and interfaces using Quagga
 description:
     - Configures basic OSPF global parameters such as \
 router id and bandwidth cost, or OSPF interface configuration \
 like point-to-point settings or enabling OSPF on an interface. \
 Configuration is applied to single OSPF instance. \
-Multiple OSPF instance configuration is currently not supported.
+Multiple OSPF instance configuration is currently not supported. \
+It requires Quagga version 0.99.22 and higher with the non-modal Quagga CLI \
+developed by Cumulus Linux. For more details go to the Routing User Guide @ \
+http://cumulusnetworks.com/docs/2.2/  and Quagga Docs @  http://www.nongnu.org/quagga/
 options:
     router_id:
         description:
@@ -65,11 +68,7 @@ This will be implemented in a later release
         default: 'present'
         required_together:
             - with interface option
-notes:
-    - Quagga Routing Documentation - \
-        http://cumulusnetworks.com/docs/2.1/user-guide/layer_3/index.html \
-        http://www.nongnu.org/quagga/docs.html \
-    - Contact Cumulus Networks @ http://cumulusnetworks.com/contact/
+requirements:  ['Cumulus Linux Quagga non-modal CLI, Quagga version 0.99.22 and higher']
 '''
 EXAMPLES = '''
 Example playbook entries using the cl_quagga_ospf module
@@ -85,8 +84,6 @@ interface with a cost of 65535
         with_sequence: start=1 end=5 format=swp%d
     - name: disable ospf on swp1
         cl_quagga_ospf: interface=swp1 state=absent
-    - name: enable ospf unnumbered on swp1
-        cl_quagga_ospf: interface=swp1 anchor_int=lo
 '''
 
 
@@ -360,6 +357,7 @@ def update_cost(module):
 
 
 def config_ospf_interface_config(module):
+    enable_int_defaults(module)
     module.has_changed = False
     # get all ospf related config from quagga both globally and iface based
     get_running_config(module)
@@ -376,10 +374,23 @@ def config_ospf_interface_config(module):
 
 
 def saveconfig(module):
-    if module.params.get('saveconfig') and\
+    if module.params.get('saveconfig') is True and\
             module.has_changed:
         run_cl_cmd(module, '/usr/bin/vtysh -c "wr mem"')
         module.exit_msg += 'Saving Config '
+
+
+def enable_int_defaults(module):
+    if not module.params.get('area'):
+        module.params['area'] = '0.0.0.0'
+    if not module.params.get('state'):
+        module.params['state'] = 'present'
+
+
+def check_if_ospf_is_running(module):
+    if not os.path.exists('/var/run/quagga/ospfd.pid'):
+        _msg = 'OSPFv2 process is not running. Unable to execute command'
+        module.fail_json(msg=_msg)
 
 
 def main():
@@ -393,22 +404,25 @@ def main():
             area=dict(type='str'),
             state=dict(type='str',
                        choices=['present', 'absent']),
-            point2point=dict(choices=BOOLEANS),
-            saveconfig=dict(choices=BOOLEANS, default=False),
-            passive=dict(choices=BOOLEANS)
+            point2point=dict(type='bool', choices=BOOLEANS),
+            saveconfig=dict(type='bool', choices=BOOLEANS, default=False),
+            passive=dict(type='bool', choices=BOOLEANS)
         ),
         mutually_exclusive=[['reference_bandwidth', 'interface'],
                             ['router_id', 'interface']]
     )
+    check_if_ospf_is_running(module)
+
     check_dsl_dependencies(module, ['cost', 'state', 'area',
                                     'point2point', 'passive'],
                            'interface', 'swp1')
-    check_dsl_dependencies(module, ['interface'], 'area', '0.0.0.0')
     module.has_changed = False
     module.exit_msg = ''
     if has_interface_config(module):
         config_ospf_interface_config(module)
     else:
+        # Set area to none before applying global config
+        module.params['area'] = None
         add_global_ospf_config(module)
     saveconfig(module)
     if module.has_changed:
@@ -419,6 +433,7 @@ def main():
 # import module snippets
 from ansible.module_utils.basic import *
 import re
+import os
 import socket
 # incompatible with ansible 1.4.4 - ubuntu 12.04 version
 # from ansible.module_utils.urls import *

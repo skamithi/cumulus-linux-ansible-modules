@@ -10,7 +10,8 @@ author: Stanley Karunditu
 short_description: Configures a front panel, bridge or bond interface on a Cumulus Linux switch.
 description:
     - Configures a front panel, management, loopback, bridge or bond \
-on a Cumulus Linux switch
+on a Cumulus Linux switch. For more details review the Layer2 Interface Guide @ \
+http://cumulusnetworks.com/docs/2.2/
 options:
     name:
         description:

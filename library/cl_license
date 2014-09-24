@@ -13,7 +13,7 @@ description:
 it will be replaced with the new license. The module currently doesn't check \
 the new license expiration date. This will be done in a future release.  \
 For more details go the Cumulus Linux License Documentation @ \
-http://cumulusnetworks.com/docs/2.1/quick-start/quick-start.html
+http://cumulusnetworks.com/docs/2.2/
 options:
     src:
         description:
