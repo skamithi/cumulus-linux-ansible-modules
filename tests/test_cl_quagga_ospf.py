@@ -4,7 +4,7 @@ from nose.tools import set_trace
 from dev_modules.cl_quagga_ospf import check_dsl_dependencies, main, \
     has_interface_config, get_running_config, update_router_id, \
     add_global_ospf_config, update_reference_bandwidth, \
-    get_interface_addr_config, check_ip_addr_show, \
+    get_interface_addr_config, check_ip_addr_show, enable_int_defaults, \
     config_ospf_interface_config, enable_or_disable_ospf_on_int, \
     update_point2point, update_passive, update_cost, saveconfig
 from asserts import assert_equals
@@ -14,7 +14,10 @@ global_ospf_config = {
     'router_id': '10.1.1.1',
     'reference_bandwidth': '40000',
     'interface': None,
-    'state': 'present'
+    'state': None,
+    'cost': None,
+    'point2point': None,
+    'passive': None
 }
 
 int_ospf_config = {
@@ -364,7 +367,7 @@ def test_check_mod_args(mock_module,
     main()
     mock_module.assert_called_with(argument_spec={
         'router_id': {'type': 'str'},
-        'area': { 'type': 'str', 'default': '0.0.0.0'},
+        'area': { 'type': 'str'},
         'reference_bandwidth': {
             'default': '40000',
             'type': 'str'
@@ -375,8 +378,7 @@ def test_check_mod_args(mock_module,
             'choices': ['yes', 'on', '1', 'true',
                         1, 'no', 'off', '0',
                         'false', 0]},
-        'state': {'default': 'present',
-                  'type': 'str',
+        'state': {'type': 'str',
                   'choices': ['present', 'absent']},
         'cost': {'type': 'str'}, 'interface': {'type': 'str'},
         'passive': {'type': 'bool',
@@ -497,6 +499,7 @@ def test_update_reference_bandwidth(mock_module,
     assert_equals(instance.has_changed, False)
 
 
+@mock.patch('dev_modules.cl_quagga_ospf.enable_int_defaults')
 @mock.patch('dev_modules.cl_quagga_ospf.get_running_config')
 @mock.patch('dev_modules.cl_quagga_ospf.get_interface_addr_config')
 @mock.patch('dev_modules.cl_quagga_ospf.enable_or_disable_ospf_on_int')
@@ -510,7 +513,8 @@ def test_config_ospf_interface_config(mock_module,
                                       mock_update_point2point,
                                       mock_ospf_on_int,
                                       mock_get_interface_addr,
-                                      mock_get_running_config):
+                                      mock_get_running_config,
+                                      mock_enable_defaults):
     """
     cl_quagga_ospf - test configuring ospf interface
     """
@@ -522,8 +526,10 @@ def test_config_ospf_interface_config(mock_module,
     manager.attach_mock(mock_update_point2point, 'update_point2point')
     manager.attach_mock(mock_update_cost, 'update_cost')
     manager.attach_mock(mock_update_passive, 'update_passive')
+    manager.attach_mock(mock_enable_defaults, 'enable_int_defaults')
     # enable the ospf interface
-    expected_calls = [mock.call.get_running_config(instance),
+    expected_calls = [mock.call.enable_int_defaults(instance),
+                      mock.call.get_running_config(instance),
                       mock.call.get_interface_addr_config(instance),
                       mock.call.enable_or_disable_ospf_on_int(instance),
                       mock.call.update_point2point(instance),
@@ -545,6 +551,26 @@ def test_config_ospf_interface_config(mock_module,
                       mock.call.enable_or_disable_ospf_on_int(instance)]
     config_ospf_interface_config(instance)
     assert_equals(manager.method_calls, expected_calls)
+
+
+@mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
+def test_enable_int_defaults(mock_module):
+    instance = mock_module.return_value
+    # state param is None. enable_int_defaults should set it to 'present'
+    values = int_ospf_config.copy()
+    values['state'] = None
+    instance.params.get.side_effect = mod_args_generator(values)
+    enable_int_defaults(instance)
+    assert_equals(instance.params.__setitem__.call_args_list,
+                  [mock.call('state', 'present')])
+    # when area params is None, enable_int_default should set it to '0.0.0.0'
+    mock_module.reset_mock()  # reset mock attrs
+    values = int_ospf_config.copy()
+    values['area'] = None
+    instance.params.get.side_effect = mod_args_generator(values)
+    enable_int_defaults(instance)
+    assert_equals(instance.params.__setitem__.call_args_list,
+                  [mock.call('area', '0.0.0.0')])
 
 
 @mock.patch('dev_modules.cl_quagga_ospf.update_reference_bandwidth')
@@ -606,3 +632,11 @@ def test_check_dsl_dependencies(mock_module):
         "interface option. Example 'cl_quagga_ospf: interface=swp1 " +
         "point2point=yes'"
     )
+    # check dsl when putting in global config
+    mock_module.reset_mock()
+    # create a new instance of AnsibleModule
+    instance.params.get.side_effect = mod_args_generator(global_ospf_config)
+    check_dsl_dependencies(instance, ['cost', 'state', 'area',
+                                      'point2point', 'passive'],
+                           'interface', 'swp1')
+    assert_equals(instance.fail_json.call_count, 0)

@@ -360,6 +360,7 @@ def update_cost(module):
 
 
 def config_ospf_interface_config(module):
+    enable_int_defaults(module)
     module.has_changed = False
     # get all ospf related config from quagga both globally and iface based
     get_running_config(module)
@@ -382,6 +383,12 @@ def saveconfig(module):
         module.exit_msg += 'Saving Config '
 
 
+def enable_int_defaults(module):
+    if not module.params.get('area'):
+        module.params['area'] = '0.0.0.0'
+    if not module.params.get('state'):
+        module.params['state'] = 'present'
+
 def main():
     module = AnsibleModule(
         argument_spec=dict(
@@ -390,10 +397,9 @@ def main():
             router_id=dict(type='str'),
             interface=dict(type='str'),
             cost=dict(type='str'),
-            area=dict(type='str', default='0.0.0.0'),
+            area=dict(type='str'),
             state=dict(type='str',
-                       choices=['present', 'absent'],
-                       default='present'),
+                       choices=['present', 'absent']),
             point2point=dict(type='bool', choices=BOOLEANS),
             saveconfig=dict(type='bool', choices=BOOLEANS, default=False),
             passive=dict(type='bool', choices=BOOLEANS)
