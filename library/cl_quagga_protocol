@@ -15,7 +15,7 @@ This includes OSPF v2/v3 and BGP. Quagga services are defined in the \
 OSPF or BGP routing protocols, because this is what Cumulus Linux currently \
 supports. Using Ansible Templates you any supported or unsupported quagga \
 routing protocol. For more details go to the Quagga Documentation located at \
-http://cumulusnetworks.com/docs/latest/user-guide and \
+http://cumulusnetworks.com/docs/2.2 and \
 http://www.nongnu.org/quagga/docs.html
 options:
     name:
@@ -35,6 +35,7 @@ is already configured but not activated, setting activate=yes will not activate 
 This will be fixed in an upcoming release
         choices: ['yes', 'no']
         default: ['no']
+requirements: ['Quagga version 0.99.23 and higher']
 '''
 EXAMPLES = '''
 Example playbook entries using the cl_quagga module

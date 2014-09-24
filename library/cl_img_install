@@ -11,7 +11,7 @@ short_description: Install a different Cumulus Linux version.
 description:
     - install a different version of Cumulus Linux in the inactive slot. For \
 more details go the Image Management User Guide @ \
-http://cumulusnetworks.com/latest/user-guide
+http://cumulusnetworks.com/docs/2.2/
 options:
     src:
         description:
