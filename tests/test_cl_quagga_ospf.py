@@ -6,7 +6,8 @@ from dev_modules.cl_quagga_ospf import check_dsl_dependencies, main, \
     add_global_ospf_config, update_reference_bandwidth, \
     get_interface_addr_config, check_ip_addr_show, enable_int_defaults, \
     config_ospf_interface_config, enable_or_disable_ospf_on_int, \
-    update_point2point, update_passive, update_cost, saveconfig
+    update_point2point, update_passive, update_cost, saveconfig, \
+    check_if_ospf_is_running
 from asserts import assert_equals
 
 global_ospf_config = {
@@ -598,6 +599,23 @@ def test_add_global_ospf_config(mock_module,
     # change
     assert_equals(instance.exit_json.call_count, 1)
 
+@mock.patch('dev_modules.cl_quagga_ospf.os.path.exists')
+@mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
+def test_check_if_ospf_is_running(mock_module,
+                                  mock_path_exists):
+    # if ospf is running
+    mock_path_exists.return_value = True
+    check_if_ospf_is_running(mock_module)
+    assert_equals(mock_module.fail_json.call_count, 0)
+    mock_module.reset_mock()
+    # if ospf is not running
+    mock_path_exists.return_value = False
+    check_if_ospf_is_running(mock_module)
+    assert_equals(mock_module.fail_json.call_count, 1)
+    mock_path_exists.assert_called_with('/var/run/quagga/ospfd.pid')
+
+
+
 
 @mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
 def test_has_int_config(mock_module):
@@ -638,3 +656,5 @@ def test_check_dsl_dependencies(mock_module):
                                       'point2point', 'passive'],
                            'interface', 'swp1')
     assert_equals(instance.fail_json.call_count, 0)
+
+

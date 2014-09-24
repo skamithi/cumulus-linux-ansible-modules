@@ -389,6 +389,13 @@ def enable_int_defaults(module):
     if not module.params.get('state'):
         module.params['state'] = 'present'
 
+
+def check_if_ospf_is_running(module):
+    if not os.path.exists('/var/run/quagga/ospfd.pid'):
+        _msg = 'OSPFv2 process is not running. Unable to execute command'
+        module.fail_json(msg=_msg)
+
+
 def main():
     module = AnsibleModule(
         argument_spec=dict(
@@ -407,6 +414,8 @@ def main():
         mutually_exclusive=[['reference_bandwidth', 'interface'],
                             ['router_id', 'interface']]
     )
+    check_if_ospf_is_running(module)
+
     check_dsl_dependencies(module, ['cost', 'state', 'area',
                                     'point2point', 'passive'],
                            'interface', 'swp1')
@@ -427,6 +436,7 @@ def main():
 # import module snippets
 from ansible.module_utils.basic import *
 import re
+import os
 import socket
 # incompatible with ansible 1.4.4 - ubuntu 12.04 version
 # from ansible.module_utils.urls import *
