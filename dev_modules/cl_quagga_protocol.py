@@ -35,6 +35,7 @@ is already configured but not activated, setting activate=yes will not activate 
 This will be fixed in an upcoming release
         choices: ['yes', 'no']
         default: ['no']
+requirements: ['Quagga version 0.99.23 and higher']
 '''
 EXAMPLES = '''
 Example playbook entries using the cl_quagga module
