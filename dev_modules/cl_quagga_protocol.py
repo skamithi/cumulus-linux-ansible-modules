@@ -30,7 +30,9 @@ options:
         required: true
     activate:
         description:
-            - restart quagga process to activate the change
+            - restart quagga process to activate the change. If the service \
+is already configured but not activated, setting activate=yes will not activate the service. \
+This will be fixed in an upcoming release
         choices: ['yes', 'no']
         default: ['no']
 '''
@@ -50,6 +52,14 @@ Example playbook entries using the cl_quagga module
 ## Enable OSPFv2 and activate the change
 as this might not start quagga when you want it to
     cl_quagga_protocol name="ospfd" state=present activate=yes
+
+## To activate a configured service
+
+- name: disable ospfv2 service. Its configured but not enabled
+  cl_quagga_protocol name=ospfd state=absent
+
+- name: enable ospfv2 service and activate it
+  cl_quagga_protocol name=ospfd state=present activate=yes
 '''
 
 
@@ -146,8 +156,9 @@ def main():
                       required=True),
             state=dict(type='str',
                        choices=['present', 'absent'],
-                       required=True)),
-    )
+                       required=True),
+            activate=dict(type='bool', choices=BOOLEANS, default=False)
+        ))
     module.quagga_daemon_file = '/etc/quagga/daemons'
     setting_is_configured(module)
     modify_config(module)
@@ -156,6 +167,9 @@ def main():
     _state = convert_to_yes_or_no(_state)
     _msg = "%s protocol setting modified to %s" % \
         (_protocol, _state)
+    if module.params.get('activate') is True:
+        run_cl_cmd(module, '/usr/sbin/service quagga restart')
+        _msg += '. Restarted Quagga Service'
     module.exit_json(msg=_msg, changed=True)
 
 # import module snippets
