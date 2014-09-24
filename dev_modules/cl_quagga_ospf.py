@@ -7,13 +7,16 @@ DOCUMENTATION = '''
 ---
 module: cl_quagga_ospf
 author: Stanley Karunditu
-short_description: Configure basic OSPF parameters and interfaces
+short_description: Configure basic OSPF parameters and interfaces using Quagga
 description:
     - Configures basic OSPF global parameters such as \
 router id and bandwidth cost, or OSPF interface configuration \
 like point-to-point settings or enabling OSPF on an interface. \
 Configuration is applied to single OSPF instance. \
-Multiple OSPF instance configuration is currently not supported.
+Multiple OSPF instance configuration is currently not supported. \
+It requires Quagga version 0.99.22 and higher with the non-modal Quagga CLI \
+developed by Cumulus Linux. For more details go to the Routing User Guide @ \
+http://cumulusnetworks.com/docs/2.2/  and Quagga Docs @  http://www.nongnu.org/quagga/
 options:
     router_id:
         description:
@@ -65,11 +68,7 @@ This will be implemented in a later release
         default: 'present'
         required_together:
             - with interface option
-notes:
-    - Quagga Routing Documentation - \
-        http://cumulusnetworks.com/docs/2.1/user-guide/layer_3/index.html \
-        http://www.nongnu.org/quagga/docs.html \
-    - Contact Cumulus Networks @ http://cumulusnetworks.com/contact/
+requirements:  ['Cumulus Linux Quagga non-modal CLI, Quagga version 0.99.22 and higher']
 '''
 EXAMPLES = '''
 Example playbook entries using the cl_quagga_ospf module
@@ -85,8 +84,6 @@ interface with a cost of 65535
         with_sequence: start=1 end=5 format=swp%d
     - name: disable ospf on swp1
         cl_quagga_ospf: interface=swp1 state=absent
-    - name: enable ospf unnumbered on swp1
-        cl_quagga_ospf: interface=swp1 anchor_int=lo
 '''
 
 

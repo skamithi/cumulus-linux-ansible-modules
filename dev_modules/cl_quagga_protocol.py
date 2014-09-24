@@ -15,7 +15,7 @@ This includes OSPF v2/v3 and BGP. Quagga services are defined in the \
 OSPF or BGP routing protocols, because this is what Cumulus Linux currently \
 supports. Using Ansible Templates you any supported or unsupported quagga \
 routing protocol. For more details go to the Quagga Documentation located at \
-http://cumulusnetworks.com/docs/latest/user-guide and \
+http://cumulusnetworks.com/docs/2.2 and \
 http://www.nongnu.org/quagga/docs.html
 options:
     name:
