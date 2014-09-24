@@ -5,10 +5,43 @@ from dev_modules.cl_quagga_protocol import main, convert_to_yes_or_no, \
 from asserts import assert_equals
 
 
-def mod_args(arg):
-    values = {'name': 'ospfd',
-              'state': 'present'}
-    return values[arg]
+mod_args = {'name': 'ospfd',
+            'state': 'present',
+            'activate': False}
+
+
+def mod_args_generator(values, *args):
+    def mod_args(args):
+        return values[args]
+    return mod_args
+
+
+@mock.patch('dev_modules.cl_quagga_protocol.run_cl_cmd')
+@mock.patch('dev_modules.cl_quagga_protocol.modify_config')
+@mock.patch('dev_modules.cl_quagga_protocol.setting_is_configured')
+@mock.patch('dev_modules.cl_quagga_protocol.AnsibleModule')
+def test_restarting_quagga(mock_module,
+                           mock_check_setting,
+                           mock_modify_config,
+                           mock_run_cmd):
+    """
+    cl_quagga_protocol - test restarting quagga
+    """
+    instance = mock_module.return_value
+    # activate = yes
+    values = mod_args.copy()
+    values['activate'] = True
+    instance.params.get.side_effect = mod_args_generator(values)
+    main()
+    _msg = 'ospfd protocol setting modified to yes. Restarted Quagga Service'
+    instance.exit_json.assert_called_with(msg=_msg, changed=True)
+    # activate = no
+    values = mod_args.copy()
+    values['activate'] = False
+    instance.params.get.side_effect = mod_args_generator(values)
+    main()
+    _msg = 'ospfd protocol setting modified to yes'
+    instance.exit_json.assert_called_with(msg=_msg, changed=True)
 
 
 @mock.patch('dev_modules.cl_quagga_protocol.modify_config')
@@ -19,13 +52,19 @@ def test_module_args(mock_module,
                      mock_modify_config):
     """ cl_quagga_protocol - Test module argument specs"""
     instance = mock_module.return_value
-    instance.params.get.side_effect = mod_args
+    instance.params.get.side_effect = mod_args_generator(mod_args)
     main()
     mock_module.assert_called_with(
         argument_spec={'name':
                        {'type': 'str', 'choices':
                         ['ospfd', 'ospf6d', 'bgpd'],
                         'required': True},
+                       'activate': {
+                           'type': 'bool',
+                           'choices': ['yes', 'on', '1', 'true', 1,
+                                       'no', 'off', '0', 'false', 0],
+                           'default': False
+                       },
                        'state': {'type': 'str',
                                  'choices': ['present', 'absent'],
                                  'required': True}

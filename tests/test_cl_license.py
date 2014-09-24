@@ -14,16 +14,17 @@ what is seen in this function below
 """
 
 
-def mod_args_return_values_switchd_no(arg):
-    values = {'src': 'http://10.1.1.1/license.txt',
-              'restart_switchd': 'no'}
-    return values[arg]
+mod_args = {
+    'src': 'http://10.1.1.1/license.txt',
+    'restart_switchd': True,
+    'force': False
+}
 
 
-def mod_args_return_values_switchd_yes(arg):
-    values = {'src': 'http://10.1.1.1/license.txt',
-              'restart_switchd': 'yes'}
-    return values[arg]
+def mod_args_generator(values, *args):
+    def mod_args(args):
+        return values[args]
+    return mod_args
 
 
 def test_get_todays_date():
@@ -40,8 +41,14 @@ def test_get_todays_date():
 def test_check_license_existence(mock_os_path_exists, mock_date):
     "Test check_license_existence"
     lf = open('tests/license.txt')
-    # license file exists and is current
     mock_module = MagicMock()
+    # force mode is enabled
+    mock_module.params.get.return_value = True
+    license_upto_date(mock_module)
+    assert_equals(mock_os_path_exists.call_count, 0)
+
+    # license file exists and is current
+    mock_module.params.get.return_value = False
     mock_date.return_value = date(2013, 8, 6)
     mock_os_path_exists.return_value = True
     with mock.patch('__builtin__.open') as mock_open:
@@ -50,11 +57,13 @@ def test_check_license_existence(mock_os_path_exists, mock_date):
         mock_module.exit_json.assert_called_with(
             msg='license is installed and has not expired', changed=False)
     mock_os_path_exists.assert_called_with(LICENSE_PATH)
+
     # license file does not exist
     mock_os_path_exists.return_value = False
     mock_module = MagicMock()
     license_upto_date(mock_module)
     assert_equals(mock_module.exit_json.call_count, 0)
+
     # license file exists but has expired
     mock_os_path_exists.return_value = True
     mock_date.return_value = date(2014, 8, 6)
@@ -64,13 +73,18 @@ def test_check_license_existence(mock_os_path_exists, mock_date):
         assert_equals(mock_module.exit_json.call_count, 0)
 
 
+@mock.patch('dev_modules.cl_license.time.sleep')
 @mock.patch('dev_modules.cl_license.license_is_current')
 @mock.patch('dev_modules.cl_license.AnsibleModule')
-def test_run_main_restart_switchd_no(mock_ansible_module, mock_license):
-    "Test correct cl_licence file execution when restart_switchd_is_no"
+def test_run_main_restart_switchd_no(mock_ansible_module,
+                                     mock_license,
+                                     mock_time):
+    "Test correct cl_licence file execution when restart_switchd is no"
     instance = mock_ansible_module.return_value
     instance.mock_license.return_value = True
-    instance.params.get.side_effect = mod_args_return_values_switchd_no
+    values = mod_args.copy()
+    values['restart_switchd'] = False
+    instance.params.get.side_effect = mod_args_generator(values)
     instance.run_command.return_value = ['0', '', '']
     main()
     instance.run_command.assert_called_with(
@@ -88,12 +102,12 @@ def test_run_main_restart_switchd_yes(mock_restart_switchd,
                                       mock_license):
     """
     Test correct cl_licence file execution when restart_switchd_is_yes\
-    and switchd fails to start.
+    and switchd fails to start. Module should run fail_json
     """
     mock_license.return_value = True
     mock_restart_switchd.return_value = False
     instance = mock_ansible_module.return_value
-    instance.params.get.side_effect = mod_args_return_values_switchd_yes
+    instance.params.get.side_effect = mod_args_generator(mod_args)
     instance.run_command.return_value = ['0', '', '']
     main()
     instance.run_command.assert_called_with(
@@ -116,7 +130,7 @@ def test_run_main_restart_switchd_yes_doesnt_fail(mock_restart_switchd,
     mock_license.return_value = True
     mock_restart_switchd.return_value = True
     instance = mock_ansible_module.return_value
-    instance.params.get.side_effect = mod_args_return_values_switchd_yes
+    instance.params.get.side_effect = mod_args_generator(mod_args)
     instance.run_command.return_value = ['0', '', '']
 
     main()

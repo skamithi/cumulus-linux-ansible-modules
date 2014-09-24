@@ -6,3 +6,5 @@
 *.gz
 *.pyc
 *.swo
+
+*.txt

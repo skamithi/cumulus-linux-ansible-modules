@@ -14,7 +14,9 @@ This includes OSPF v2/v3 and BGP. Quagga services are defined in the \
 /etc/quagga/daemons file. This module creates a file that will only enable \
 OSPF or BGP routing protocols, because this is what Cumulus Linux currently \
 supports. Using Ansible Templates you any supported or unsupported quagga \
-routing protocol.
+routing protocol. For more details go to the Quagga Documentation located at \
+http://cumulusnetworks.com/docs/latest/user-guide and \
+http://www.nongnu.org/quagga/docs.html
 options:
     name:
         description:
@@ -26,29 +28,38 @@ options:
             - describe whether the protocol should be enabled or disabled
         choices: ['present', 'absent']
         required: true
-notes:
-    - Quagga Routing Documentation - \
-        http://cumulusnetworks.com/docs/2.1/user-guide/layer_3/index.html \
-        http://www.nongnu.org/quagga/docs.html \
-    - Contact Cumulus Networks @ http://cumulusnetworks.com/contact/
+    activate:
+        description:
+            - restart quagga process to activate the change. If the service \
+is already configured but not activated, setting activate=yes will not activate the service. \
+This will be fixed in an upcoming release
+        choices: ['yes', 'no']
+        default: ['no']
 '''
 EXAMPLES = '''
 Example playbook entries using the cl_quagga module
 
-    tasks:
-    - name: activate ospfv2
-        cl_quagga_protocol name="ospfd" state=present
-    - name: deactivate ospfv3
-        cl_quagga_protocol name="ospf6d" state=absent
-    - name: enable bgp v4/v6
-        cl_quagga_protocol name="bgpd" state=present
-    - name: activate ospf then restart quagga right away. don't use notify \
+## Enable OSPFv2. Do not activate the change
+    cl_quagga_protocol name="ospfd" state=present
+
+## Disable OSPFv2. Do not activate the change
+    cl_quagga_protocol name="ospf6d" state=absent
+
+## Enable BGPv2. Do not activate the change. Activating the change requires a restart of the
+## entire quagga process.
+    cl_quagga_protocol name="bgpd" state=present
+
+## Enable OSPFv2 and activate the change
 as this might not start quagga when you want it to
-        cl_quagga_protocol name="ospfd" state=present
-        register: ospf_service
-    - name: restart Quagga right away after setting it
-        service: name=quagga state=restarted
-        when: ospf_service.changed == True
+    cl_quagga_protocol name="ospfd" state=present activate=yes
+
+## To activate a configured service
+
+- name: disable ospfv2 service. Its configured but not enabled
+  cl_quagga_protocol name=ospfd state=absent
+
+- name: enable ospfv2 service and activate it
+  cl_quagga_protocol name=ospfd state=present activate=yes
 '''
 
 
@@ -145,8 +156,9 @@ def main():
                       required=True),
             state=dict(type='str',
                        choices=['present', 'absent'],
-                       required=True)),
-    )
+                       required=True),
+            activate=dict(type='bool', choices=BOOLEANS, default=False)
+        ))
     module.quagga_daemon_file = '/etc/quagga/daemons'
     setting_is_configured(module)
     modify_config(module)
@@ -155,6 +167,9 @@ def main():
     _state = convert_to_yes_or_no(_state)
     _msg = "%s protocol setting modified to %s" % \
         (_protocol, _state)
+    if module.params.get('activate') is True:
+        run_cl_cmd(module, '/usr/sbin/service quagga restart')
+        _msg += '. Restarted Quagga Service'
     module.exit_json(msg=_msg, changed=True)
 
 # import module snippets

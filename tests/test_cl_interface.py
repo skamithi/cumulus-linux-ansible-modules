@@ -64,6 +64,12 @@ def mod_args_unknown(arg):
     return values[arg]
 
 
+def mod_args_generator(values, *args):
+    def mod_args(args):
+        return values[args]
+    return mod_args
+
+
 @mock.patch('dev_modules.cl_interface.apply_config')
 @mock.patch('dev_modules.cl_interface.remove_config_from_etc_net_interfaces')
 @mock.patch('dev_modules.cl_interface.modify_switch_config')
@@ -80,14 +86,25 @@ def test_module_args(mock_module,
                      mock_apply_config):
     """ Test module argument specs"""
     instance = mock_module.return_value
-    instance.params.get.side_effect = mod_args_unknown
+    values = {'name': 'gibberish',
+              'bridgeports': None,
+              'bondslaves': None,
+              'applyconfig': 'no',
+              'ifaceattrs': None,
+              'state': 'present',
+              }
+    instance.params.get.side_effect = mod_args_generator(values)
     mock_get_iface_type.return_value = 'loopback'
     main()
     mock_module.assert_called_with(
         argument_spec={'bondslaves': {'type': 'list'},
                        'ipv6': {'type': 'list'},
                        'ipv4': {'type': 'list'},
-                       'applyconfig': {'type': 'str', 'default': 'no'},
+                       'applyconfig': {'type': 'bool',
+                                       'choices': ['yes', 'on', '1',
+                                                   'true', 1, 'no',
+                                                   'off', '0', 'false', 0],
+                                       'default': False},
                        'name': {'required': True, 'type': 'str'},
                        'ifaceattrs': {'type': 'dict'},
                        'alias': {'type': 'str'},
@@ -101,6 +118,44 @@ def test_module_args(mock_module,
         mutually_exclusive=[['bridgeports', 'bondslaves'],
                             ['dhcp', 'ipv4'],
                             ['dhcp', 'ipv6']])
+
+global_values = {
+    'name': 'gibberish',
+    'bridgeports': None,
+    'bondslaves': None,
+    'applyconfig': 'no',
+    'speed': None,
+    'mtu': None,
+    'alias': None,
+    'ifaceattrs': None,
+    'state': 'present'
+}
+
+
+@mock.patch('dev_modules.cl_interface.apply_config')
+@mock.patch('dev_modules.cl_interface.remove_config_from_etc_net_interfaces')
+@mock.patch('dev_modules.cl_interface.modify_switch_config')
+@mock.patch('dev_modules.cl_interface.config_lo_iface')
+@mock.patch('dev_modules.cl_interface.config_changed')
+@mock.patch('dev_modules.cl_interface.get_iface_type')
+@mock.patch('dev_modules.cl_interface.AnsibleModule')
+def test_applyconfig(mock_module,
+                     mock_get_iface_type,
+                     mock_config_changed,
+                     mock_config_lo_iface,
+                     mock_mod_sw_config,
+                     mock_remove_config,
+                     mock_apply_config):
+
+    instance = mock_module.return_value
+    instance.params.get.side_effect = mod_args_generator(global_values)
+    main()
+    assert_equals(mock_apply_config.call_count, 0)
+    values = global_values.copy()
+    values['applyconfig'] = True
+    instance.params.get.side_effect = mod_args_generator(values)
+    main()
+    assert_equals(mock_apply_config.call_count, 1)
 
 
 def mod_arg_state_absent(arg):

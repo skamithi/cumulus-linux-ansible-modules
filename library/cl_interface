@@ -7,9 +7,10 @@ DOCUMENTATION = '''
 ---
 module: cl_interface
 author: Stanley Karunditu
-short_description: Configures a front panel , bridge or bond interface.
+short_description: Configures a front panel, bridge or bond interface on a Cumulus Linux switch.
 description:
-    - Configures a front panel, management, loopback, bridge or bond interface.
+    - Configures a front panel, management, loopback, bridge or bond \
+on a Cumulus Linux switch
 options:
     name:
         description:
@@ -17,7 +18,8 @@ options:
         required: true
     applyconfig:
         description:
-            - apply interface change
+            - activate the interface change. It does this by running the \
+`ifup` command on the specified interface.
         choices: ['yes', 'no']
         default: 'no'
     alias:
@@ -26,44 +28,46 @@ options:
     ipv4:
         description:
             - list of IPv4 addresses to configure on the interface. \
-                use X.X.X.X/YY syntax.
+use X.X.X.X/YY syntax.
     ipv6:
         description:
             - list of IPv6 addresses  to configure on the interface. \
-                use X:X:X::X/YYY syntax
+use X:X:X::X/YYY syntax
     bridgeports:
         description:
             - list ports associated with the bridge interface.
     bondslaves:
         description:
-            - list ports associated with the bond interface
+            - list ports associated with the bond interface. Creates a LACP \
+bond. Functionality to create other types of bonds will be available in a future release.
     ifaceattrs:
         description:
-            - provide a dictionary of all attributes to assign to the port. \
-                it is mutually exclusive with any other command.
+            - provide a dictionary of all available attributes to assign to the port. \
+it is mutually exclusive with any other option, except `applyconfig` and `name`. \
+See the examples section for more details.
+
     dhcp:
         description:
             - configure dhcp on the interface
         choices: ['yes', 'no']
     speed:
         description:
-            - set speed of the bond, bridge or swp(front panel) or \
-            mgmt(eth0) interface. speed is in MB
+            - set speed of the swp(front panel) or \
+management(eth0) interface. speed is in MB
     mtu:
         description:
             - set MTU. Configure Jumbo Frame by setting MTU to 9000.
     state:
         description:
-            - set to 'noconfig' to remove all config from an interface.
+            - set to 'noconfig' to remove all config from an interface. \
+Provides the ability to reset the configuration. See the examples section for more details.
         choices: ['noconfig', 'hasconfig']
         default: 'hasconfig'
-notes:
-    - Cumulus Linux Interface Documentation - \
-        http://cumulusnetworks.com/docs/2.0/user-guide/layer_1_2/interfaces.html
-    - Contact Cumulus Networks @ http://cumulusnetworks.com/contact/
+
+requirements: [ Alternate Debian network interface manager - ifupdown2 @ github.com/CumulusNetworks/ifupdown2 ]
 '''
 EXAMPLES = '''
-#Example playbook entries using the cl_interface
+## Example playbook entries using the cl_interface
 
 ## configure a front panel port with an IP
 cl_interface: name=swp1  ipv4=10.1.1.1/24 applyconfig=yes
@@ -78,31 +82,45 @@ cl_interface: name=br0  bridgeports=['swp1-10.100', 'swp11'] applyconfig=yes
 Don't activate the config
 cl_interface: name=bond1 bondslaves=['swp17-20']
 
-## configure a bond interface with an IP address
+## configure a bond interface with an IP address and activate the configuration
 cl_interface:
     name=br0
     bondslaves=['swp1', 'swp2']
-    ipv4='10.1.1.1/24' applyconfig=yes
+    ipv4='10.1.1.1/24'
+    applyconfig=yes
 
 ## remove all configuration from an interface. Don't activate the config
-cl_interface: name=br0 state=noconfig
+cl_interface: name=br0 state=noconfig applyconfig=yes
+
+## renaming a bond interface
+
+- name: remove all config from the old bond. this is disruptive
+cl_interface: name=oldbondname state=noconfig applyconfig=yes
+
+- name: apply bondslaves from oldbondname to newbondname and \
+activate the change.
+cl_interface: name=newbondname bondslaves='swp1 swp2' applyconfig=yes
 
 ## use complex args with ifaceattrs. restart networking only if a change occurs
-## notify doesn't work well because its asynchronous and networking must be \
-## started synchronously. More efficient when doing lots of config changes \
-## to apply the changes, then run 'ifup -a' once at the end
-- name: configure multiple interfaces using interface.yml
+## notify doesn't work well because its asynchronous and networking must be
+## started synchronously. More efficient when doing lots of config changes
+## to install the changes, then run reload networking once at the end to
+## apply the changes
+
+- name: configure lots of interfaces
 cl_interface:
     ifaceattrs: "{{ item.value }}"
     name: "{{ item.key}}"
-with_dict:interfaces[ansible_hostname]
-register:  networking
+with_dict: interfaces[ansible_hostname]
+ register: networking
+
 - name: apply all network changes if change occured. faster than doing per \
 interface restart using applyconfig option.
   service: name=networking state=reloaded
   when: networking.changed == True
 
-## interfaces.yml file for complex args
+## interfaces.yml file for complex interface configuration
+## ------------interface.yml -----------
 interfaces:
     sw1:
         vlan1:
@@ -547,7 +565,8 @@ def main():
             mtu=dict(type='str'),
             state=dict(type='str', choices=['noconfig', 'hasconfig'],
                        default='hasconfig'),
-            applyconfig=dict(type='str', default='no')
+            applyconfig=dict(type='bool', choices=BOOLEANS, default=False),
+
         ),
         mutually_exclusive=[
             ['bridgeports', 'bondslaves'],
@@ -570,7 +589,7 @@ def main():
     config_changed(module, iface)
     modify_switch_config(module, iface)
     remove_config_from_etc_net_interfaces(module, iface)
-    if module.params.get('applyconfig') == 'yes':
+    if module.params.get('applyconfig') is True:
         apply_config(module, iface)
     _msg = 'interface successfully configured %s' % (iface['name'])
     module.exit_json(msg=_msg, changed=True)

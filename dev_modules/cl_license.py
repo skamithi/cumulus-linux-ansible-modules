@@ -9,7 +9,11 @@ module: cl_license
 author: Sean Cavanaugh & Stanley Karunditu
 short_description: Install Cumulus Linux license
 description:
-    - Install a Cumulus Linux license. The module checks for any existing license and if it is expired with replace it with the license been pushed to the switch. The module does not check that the license been installed is an active license.
+    - Install a Cumulus Linux license. If an existing license has expired, \
+it will be replaced with the new license. The module currently doesn't check \
+the new license expiration date. This will be done in a future release.  \
+For more details go the Cumulus Linux License Documentation @ \
+http://cumulusnetworks.com/docs/2.1/quick-start/quick-start.html
 options:
     src:
         description:
@@ -17,28 +21,34 @@ options:
         required: true
     restart_switchd:
         description:
-            - restart switchd process after installing the license
+            - restart switchd process after installing the license. \
+This is required to activate the license. It disrupts all network traffic so making this knob optionally
         choices: ['yes', 'no']
         default: 'no'
     force:
         description:
-            - force installation of the license
+            - force installation of the license. This does not active the new \
+license. It overwrites the existing license without checking if the license has expired or not.
         choices: ['yes', 'no']
         default: 'no'
-notes:
-    - License Documentation - http://cumulusnetworks.com/docs/2.1/quick-start/quick-start.html
-    - Contact Cumulus Networks @ http://cumulusnetworks.com/contact/
 '''
 EXAMPLES = '''
 Example playbook entries using the cl_license module to manage
 licenses on Cumulus Linux
 
-    tasks:
+## Install a license using a HTTP URL
+
     - name: install license using http url
       cl_license: src='http://10.1.1.1/license.txt'
 
+## Install a license from the local filesystem
+
+    - name: copy license to the switch
+      copy: license.txt dest=/tmp/license.txt
     - name: install license from local filesystem
-      cl_license: src='/home/nfsshare/license.txt'
+      cl_license: src='/tmp/license.txt'
+
+## Install a license and activate the license by restarting the switchd daemon
 
     - name: install license from local filesystem restart switchd
       cl_license: src='/home/nfsshare/licence.txt' restart_switchd=yes
@@ -81,6 +91,8 @@ def license_is_current():
 
 
 def license_upto_date(module):
+    if module.params.get('force') is True:
+        return
     if os.path.exists(LICENSE_PATH) and license_is_current():
         module.exit_json(changed=False,
                          msg="license is installed and has not expired")
@@ -116,15 +128,16 @@ def main():
     module = AnsibleModule(
         argument_spec=dict(
             src=dict(required=True, type='str'),
-            restart_switchd=dict(default='no', choices=["yes", "no"]),
-            force=dict(default='no', choices=['yes', 'no'])
+            restart_switchd=dict(type='bool', choices=BOOLEANS, default=False),
+            force=dict(type='bool', choices=BOOLEANS, default=False)
         ),
     )
 
-    license_upto_date(module)
+
 
     license_url = module.params.get('src')
-    restart_switchd = module.params.get('restart_switchd')
+
+    license_upto_date(module)
 
     cl_license_path = '/usr/cumulus/bin/cl-license'
     _changed = False
@@ -134,15 +147,14 @@ def main():
 
     cl_lic_cmd = ('%s -i %s') % (cl_license_path, license_url)
     run_cl_cmd(module, cl_lic_cmd)
+    _changed = True
     _msg = 'license updated/installed. no request to restart switchd'
-    if restart_switchd == 'yes':
+    if module.params.get('restart_switchd') is True:
         if restart_switchd_now(module):
-            _changed = True
             _msg = 'license updated/installed. switchd restarted'
         else:
             _msg = 'license updated/installed. switchd failed to restart'
             module.fail_json(msg=_msg)
-    _changed = True
     module.exit_json(changed=_changed, msg=_msg)
 
 
