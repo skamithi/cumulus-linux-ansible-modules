@@ -410,7 +410,6 @@ def main():
     check_dsl_dependencies(module, ['cost', 'state', 'area',
                                     'point2point', 'passive'],
                            'interface', 'swp1')
-    check_dsl_dependencies(module, ['interface'], 'area', '0.0.0.0')
     module.has_changed = False
     module.exit_msg = ''
     if has_interface_config(module):
