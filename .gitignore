@@ -6,5 +6,5 @@
 *.gz
 *.pyc
 *.swo
-
 *.txt
+/.temp_mods

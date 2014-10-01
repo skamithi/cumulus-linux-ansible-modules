@@ -8,15 +8,16 @@
 ###Development
 
 All dev work should be done in devel branch.
-When module is stable, merge to master and add a copy of it in the ``library`` directory
-After development is completed, merge devel branch back into master and run
-``./create_final_module.py`` to generate the module without the ``.py`` extension.
-
+When module is stable, merge to master branch.
 
 ###Testing
-All modules created have associated nose test cases. Test cases can be find in ``test`` directory
-To run the tests run ``nosetests`` in the git root directory.
+All modules created have associated nose test cases. Test cases can be found
+in ``tests`` directory.
+To run the tests run ``runtests.py`` in the git root directory.
 
+#### Required Packages For Tests To Run
+
+????
 
 ###Using these modules
 
