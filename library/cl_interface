@@ -450,7 +450,10 @@ def add_bridgeports(module, iface):
         pass
     bridgeports = add_glob(bridgeports)
     iface['config']['bridge-ports'] = ' '.join(bridgeports)
-    iface['config']['bridge-stp'] = 'on'
+    # Undocumented feature where STP can be turned off. Not recommended.
+    # Only useful so far when making switch a host for recreate purposes.
+    if module.params.get('stp') is True:
+        iface['config']['bridge-stp'] = 'on'
 
 
 def modify_switch_config(module, iface):
@@ -564,6 +567,7 @@ def main():
             dhcp=dict(type='str', choices=["yes", "no"]),
             speed=dict(type='str'),
             mtu=dict(type='str'),
+            stp=dict(type='bool', choices=BOOLEANS, default=True),
             state=dict(type='str', choices=['noconfig', 'hasconfig'],
                        default='hasconfig'),
             applyconfig=dict(type='bool', choices=BOOLEANS, default=False),
