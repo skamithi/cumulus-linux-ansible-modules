@@ -111,6 +111,9 @@ def test_module_args(mock_module,
                        'speed': {'type': 'str'},
                        'mtu': {'type': 'str'},
                        'dhcp': {'type': 'str', 'choices': ['yes', 'no']},
+                       'stp': {'default': True, 'type': 'bool', 'choices':
+                               ['yes', 'on', '1', 'true', 1, 'no',
+                                'off', '0', 'false', 0]},
                        'state': {'type': 'str',
                                  'choices': ['noconfig', 'hasconfig'],
                                  'default': 'hasconfig'},
@@ -631,7 +634,7 @@ def test_adding_bridgemem(mock_module):
     iface = {'name': 'viva', 'config': {}}
     add_bridgeports(instance, iface)
     assert_equals(iface['config']['bridge-ports'], ' '.join(mems))
-    assert_equals(iface['config']['bridge-stp'], 'on')
+    # assert_equals(iface['config']['bridge-stp'], 'on')
 
     # ifaceattr option defined
     mems = ['swp1', 'swp2', 'swp3.100']
@@ -640,7 +643,7 @@ def test_adding_bridgemem(mock_module):
     iface = {'name': 'viva', 'config': {}}
     add_bridgeports(instance, iface)
     assert_equals(iface['config']['bridge-ports'], ' '.join(mems))
-    assert_equals(iface['config']['bridge-stp'], 'on')
+    # assert_equals(iface['config']['bridge-stp'], 'on')
 
     # no option set
     instance.params = {'bridgeports': None,
@@ -657,7 +660,7 @@ def test_adding_bridgemem(mock_module):
     add_bridgeports(instance, iface)
     assert_equals(iface['config']['bridge-ports'],
                   'glob swp1-10 swp2 glob swp30-40.100')
-    assert_equals(iface['config']['bridge-stp'], 'on')
+    # assert_equals(iface['config']['bridge-stp'], 'on')
 
     # bridge port set to none
     mems = ['none']
