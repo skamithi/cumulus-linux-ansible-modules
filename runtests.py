@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
 # A wrapper script to convert an ansible module to something nose knows
-# how to import and interperate correctly, I am sure there is a better
-# way to do this if I knew more about python.
+# how to import and interperate correctly
+# Appreciate any better solutions to this.
 
 import os
 import sys
