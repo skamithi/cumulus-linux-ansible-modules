@@ -14,7 +14,7 @@
 - name: configure ospf
   cl_quagga_ospf:
     name: "{{ item.key }}"
-    state: "{{ item.value.ospf.state | 'absent' }}"
-    passive: "{{ item.value.ospf.passive | 'no' }}"
-    activate: "yes"
+    state: "{{ item.value.ospf.state|default('absent') }}"
+    passive: "{{ item.value.ospf.passive|default('no') }}"
+    saveconfig: "yes"
   with_dict: interfaces[ansible_hostname]
