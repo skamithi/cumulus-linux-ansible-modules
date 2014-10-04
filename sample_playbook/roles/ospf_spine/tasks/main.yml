@@ -9,7 +9,7 @@
   cl_quagga_protocol: name=ospfd state=present activate=yes
 
 - name: configure ospf router id. set it to loopback ip.
-  cl_quagga_protocol: router_id=interfaces[ansible_hostname].lo.ip
+  cl_quagga_ospf: router_id=interfaces[ansible_hostname].lo.ip
 
 - name: configure ospf
   cl_quagga_ospf:
