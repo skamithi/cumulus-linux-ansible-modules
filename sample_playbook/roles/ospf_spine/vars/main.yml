@@ -1,7 +1,7 @@
 interfaces:
   spine1:
     lo:
-      ip: '10.100.1.1/32'
+      ipv4: '10.100.1.1/32'
       ospf:
         state: 'present'
         passive: 'yes'
@@ -22,7 +22,7 @@ interfaces:
         state: 'present'
   spine2:
     lo:
-      ip: '10.100.1.2/32'
+      ipv4: '10.100.1.2/32'
       ospf:
         state: 'present'
         passive: 'yes'
