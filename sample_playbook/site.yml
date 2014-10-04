@@ -13,9 +13,10 @@
     - common
     - ospf_leaf
 
-- hosts: upgrade_sw
-  user: cumulus
-  sudo: True
-  roles:
-    - upgrade_sw
+# Uncomment to demo switch upgrade
+#- hosts: upgrade_sw
+#  user: cumulus
+#  sudo: True
+#  roles:
+#    - upgrade_sw
 
