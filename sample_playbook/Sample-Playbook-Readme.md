@@ -1,6 +1,6 @@
 ### Common Role
 Demonstrates how to:
-  * set the timezone 
+  * set the timezone
   * install a Cumulus Linux License
 
 ### Loopbacks
@@ -24,13 +24,13 @@ Range is 10.100.1.X/32  where
 | SPINE2 | swp11 | 10.102.4.1/30 | --- | 10.102.4.2/30 | swp1  | LEAF2 |
 
 ### LEAF1 Host VLANs (primary link)
-* vlan1 - mgmt - 10.1.11.2/24
-* vlan2 - data - 10.1.2.2/24
-* vlan3 - ctrl - 10.1.3.2/24
+* vlan1 - mgmt - 10.1.1.1/24
+* vlan2 - data - 10.1.2.1/24
+* vlan3 - ctrl - 10.1.3.1/24
 
 ### LEAF2 Host VLANs (backup link)
 
-*  vlan11 - mgmt - 10.1.11.2/24
+*  vlan11 - mgmt - 10.1.11.1/24
 * vlan12 - data - 10.1.12.1/24
 *  vlan13 - ctrl - 10.1.13.1/24
 
