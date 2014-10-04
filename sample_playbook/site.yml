@@ -1,4 +1,4 @@
-
+---
 - hosts: spine
   user: cumulus
   sudo: True
@@ -6,7 +6,7 @@
     - common
     - ospf_spine
 
-- hosts: spine
+- hosts: leaf
   user: cumulus
   sudo: True
   roles:
