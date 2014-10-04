@@ -1,6 +1,10 @@
--name : upgrade cumulus linux software. version to upgrade to defined in upgrade_sw/vars/main.yml
-cl_img_install: src="/root/CumulusLinux-{{cl_version}}-powerpc.bin" switch_slot=yes
-register: reboot_switch
+# cl_version defined in upgrade_sw/vars/main.yml
+- name: copy cumulus linux software to root partition.
+  copy: src=CumulusLinux-{{cl_version}}-powerpc.bin dest=/root
+
+- name : upgrade cumulus linux software.
+  cl_img_install: src="/root/CumulusLinux-{{cl_version}}-powerpc.bin" switch_slot=yes
+  register: reboot_switch
 
 - name: reboot switch
   shell: reboot
