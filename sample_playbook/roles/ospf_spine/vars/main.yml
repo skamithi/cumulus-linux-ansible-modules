@@ -1,0 +1,41 @@
+interfaces:
+  spine1:
+    lo:
+      ip: '10.100.1.1/32'
+      ospf:
+        state: 'present'
+        passive: 'yes'
+    swp1:
+      alias: 'connection to WAN'
+      ipv4: '10.99.1.2/30'
+      ospf:
+        state: 'present'
+    swp10:
+      alias: 'uplink to leaf1'
+      ipv4: '10.101.3.1/30'
+      ospf:
+        state: 'present'
+    swp11:
+      alias: 'uplink to leaf2'
+      ipv4: '10.101.4.1/30'
+      ospf:
+        state: 'present'
+  spine2:
+    lo:
+      ip: '10.100.1.2/32'
+      ospf:
+        state: 'present'
+        passive: 'yes'
+    swp1:
+      alias: 'connection to WAN'
+      ipv4: '10.99.1.6/30'
+    swp10:
+      alias: 'uplink to leaf1'
+      ipv4: '10.102.3.1/30'
+      ospf:
+        state: 'present'
+    swp11:
+      alias: 'uplink to leaf2'
+      ipv4: '10.102.4.1/30'
+      ospf:
+        state: 'present'

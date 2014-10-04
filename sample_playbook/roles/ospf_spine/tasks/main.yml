@@ -1,0 +1,20 @@
+- name: configure L2/L3 interfaces on the spine switch. see ospf_spine/vars/main.yml
+  cl_interface:
+    ifaceattrs: "{{ item.value }}"
+    name: "{{ item.key}}"
+    applyconfig: 'yes'
+  with_dict: interfaces[ansible_hostname]
+
+- name: enable ospf. If not enabled restarts all routing.
+  cl_quagga_protocol: name=ospfd state=present activate=yes
+
+- name: configure ospf router id. set it to loopback ip.
+  cl_quagga_protocol: router_id=interfaces[ansible_hostname].lo.ip
+
+- name: configure ospf
+  cl_quagga_ospf:
+    name: "{{ item.key }}"
+    state: "{{ item.value.ospf.state | 'absent' }}"
+    passive: "{{ item.value.ospf.passive | 'no' }}"
+    activate: "yes"
+  with_dict: interfaces[ansible_hostname]
