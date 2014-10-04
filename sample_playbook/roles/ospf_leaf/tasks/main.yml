@@ -1,0 +1,21 @@
+- name: configure L2/L3 interfaces on the leaf switch. see ospf_leaf/vars/main.yml.
+  cl_interface:
+    ifaceattrs: "{{ item.value }}"
+    name: "{{ item.key}}"
+    applyconfig: 'yes'
+  with_dict: interfaces[ansible_hostname]
+
+- name: enable ospf. If not enabled restarts all routing.
+  cl_quagga_protocol: name=ospfd state=present activate=yes
+
+- name: configure ospf router id. set it to loopback ip.
+  cl_quagga_ospf: router_id={{ interfaces[ansible_hostname].lo.ipv4|replace('/32','') }}
+
+- name: configure ospf
+  cl_quagga_ospf:
+    interface: "{{ item.key }}"
+    state: "{{ item.value.ospf.state|default('absent') }}"
+    passive: "{{ item.value.ospf.passive|default('no') }}"
+    saveconfig: "yes"
+  with_dict: interfaces[ansible_hostname]
+

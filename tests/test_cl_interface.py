@@ -278,7 +278,8 @@ def test_exception_when_using_ifaceattr(mock_module):
         'ifaceattrs': {'something': '1'},
         'name': 'sdf',
         'applyconfig': 'yes',
-        'state': 'hasconfig'}
+        'state': 'hasconfig',
+        'stp': 'on'}
     check_if_applyconfig_name_defined_only(instance)
     assert_equals(instance.fail_json.call_count, 0)
 
