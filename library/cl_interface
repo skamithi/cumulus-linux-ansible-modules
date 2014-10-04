@@ -526,7 +526,7 @@ def check_if_applyconfig_name_defined_only(module):
     modparams = sorted(modparams)
     _msg = "when ifaceattrs is defined, only addition options allowed " + \
         " are 'name' and 'applyconfig'"
-    if modparams != ['applyconfig', 'ifaceattrs', 'name', 'state']:
+    if modparams != ['applyconfig', 'ifaceattrs', 'name', 'state', 'stp']:
         module.fail_json(msg=_msg)
 
 
