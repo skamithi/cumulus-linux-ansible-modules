@@ -17,7 +17,12 @@ To run the tests run ``runtests.py`` in the git root directory.
 
 #### Required Packages For Tests To Run
 
-????
+python
+mock
+ (pip install mock)
+nose
+ (pip install nose)
+ 
 
 ###Using these modules
 
