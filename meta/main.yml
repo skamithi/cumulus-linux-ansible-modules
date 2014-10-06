@@ -1,0 +1,15 @@
+#
+# # Copyright (C) 2014, Cumulus Networks www.cumulusnetworks.com
+#   Authors: Stanley Karunditu: stanleyk@cumulusnetworks.com
+             Sean Cavanaugh: sean@cumulusnetworks.com
+#
+---
+galaxy_info:
+  author: Stanley Karunditu & Sean Cavanaugh
+  description: Roles and modules for managing Cumulus Linux
+  company: Cumulus Networks
+  min_ansible_version: 1.3
+  categories:
+    - networking
+
+dependencies: []
