@@ -521,7 +521,7 @@ def remove_config_from_etc_net_interfaces(module, iface):
 def check_if_applyconfig_name_defined_only(module):
     modparams = []
     for k, v in module.params.iteritems():
-        if v:
+        if v is not None:
             modparams.append(k)
     modparams = sorted(modparams)
     _msg = "when ifaceattrs is defined, only additional options allowed " + \
