@@ -10,11 +10,13 @@ interfaces:
       ipv4: '10.101.3.2/30'
       ospf:
         state: 'present'
+        point2point: 'yes'
     swp2:
       alias: 'uplink to spine2'
       ipv4: '10.102.3.2/30'
       ospf:
         state: 'present'
+        point2point: 'yes'
     vlan1:
       alias: 'primary mgmt vlan for servers'
       ipv4: '10.1.1.1/24'
@@ -46,11 +48,13 @@ interfaces:
       alias: 'uplink to spine1'
       ipv4: '10.101.4.2/30'
       ospf:
+        point2point: 'yes'
         state: 'present'
     swp2:
       alias: 'uplink to spine2'
       ipv4: '10.102.4.2/30'
       ospf:
+        point2point: 'yes'
         state: 'present'
     vlan11:
       alias: 'backup mgmt vlan for servers'

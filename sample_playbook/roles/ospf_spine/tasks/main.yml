@@ -16,5 +16,6 @@
     name: "{{ item.key }}"
     state: "{{ item.value.ospf.state|default('absent') }}"
     passive: "{{ item.value.ospf.passive|default('no') }}"
+    point2point: "{{ item.value.ospf.point2point|default('no')}}"
     saveconfig: "yes"
   with_dict: interfaces[ansible_hostname]
