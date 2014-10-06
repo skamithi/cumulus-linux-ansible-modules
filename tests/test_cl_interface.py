@@ -277,6 +277,7 @@ def test_exception_when_using_ifaceattr(mock_module):
     instance.params = {
         'ifaceattrs': {'something': '1'},
         'name': 'sdf',
+        'stp': True,
         'applyconfig': 'yes',
         'state': 'hasconfig',
         'stp': 'on'}
@@ -286,6 +287,7 @@ def test_exception_when_using_ifaceattr(mock_module):
     instance.params = {
         'ifaceattrs': {'something': '1'},
         'name': 'sdf',
+        'stp': True,
         'sdfdf': 'dfdf',
         'applyconfig': 'yes',
         'state': 'hasconfig'}
@@ -293,8 +295,20 @@ def test_exception_when_using_ifaceattr(mock_module):
     check_if_applyconfig_name_defined_only(instance)
     instance.fail_json.assert_called_with(
         msg="when ifaceattrs is defined, " +
-        "only addition options allowed  are 'name' " +
+        "only additional options allowed  are 'name' " +
         "and 'applyconfig'")
+
+    # if applyconfig is False, check_if should still work
+    instance.params = {
+        'ifaceattrs': {'something': '1'},
+        'name': 'sdf',
+        'stp': True,
+        'applyconfig': False,
+        'state': 'hasconfig'}
+
+    mock_module.reset_mock()
+    check_if_applyconfig_name_defined_only(instance)
+    assert_equals(instance.fail_json.call_count, 0)
 
 
 @mock.patch('dev_modules.cl_interface.AnsibleModule')
