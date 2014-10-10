@@ -188,7 +188,7 @@ def get_ip(addrs):
             if addrs[0].lower() == 'none':
                 return None
             else:
-                return addrs[0]
+                return addrs.pop(0)
     elif addrs.lower() == 'none':
         return None
     return addrs
@@ -200,8 +200,9 @@ def add_ipv4(module, iface):
     if not addrs and ifaceattrs and 'ipv4' in ifaceattrs:
         addrs = ifaceattrs['ipv4']
     if addrs:
-        create_config_addr_attr(iface)
-        iface['config']['address'] = get_ip(addrs)
+        for i in addrs:
+                create_config_addr_attr(iface)
+                iface['config']['address'] = get_ip(addrs)
 
 
 def add_ipv6(module, iface):
