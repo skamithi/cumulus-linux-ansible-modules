@@ -9,6 +9,7 @@ from dev_modules.cl_interface import get_iface_type, add_ipv4, \
     config_speed, config_mtu, add_bondslaves, config_alias, \
     config_iface
 from asserts import assert_equals
+from mock import MagicMock
 
 
 def mod_args_none(arg):
@@ -425,6 +426,19 @@ def test_state_absent_in_config_iface(mock_module):
     instance.params.get.return_value = 'noconfig'
     config_iface(instance, {'config': {}}, 'none')
     instance.params.get.assert_called_with('state')
+
+
+@mock.patch('dev_modules.cl_interface.config_swp_iface')
+@mock.patch('dev_modules.cl_interface.AnsibleModule')
+def test_config_iface_when_ifacetype_is_mgmt(mock_module, mock_swp_iface):
+    """
+    mgmt ports are not getting ip address when set
+    """
+    instance = mock_module.return_value
+    ifacetype = 'mgmt'
+    iface = MagicMock()
+    config_iface(instance, iface, ifacetype)
+    assert_equals(mock_swp_iface.call_count, 1)
 
 
 @mock.patch('dev_modules.cl_interface.run_cl_cmd')

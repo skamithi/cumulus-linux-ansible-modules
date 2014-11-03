@@ -546,7 +546,7 @@ def config_iface(module, iface, _ifacetype):
         return
     elif _ifacetype == 'loopback':
         config_lo_iface(module, iface)
-    elif _ifacetype == 'swp':
+    elif _ifacetype == 'swp' or _ifacetype == 'mgmt':
         config_swp_iface(module, iface)
     elif _ifacetype == 'bridge':
         config_bridge_iface(module, iface)
