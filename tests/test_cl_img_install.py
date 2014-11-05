@@ -78,10 +78,15 @@ def test_getting_primary_slot_num(mock_module, mock_run_cmd, mock_platform):
     # if hw type is x86
     mock_platform.return_value = 'x86_64'
     instance = mock_module.return_value
-    mock_run_cmd.return_value = ['1']
-    assert_equals(get_primary_slot_num(instance), '1')
+    mock_run_cmd.return_value = ['slot_state1=0',
+                                 'cl.ver1=2.2.1-a3f5d27-201410161423-build',
+                                 'slot_state2=0',
+                                 'cl.ver2=3.3.3-de2b088-201410281843-build',
+                                 'saved_entry=Cumulus Linux 2.3.3-de2b088-201410281843-build - slot 2',
+                                 'cl.active=2']
+    assert_equals(get_primary_slot_num(instance), '2')
     mock_run_cmd.assert_called_with(
-        instance, "/usr/bin/grub-editenv list | grep cl.active | cut -d'=' -f2")
+        instance, "/usr/bin/grub-editenv list")
 
 
 def test_check_mnt_root_lsb_release():
@@ -125,9 +130,14 @@ def test_check_fw_print_env_ppc(mock_module, mock_run_cmd, mock_platform):
     mock_platform.return_value = 'x86_64'
     slot_num = '1'
     instance = mock_module.return_value
-    mock_run_cmd.return_value = ['2.0.2-a8ec422-201404161914-final']
+    mock_run_cmd.return_value = ['slot_state1=0',
+                                 'cl.ver1=2.0.2-a3f5d27-201410161423-build',
+                                 'slot_state2=0',
+                                 'cl.ver2=3.3.3-de2b088-201410281843-build',
+                                 'saved_entry=Cumulus Linux 2.3.3-de2b088-201410281843-build - slot 2',
+                                 'cl.active=2']
     assert_equals(check_fw_print_env(instance, slot_num), '2.0.2')
-    cmd = '/usr/bin/grub-editenv list | /bin/grep cl.ver%s' % (slot_num)
+    cmd = '/usr/bin/grub-editenv list'
     mock_run_cmd.assert_called_with(instance, cmd)
 
 
