@@ -21,7 +21,6 @@ To run the tests run ``runtests.py`` in the git root directory.
 * nose
  * (pip install nose)
 
-
 ###Using these modules
 
 Clone this directory and then create an ansible.cfg adding the ``library`` directory of this
