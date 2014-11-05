@@ -61,15 +61,27 @@ def test_get_active_slot(mock_module):
         mock_open.assert_called_with('/proc/cmdline')
 
 
+@mock.patch('dev_modules.cl_img_install.platform.machine')
 @mock.patch('dev_modules.cl_img_install.run_cl_cmd')
 @mock.patch('dev_modules.cl_img_install.AnsibleModule')
-def test_getting_primary_slot_num(mock_module, mock_run_cmd):
+def test_getting_primary_slot_num(mock_module, mock_run_cmd, mock_platform):
     """
     Test getting primary slot number
     """
+    # if hw type is ppc
+    mock_platform.return_value = 'ppc'
     instance = mock_module.return_value
     mock_run_cmd.return_value = ['1']
     assert_equals(get_primary_slot_num(instance), '1')
+    mock_run_cmd.assert_called_with(
+        instance, '/usr/sbin/fw_printenv -n cl.active')
+    # if hw type is x86
+    mock_platform.return_value = 'x86_64'
+    instance = mock_module.return_value
+    mock_run_cmd.return_value = ['1']
+    assert_equals(get_primary_slot_num(instance), '1')
+    mock_run_cmd.assert_called_with(
+        instance, "/usr/bin/grub-editenv list | grep cl.active | cut -d'=' -f2")
 
 
 def test_check_mnt_root_lsb_release():
