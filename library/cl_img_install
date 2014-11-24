@@ -137,14 +137,35 @@ def check_mnt_root_lsb_release(slot_num):
 
 
 def check_fw_print_env(module, slot_num):
-    cmd = "/usr/sbin/fw_printenv -n cl.ver%s" % (slot_num)
-    output = run_cl_cmd(module, cmd)
-    return output[0].split('-')[0]
+    cmd = None
+    if platform.machine() == 'ppc':
+        cmd = "/usr/sbin/fw_printenv -n cl.ver%s" % (slot_num)
+        fw_output = run_cl_cmd(module, cmd)
+        return fw_output[0].split('-')[0]
+    elif platform.machine() == 'x86_64':
+        cmd = "/usr/bin/grub-editenv list"
+        grub_output = run_cl_cmd(module, cmd)
+        for _line in grub_output:
+            _regex_str = re.compile('cl.ver' + slot_num + '=([\w.]+)-')
+            m0 = re.match(_regex_str, _line)
+            if m0:
+                return m0.group(1)
+
 
 
 def get_primary_slot_num(module):
-    cmd = "/usr/sbin/fw_printenv -n cl.active"
-    return ''.join(run_cl_cmd(module, cmd))
+    cmd = None
+    if platform.machine() == 'ppc':
+        cmd = "/usr/sbin/fw_printenv -n cl.active"
+        return ''.join(run_cl_cmd(module, cmd))
+    elif platform.machine() == 'x86_64':
+        cmd = "/usr/bin/grub-editenv list"
+        grub_output = run_cl_cmd(module, cmd)
+        for _line in grub_output:
+            _regex_str = re.compile('cl.active=(\d)')
+            m0 = re.match(_regex_str, _line)
+            if m0:
+                return m0.group(1)
 
 
 def get_active_slot(module):

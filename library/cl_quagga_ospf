@@ -7,24 +7,24 @@ DOCUMENTATION = '''
 ---
 module: cl_quagga_ospf
 author: Stanley Karunditu
-short_description: Configure basic OSPF parameters and interfaces using Quagga
+short_description: Configure basic OSPFv2 parameters and interfaces using Quagga
 description:
-    - Configures basic OSPF global parameters such as \
-router id and bandwidth cost, or OSPF interface configuration \
-like point-to-point settings or enabling OSPF on an interface. \
-Configuration is applied to single OSPF instance. \
-Multiple OSPF instance configuration is currently not supported. \
+    - Configures basic OSPFv2 global parameters such as \
+router id and bandwidth cost, or OSPFv2 interface configuration \
+like point-to-point settings or enabling OSPFv2 on an interface. \
+Configuration is applied to single OSPFv2 instance. \
+Multiple OSPFv2 instance configuration is currently not supported. \
 It requires Quagga version 0.99.22 and higher with the non-modal Quagga CLI \
 developed by Cumulus Linux. For more details go to the Routing User Guide @ \
 http://cumulusnetworks.com/docs/2.2/  and Quagga Docs @  http://www.nongnu.org/quagga/
 options:
     router_id:
         description:
-            - Set the OSPF router id
+            - Set the OSPFv2 router id
         required: true
     reference_bandwidth:
         description:
-            - Set the OSPF auto cost reference bandwidth
+            - Set the OSPFv2 auto cost reference bandwidth
         default: 40000
     saveconfig:
         description:
@@ -33,10 +33,10 @@ options:
         default: ['no']
     interface:
         description:
-            - define the name the interface to apply OSPF services.
+            - define the name the interface to apply OSPFv2 services.
     point2point:
         description:
-            - Boolean. enable OSPF point2point on the interface
+            - Boolean. enable OSPFv2 point2point on the interface
         choices: ['yes', 'no']
         require_together:
             - with interface option
@@ -52,13 +52,13 @@ options:
             - with interface option
     passive:
         description:
-            - make OSPF interface passive
+            - make OSPFv2 interface passive
         choices: ['yes', 'no']
         required_together:
             - with interface option
     state:
         description:
-            - Describes if OSPF should be present on a particular interface.\
+            - Describes if OSPFv2 should be present on a particular interface.\
 Module currently does not check that interface is not associated \
 with a bond or bridge. \
 User will have to manually clear the configuration of the interface \
@@ -76,7 +76,7 @@ Example playbook entries using the cl_quagga_ospf module
     tasks:
     - name: configure ospf router_id
         cl_quagga_ospf: router_id=10.1.1.1
-    - name: enable OSPF on swp1 and set it be a point2point OSPF \
+    - name: enable OSPFv2 on swp1 and set it be a point2point OSPF \
 interface with a cost of 65535
         cl_quagga_ospf: interface=swp1 point2point=yes cost=65535
     - name: enable ospf on swp1-5
@@ -202,7 +202,7 @@ def add_global_ospf_config(module):
     if module.params.get('reference_bandwidth'):
         update_reference_bandwidth(module)
     if module.has_changed is False:
-        module.exit_msg = 'No change in OSPF global config'
+        module.exit_msg = 'No change in OSPFv2 global config'
     module.exit_json(msg=module.exit_msg, changed=module.has_changed)
 
 

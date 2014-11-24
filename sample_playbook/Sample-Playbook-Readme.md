@@ -42,3 +42,5 @@ Range is 10.100.1.X/32  where
 * router ID set to the loopback interfaces
 * by default `cl_quagga_ospf` sets reference-bandwidth to 40G.
 
+###TODO:
+Show output of non-modal quagga CLI and `ifquery` to show result.

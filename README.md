@@ -1,9 +1,7 @@
 ##Cumulus Linux specific ansible modules.
 
-* dev_modules : contains ansible modules with a suffix of .py for
-  easier testing with nose.
 * tests: contains tests for each ansible module
-* library: contains ansible modules without the .py suffix and are ready to be called by ``ansible`` or ``ansible-playbook``.
+* library: contains ansible modules and are ready to be called by ``ansible`` or ``ansible-playbook``.
 
 ###Development
 
@@ -22,7 +20,6 @@ To run the tests run ``runtests.py`` in the git root directory.
  * (pip install mock)
 * nose
  * (pip install nose)
- 
 
 ###Using these modules
 
@@ -57,7 +54,7 @@ hostfile = /files/ansible_playbooks/hosts
   tasks:
     - name: install license from http server
       cl_license: src='http://myserver/license.txt' restart_switchd=yes
-      
+
 ```
 
 
@@ -67,9 +64,9 @@ hostfile = /files/ansible_playbooks/hosts
 
 ### Cumulus Linux
 
-Cumulus Linux is a software distribution that runs on top of industry standard 
-networking hardware. It enables the latest Linux applications and automation 
-tools on networking gear while delivering new levels of innovation and 
+Cumulus Linux is a software distribution that runs on top of industry standard
+networking hardware. It enables the latest Linux applications and automation
+tools on networking gear while delivering new levels of innovation and
 ﬂexibility to the data center.
 
 For further details please see: [cumulusnetworks.com](http://www.cumulusnetworks.com)

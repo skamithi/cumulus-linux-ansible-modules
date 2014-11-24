@@ -61,15 +61,32 @@ def test_get_active_slot(mock_module):
         mock_open.assert_called_with('/proc/cmdline')
 
 
+@mock.patch('dev_modules.cl_img_install.platform.machine')
 @mock.patch('dev_modules.cl_img_install.run_cl_cmd')
 @mock.patch('dev_modules.cl_img_install.AnsibleModule')
-def test_getting_primary_slot_num(mock_module, mock_run_cmd):
+def test_getting_primary_slot_num(mock_module, mock_run_cmd, mock_platform):
     """
     Test getting primary slot number
     """
+    # if hw type is ppc
+    mock_platform.return_value = 'ppc'
     instance = mock_module.return_value
     mock_run_cmd.return_value = ['1']
     assert_equals(get_primary_slot_num(instance), '1')
+    mock_run_cmd.assert_called_with(
+        instance, '/usr/sbin/fw_printenv -n cl.active')
+    # if hw type is x86
+    mock_platform.return_value = 'x86_64'
+    instance = mock_module.return_value
+    mock_run_cmd.return_value = ['slot_state1=0',
+                                 'cl.ver1=2.2.1-a3f5d27-201410161423-build',
+                                 'slot_state2=0',
+                                 'cl.ver2=3.3.3-de2b088-201410281843-build',
+                                 'saved_entry=Cumulus Linux 2.3.3-de2b088-201410281843-build - slot 2',
+                                 'cl.active=2']
+    assert_equals(get_primary_slot_num(instance), '2')
+    mock_run_cmd.assert_called_with(
+        instance, "/usr/bin/grub-editenv list")
 
 
 def test_check_mnt_root_lsb_release():
@@ -97,15 +114,32 @@ def test_check_mnt_root_lsb_release():
                       '2.2.x')
 
 
+@mock.patch('platform.machine')
 @mock.patch('dev_modules.cl_img_install.run_cl_cmd')
 @mock.patch('dev_modules.cl_img_install.AnsibleModule')
-def test_check_fw_print_env(mock_module, mock_run_cmd):
+def test_check_fw_print_env_ppc(mock_module, mock_run_cmd, mock_platform):
+    # check checking fw print on ppc
+    mock_platform.return_value = 'ppc'
     slot_num = '1'
     instance = mock_module.return_value
     mock_run_cmd.return_value = ['2.0.2-a8ec422-201404161914-final']
     assert_equals(check_fw_print_env(instance, slot_num), '2.0.2')
     cmd = '/usr/sbin/fw_printenv -n cl.ver%s' % (slot_num)
     mock_run_cmd.assert_called_with(instance, cmd)
+    # check checking fw settings on x86
+    mock_platform.return_value = 'x86_64'
+    slot_num = '1'
+    instance = mock_module.return_value
+    mock_run_cmd.return_value = ['slot_state1=0',
+                                 'cl.ver1=2.0.2-a3f5d27-201410161423-build',
+                                 'slot_state2=0',
+                                 'cl.ver2=3.3.3-de2b088-201410281843-build',
+                                 'saved_entry=Cumulus Linux 2.3.3-de2b088-201410281843-build - slot 2',
+                                 'cl.active=2']
+    assert_equals(check_fw_print_env(instance, slot_num), '2.0.2')
+    cmd = '/usr/bin/grub-editenv list'
+    mock_run_cmd.assert_called_with(instance, cmd)
+
 
 
 @mock.patch('dev_modules.cl_img_install.AnsibleModule')

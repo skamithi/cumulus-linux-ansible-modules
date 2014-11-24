@@ -74,19 +74,19 @@ EXAMPLES = '''
 cl_interface: name=swp1  ipv4=10.1.1.1/24 applyconfig=yes
 
 ## configure a front panel port with multiple IPs
-cl_interface: name=swp1 ipv4=['10.1.1.1/24', '20.1.1.1/24'] applyconfig=yes
+cl_interface: name=swp1 ipv4="10.1.1.1/24, 20.1.1.1/24" applyconfig=yes
 
 ## configure a bridge interface with a few trunk members and access port
-cl_interface: name=br0  bridgeports=['swp1-10.100', 'swp11'] applyconfig=yes
+cl_interface: name=br0  bridgeports="swp1-10.100, swp11" applyconfig=yes
 
 ## configure a bond interface with multiple contiguous ports. \
 Don't activate the config
-cl_interface: name=bond1 bondslaves=['swp17-20']
+cl_interface: name=bond1 bondslaves="swp17-20"
 
 ## configure a bond interface with an IP address and activate the configuration
 cl_interface:
     name=br0
-    bondslaves=['swp1', 'swp2']
+    bondslaves="swp1, swp2"
     ipv4='10.1.1.1/24'
     applyconfig=yes
 
@@ -100,7 +100,7 @@ cl_interface: name=oldbondname state=noconfig applyconfig=yes
 
 - name: apply bondslaves from oldbondname to newbondname and \
 activate the change.
-cl_interface: name=newbondname bondslaves='swp1 swp2' applyconfig=yes
+cl_interface: name=newbondname bondslaves='swp1, swp2' applyconfig=yes
 
 ## use complex args with ifaceattrs. restart networking only if a change occurs
 ## notify doesn't work well because its asynchronous and networking must be
@@ -130,6 +130,16 @@ interfaces:
                 - bond3.1
             ipv4: "10.1.1.1/24"
             alias: "tagged vlan 1"
+        vlan2:
+            bridgeports: [bond0.2, bond3.2]
+            ipv4: [10.1.2.1/24, 10.2.2.2/24]
+        vlan3:
+            bridgeports :
+                - bond0.3
+                - bond3.3
+            ipv4:
+                - 10.1.3.1/24
+                - 10.2.3.2/24
         swp1:
             mtu: 9000
         swp3:
@@ -536,7 +546,7 @@ def config_iface(module, iface, _ifacetype):
         return
     elif _ifacetype == 'loopback':
         config_lo_iface(module, iface)
-    elif _ifacetype == 'swp':
+    elif _ifacetype == 'swp' or _ifacetype == 'mgmt':
         config_swp_iface(module, iface)
     elif _ifacetype == 'bridge':
         config_bridge_iface(module, iface)
