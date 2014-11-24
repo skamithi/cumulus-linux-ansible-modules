@@ -46,7 +46,7 @@ acceptable to "ip route show" command. See manpage of "ip-route" for more detail
         default: ""
         
 notes:
-    - IP Route Documentation - [ add later ]\
+    - IP Route Documentation - http://manpages.ubuntu.com/manpages/precise/man8/route.8.html\
     - Contact Cumulus Networks @ http://cumulusnetworks.com/contact/
 '''
 EXAMPLES = '''
