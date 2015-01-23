@@ -855,22 +855,31 @@ def test_config_speed(mock_module):
     instance.params = {'speed': 1000}
     iface = {'config': {}}
     config_speed(instance, iface)
-    assert_equals(iface, {'config': {'speed': 1000}})
+    assert_equals(iface, {'config': {
+        'link-speed': 1000,
+        'link-duplex': 'full'
+    }})
     # speed set in module.param is 'none'
     instance.params = {'speed': 'none'}
     iface = {'config': {}}
     config_speed(instance, iface)
-    assert_equals(iface, {'config': {'speed': None}})
+    assert_equals(iface, {'config':
+                          {'link-speed': None,
+                           'link-duplex': None}})
     # speed set in ifaceattr not empty
     instance.params = {'speed': None, 'ifaceattrs': {'speed': '1000'}}
     iface = {'config': {}}
     config_speed(instance, iface)
-    assert_equals(iface, {'config': {'speed': '1000'}})
+    assert_equals(iface, {'config': {
+        'link-speed': '1000',
+        'link-duplex': 'full'}})
     # speed set in ifaceattr is 'none'
     instance.params = {'speed': None, 'ifaceattrs': {'speed': 'none'}}
     iface = {'config': {}}
     config_speed(instance, iface)
-    assert_equals(iface, {'config': {'speed': None}})
+    assert_equals(iface, {'config': {
+        'link-speed': None,
+        'link-duplex': None}})
 
 
 @mock.patch('dev_modules.cl_interface.AnsibleModule')

@@ -320,14 +320,18 @@ def config_dhcp(module, iface):
 def config_speed(module, iface):
     speedattr = module.params.get('speed')
     ifaceattrs = module.params.get('ifaceattrs')
+    duplexattr = 'full'
     if not speedattr:
         if ifaceattrs and 'speed' in ifaceattrs:
             speedattr = ifaceattrs['speed']
+            duplexattr = 'full'
         else:
             return
     if str(speedattr).lower() == 'none':
         speedattr = None
-    iface['config']['speed'] = speedattr
+        duplexattr = None
+    iface['config']['link-speed'] = speedattr
+    iface['config']['link-duplex'] = duplexattr
 
 
 def config_mtu(module, iface):
