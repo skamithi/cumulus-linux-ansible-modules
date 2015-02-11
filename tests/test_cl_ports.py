@@ -19,7 +19,18 @@ def test_module_args(mock_module):
 
 @mock.patch('dev_modules.cl_ports.os.path.exists')
 @mock.patch('dev_modules.cl_ports.AnsibleModule')
-def test_hash_existing_ports_conf(mock_module, mock_exists):
+def test_hash_existing_ports_conf_doesntwork(mock_module, mock_exists):
+    """ test missing ports.conf """
+    instance = mock_module.return_value
+    mock_exists.return_value = False
+    assert_equals(cl_ports.hash_existing_ports_conf(instance), False)
+    instance.fail_json.assert_called_with(
+        msg='/etc/cumulus/ports.conf is missing', changed=False)
+
+
+@mock.patch('dev_modules.cl_ports.os.path.exists')
+@mock.patch('dev_modules.cl_ports.AnsibleModule')
+def test_hash_existing_ports_conf_works(mock_module, mock_exists):
     """ test putting ports.conf values into a hash """
     # create ansiblemodule mock instance
     instance = mock_module.return_value
