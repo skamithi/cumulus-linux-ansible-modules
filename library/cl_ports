@@ -82,6 +82,10 @@ def main():
             speed_10g=dict(type='list'),
             speed_40g=dict(type='list')
         ),
+        required_one_of = [['speed_40g_div_4',
+                            'speed_4_by_10g',
+                            'speed_10g',
+                            'speed_40g']]
     )
 
     _changed = False

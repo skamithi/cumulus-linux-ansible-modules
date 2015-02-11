@@ -3,7 +3,6 @@ from mock import MagicMock
 from nose.tools import set_trace
 import dev_modules.cl_ports as cl_ports
 from asserts import assert_equals, mod_args_generator
-from datetime import date, datetime
 
 
 @mock.patch('dev_modules.cl_ports.AnsibleModule')
@@ -14,7 +13,12 @@ def test_module_args(mock_module):
         argument_spec={'speed_10g': {'type': 'list'},
                        'speed_40g': {'type': 'list'},
                        'speed_40g_div_4': {'type': 'list'},
-                       'speed_4_by_10g': {'type': 'list'}})
+                       'speed_4_by_10g': {'type': 'list'}},
+        required_one_of=[['speed_40g_div_4',
+                          'speed_4_by_10g',
+                          'speed_10g',
+                          'speed_40g']]
+    )
 
 
 @mock.patch('dev_modules.cl_ports.os.path.exists')
