@@ -1,0 +1,79 @@
+#!/usr/bin/env python
+#
+# Copyright (C) 2015, Cumulus Networks www.cumulusnetworks.com
+#
+#
+DOCUMENTATION = '''
+---
+module: cl_ports
+author: Stanley Karunditu
+short_description: Configure Cumulus Switch port attributes (ports.conf)
+description:
+    - Set the initial port attribute defined in the Cumulus Linux ports.conf, \
+file. This module does not do any error checking at the moment. Be careful to
+not include ports that do not exist on the switch. And carefully read the original \
+ports.conf file for any exceptions or limitations.
+For more details go the Configure Switch Port Attribute Documentation @ \
+http://docs.cumulusnetworks.com
+options:
+    speed_10g:
+        description:
+            - list of ports to run initial run at 10G
+    speed_40g:
+        description:
+            - list of ports to run initial run at 40G
+    speed_4_by_10g:
+        description:
+            - list of 40G ports that will be unganged to run as 4 10G ports.
+    speed_40g_div_4:
+        description:
+            - list of 10G ports that will be ganged to form a 40G port
+'''
+EXAMPLES = '''
+Example playbook entries using the cl_ports module to manage the switch attributes
+defined in the ports.conf file on Cumulus Linux
+
+## Unganged port configuration on certain ports.
+
+    - name: configure ports.conf setup
+      cl_ports:
+          speed_4_by_10g: ['swp1-3', 'swp6']
+          speed_40g: ['swp4-5', 'swp7-32']
+
+'''
+
+def run_cl_cmd(module, cmd, check_rc=True):
+    try:
+        (rc, out, err) = module.run_command(cmd, check_rc=check_rc)
+    except Exception, e:
+        module.fail_json(msg=e.strerror)
+    # trim last line as it is always empty
+    ret = out.splitlines()
+    return ret[:-1]
+
+
+def main():
+    module = AnsibleModule(
+        argument_spec=dict(
+            speed_40g_div_4=dict(type='list'),
+            speed_4_by_10g=dict(type='list'),
+            speed_10g=dict(type='list'),
+            speed_40g=dict(type='list')
+        ),
+    )
+
+    _changed = True
+    _msg = 'something'
+#    module.fail_json(msg=_msg)
+    module.exit_json(changed=_changed, msg=_msg)
+
+
+# import module snippets
+from ansible.module_utils.basic import *
+# from ansible.module_utils.urls import *
+import time
+from datetime import datetime
+from urlparse import urlparse
+
+if __name__ == '__main__':
+    main()
