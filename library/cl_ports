@@ -10,10 +10,10 @@ author: Stanley Karunditu
 short_description: Configure Cumulus Switch port attributes (ports.conf)
 description:
     - Set the initial port attribute defined in the Cumulus Linux ports.conf, \
-file. This module does not do any error checking at the moment. Be careful to
+file. This module does not do any error checking at the moment. Be careful to \
 not include ports that do not exist on the switch. \
 Carefully read the original \
-ports.conf file for any exceptions or limitations.
+ports.conf file for any exceptions or limitations. \
 For more details go the Configure Switch Port Attribute Documentation @ \
 http://docs.cumulusnetworks.com
 options:
