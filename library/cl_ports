@@ -99,9 +99,14 @@ def generate_new_ports_conf_hash(module):
 
 
 def compare_new_and_old_port_conf_hash(module):
-    ports_conf_hash_copy = module.exist_ports_conf_hash.copy()
+    ports_conf_hash_copy = module.ports_conf_hash.copy()
     module.ports_conf_hash.update(module.new_ports_hash)
-    if ports_conf_hash_copy == module.existing_ports_conf_hash:
+    port_num_length = len(module.ports_conf_hash.keys())
+    orig_port_num_length = len(ports_conf_hash_copy.keys())
+    if port_num_length != orig_port_num_length:
+        module.fail_json(msg="Port numbering is wrong. Too many or two few ports configured")
+        return False
+    elif ports_conf_hash_copy == module.ports_conf_hash:
         return False
     return True
 

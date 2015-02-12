@@ -88,6 +88,21 @@ def test_compare_new_and_old_port_conf_hash(mock_module):
 
 
 @mock.patch('dev_modules.cl_ports.AnsibleModule')
+def test_compare_new_and_old_port_conf_hash_too_many_ports(mock_module):
+    """ test comparing existing and new ports.conf config """
+    instance = mock_module.return_value
+    instance.ports_conf_hash = {1: '40G',
+                                2: '40G',
+                                3: '10G'}
+    # test and see if doing this out of order makes a difference
+    instance.new_ports_hash = {3: '4x10G', 1: '10G', 5: '10G'}
+    result = cl_ports.compare_new_and_old_port_conf_hash(instance)
+    assert_equals(result, False)
+    instance.fail_json.assert_called_with(
+        msg='Port numbering is wrong. Too many or two few ports configured')
+
+
+@mock.patch('dev_modules.cl_ports.AnsibleModule')
 def test_write_to_ports_conf(mock_module):
     """ test writing to ports.conf file """
     test_port_conf = './tests/write_to_ports_conf'
@@ -118,7 +133,7 @@ def test_compare_new_and_old_port_conf_hash_idempotent(mock_module):
                                 3: '10G'}
     instance.new_ports_hash = {1: '40G', 3: '10G'}
     result = cl_ports.compare_new_and_old_port_conf_hash(instance)
-    assert_equals(result, True)
+    assert_equals(result, False)
 
 
 @mock.patch('dev_modules.cl_ports.AnsibleModule')
