@@ -105,6 +105,7 @@ def compare_new_and_old_port_conf_hash(module):
         return False
     return True
 
+
 def make_copy_of_orig_ports_conf():
     if not os.path.exists(PORTS_CONF + '.orig'):
         shutil.copyfile(PORTS_CONF, PORTS_CONF + '.orig')
@@ -116,8 +117,9 @@ def write_to_ports_conf(module):
     for k in sorted(module.ports_conf_hash.keys()):
         port_setting = module.ports_conf_hash[k]
         _str = "%s=%s\n" % (k, port_setting)
-        write_to_file.write(_str )
+        write_to_file.write(_str)
     write_to_file.close()
+
 
 def main():
     module = AnsibleModule(
