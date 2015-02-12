@@ -21,6 +21,21 @@ def test_module_args(mock_module):
     )
 
 
+@mock.patch('dev_modules.cl_ports.AnsibleModule')
+def test_generate_new_ports_conf_hash(mock_module):
+    """ test generating ports_conf hash based on user added params """
+    instance = mock_module.return_value
+    instance.params = {
+        'speed_40g': ['swp1-2', 'swp5'],
+        'speed_4_by_10g': ['swp7-8']
+    }
+    cl_ports.generate_new_ports_conf_hash(instance)
+    assert_equals(instance.new_ports_hash, {1: '40G',
+                                            2: '40G',
+                                            5: '40G',
+                                            7: '4x10G',
+                                            8: '4x10G'})
+
 @mock.patch('dev_modules.cl_ports.os.path.exists')
 @mock.patch('dev_modules.cl_ports.AnsibleModule')
 def test_hash_existing_ports_conf_doesntwork(mock_module, mock_exists):
