@@ -57,7 +57,7 @@ def run_cl_cmd(module, cmd, check_rc=True):
 
 
 def hash_existing_ports_conf(module):
-    module.existing_ports_conf_hash = {}
+    module.ports_conf_hash = {}
     if os.path.exists(PORTS_CONF):
         existing_ports_conf = open(PORTS_CONF).readlines()
         for _line in existing_ports_conf:
@@ -65,7 +65,7 @@ def hash_existing_ports_conf(module):
             if m0:
                 _portnum = int(m0.group(1))
                 _speed = m0.group(2)
-                module.existing_ports_conf_hash[_portnum] = _speed
+                module.ports_conf_hash[_portnum] = _speed
     else:
         _msg = '/etc/cumulus/ports.conf is missing'
         module.fail_json(msg=_msg, changed=False)
@@ -99,9 +99,9 @@ def generate_new_ports_conf_hash(module):
 
 
 def compare_new_and_old_port_conf_hash(module):
-    existing_ports_conf_hash_copy = module.exist_ports_conf_hash.copy()
-    module.existing_ports_conf_hash.update(module.new_ports_hash)
-    if existing_ports_conf_hash_copy == module.existing_ports_conf_hash:
+    ports_conf_hash_copy = module.exist_ports_conf_hash.copy()
+    module.ports_conf_hash.update(module.new_ports_hash)
+    if ports_conf_hash_copy == module.existing_ports_conf_hash:
         return False
     return True
 
@@ -111,7 +111,13 @@ def make_copy_of_orig_ports_conf():
 
 
 def write_to_ports_conf(module):
-    pass
+    write_to_file = open(PORTS_CONF, 'w')
+    write_to_file.write('# Managed By Ansible\n')
+    for k in sorted(module.ports_conf_hash.keys()):
+        port_setting = module.ports_conf_hash[k]
+        _str = "%s=%s\n" % (k, port_setting)
+        write_to_file.write(_str )
+    write_to_file.close()
 
 def main():
     module = AnsibleModule(

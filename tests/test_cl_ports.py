@@ -1,8 +1,7 @@
 import mock
-from mock import MagicMock
 from nose.tools import set_trace
 import dev_modules.cl_ports as cl_ports
-from asserts import assert_equals, mod_args_generator
+from asserts import assert_equals
 
 
 @mock.patch('dev_modules.cl_ports.make_copy_of_orig_ports_conf')
@@ -79,21 +78,44 @@ def test_make_copy_of_orig_ports_conf(mock_copy_file,
 def test_compare_new_and_old_port_conf_hash(mock_module):
     """ test comparing existing and new ports.conf config """
     instance = mock_module.return_value
-    instance.existing_ports_conf_hash = {1: '40G',
-                                         2: '40G',
-                                         3: '10G'}
-    instance.new_ports_hash = {1: '4x10G', 3: '10G'}
+    instance.ports_conf_hash = {1: '40G',
+                                2: '40G',
+                                3: '10G'}
+    # test and see if doing this out of order makes a difference
+    instance.new_ports_hash = {3: '4x10G', 1: '10G'}
     result = cl_ports.compare_new_and_old_port_conf_hash(instance)
     assert_equals(result, True)
+
+
+@mock.patch('dev_modules.cl_ports.AnsibleModule')
+def test_write_to_ports_conf(mock_module):
+    """ test writing to ports.conf file """
+    test_port_conf = './tests/write_to_ports_conf'
+    lf = open(test_port_conf, 'w')
+    instance = mock_module.return_value
+    instance.ports_conf_hash = {1: '40G',
+                                10: '10G',
+                                22: '4x10G',
+                                2: '40/4'}
+    with mock.patch('__builtin__.open') as mock_open:
+        mock_open.return_value = lf
+        cl_ports.write_to_ports_conf(instance)
+    lf.close()
+    result = open(test_port_conf, 'r').readlines()
+    mock_open.assert_called_with('/etc/cumulus/ports.conf', 'w')
+    assert_equals(result[0].strip(), '# Managed By Ansible')
+    result.pop(0)
+    assert_equals(map(lambda x: x.strip(), result),
+                  ['1=40G', '2=40/4', '10=10G', '22=4x10G'])
 
 
 @mock.patch('dev_modules.cl_ports.AnsibleModule')
 def test_compare_new_and_old_port_conf_hash_idempotent(mock_module):
     """ test comparing existing and new ports.conf config """
     instance = mock_module.return_value
-    instance.existing_ports_conf_hash = {1: '40G',
-                                         2: '40G',
-                                         3: '10G'}
+    instance.ports_conf_hash = {1: '40G',
+                                2: '40G',
+                                3: '10G'}
     instance.new_ports_hash = {1: '40G', 3: '10G'}
     result = cl_ports.compare_new_and_old_port_conf_hash(instance)
     assert_equals(result, True)
@@ -143,5 +165,5 @@ def test_hash_existing_ports_conf_works(mock_module, mock_exists):
         mock_open.return_value = lf
         cl_ports.hash_existing_ports_conf(instance)
         mock_exists.assert_called_with('/etc/cumulus/ports.conf')
-        assert_equals(instance.existing_ports_conf_hash[1], '40G')
-        assert_equals(instance.existing_ports_conf_hash[11], '4x10G')
+        assert_equals(instance.ports_conf_hash[1], '40G')
+        assert_equals(instance.ports_conf_hash[11], '4x10G')
