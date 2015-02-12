@@ -5,8 +5,18 @@ import dev_modules.cl_ports as cl_ports
 from asserts import assert_equals, mod_args_generator
 
 
+@mock.patch('dev_modules.cl_ports.make_copy_of_orig_ports_conf')
+@mock.patch('dev_modules.cl_ports.write_to_ports_conf')
+@mock.patch('dev_modules.cl_ports.hash_existing_ports_conf')
+@mock.patch('dev_modules.cl_ports.generate_new_ports_conf_hash')
+@mock.patch('dev_modules.cl_ports.compare_new_and_old_port_conf_hash')
 @mock.patch('dev_modules.cl_ports.AnsibleModule')
-def test_module_args(mock_module):
+def test_module_args(mock_module,
+                     mock_compare,
+                     mock_generate,
+                     mock_existing,
+                     mock_write,
+                     mock_copy):
     """ cl_ports - Test module argument specs"""
     cl_ports.main()
     mock_module.assert_called_with(
@@ -19,6 +29,74 @@ def test_module_args(mock_module):
                           'speed_10g',
                           'speed_40g']]
     )
+
+
+@mock.patch('dev_modules.cl_ports.make_copy_of_orig_ports_conf')
+@mock.patch('dev_modules.cl_ports.write_to_ports_conf')
+@mock.patch('dev_modules.cl_ports.hash_existing_ports_conf')
+@mock.patch('dev_modules.cl_ports.generate_new_ports_conf_hash')
+@mock.patch('dev_modules.cl_ports.compare_new_and_old_port_conf_hash')
+@mock.patch('dev_modules.cl_ports.AnsibleModule')
+def test_basic_integration_test(mock_module,
+                                mock_compare,
+                                mock_generate,
+                                mock_existing,
+                                mock_write,
+                                mock_copy):
+    """ test module results when comparing old and new config """
+    # ports.conf has changed
+    instance = mock_module.return_value
+    mock_compare.return_value = True
+    cl_ports.main()
+    instance.exit_json.assert_called_with(
+        msg='/etc/cumulus/ports.conf changed', changed=True)
+
+    # ports.conf not changed
+    mock_compare.return_value = False
+    cl_ports.main()
+    instance.exit_json.assert_called_with(
+        msg='No change in /etc/ports.conf', changed=False)
+
+
+@mock.patch('dev_modules.cl_ports.os.path.exists')
+@mock.patch('dev_modules.cl_ports.shutil.copyfile')
+def test_make_copy_of_orig_ports_conf(mock_copy_file,
+                                      mock_exists):
+    # ports.conf.orig exists.
+    mock_exists.return_value = True
+    cl_ports.make_copy_of_orig_ports_conf()
+    assert_equals(mock_copy_file.call_count, 0)
+    mock_exists.assert_called_with('/etc/cumulus/ports.conf.orig')
+
+    # ports.conf does not exist
+    mock_exists.return_value = False
+    cl_ports.make_copy_of_orig_ports_conf()
+    mock_copy_file.assert_called_with(
+        '/etc/cumulus/ports.conf', '/etc/cumulus/ports.conf.orig')
+
+
+@mock.patch('dev_modules.cl_ports.AnsibleModule')
+def test_compare_new_and_old_port_conf_hash(mock_module):
+    """ test comparing existing and new ports.conf config """
+    instance = mock_module.return_value
+    instance.existing_ports_conf_hash = {1: '40G',
+                                         2: '40G',
+                                         3: '10G'}
+    instance.new_ports_hash = {1: '4x10G', 3: '10G'}
+    result = cl_ports.compare_new_and_old_port_conf_hash(instance)
+    assert_equals(result, True)
+
+
+@mock.patch('dev_modules.cl_ports.AnsibleModule')
+def test_compare_new_and_old_port_conf_hash_idempotent(mock_module):
+    """ test comparing existing and new ports.conf config """
+    instance = mock_module.return_value
+    instance.existing_ports_conf_hash = {1: '40G',
+                                         2: '40G',
+                                         3: '10G'}
+    instance.new_ports_hash = {1: '40G', 3: '10G'}
+    result = cl_ports.compare_new_and_old_port_conf_hash(instance)
+    assert_equals(result, True)
 
 
 @mock.patch('dev_modules.cl_ports.AnsibleModule')
@@ -39,6 +117,7 @@ def test_generate_new_ports_conf_hash(mock_module):
                                             8: '4x10G',
                                             9: '40G/4',
                                             10: '10G'})
+
 
 @mock.patch('dev_modules.cl_ports.os.path.exists')
 @mock.patch('dev_modules.cl_ports.AnsibleModule')
@@ -64,5 +143,5 @@ def test_hash_existing_ports_conf_works(mock_module, mock_exists):
         mock_open.return_value = lf
         cl_ports.hash_existing_ports_conf(instance)
         mock_exists.assert_called_with('/etc/cumulus/ports.conf')
-        assert_equals(instance.existing_ports[1], '40G')
-        assert_equals(instance.existing_ports[11], '4x10G')
+        assert_equals(instance.existing_ports_conf_hash[1], '40G')
+        assert_equals(instance.existing_ports_conf_hash[11], '4x10G')

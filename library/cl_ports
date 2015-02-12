@@ -57,7 +57,7 @@ def run_cl_cmd(module, cmd, check_rc=True):
 
 
 def hash_existing_ports_conf(module):
-    module.existing_ports = {}
+    module.existing_ports_conf_hash = {}
     if os.path.exists(PORTS_CONF):
         existing_ports_conf = open(PORTS_CONF).readlines()
         for _line in existing_ports_conf:
@@ -65,7 +65,7 @@ def hash_existing_ports_conf(module):
             if m0:
                 _portnum = int(m0.group(1))
                 _speed = m0.group(2)
-                module.existing_ports[_portnum] = _speed
+                module.existing_ports_conf_hash[_portnum] = _speed
     else:
         _msg = '/etc/cumulus/ports.conf is missing'
         module.fail_json(msg=_msg, changed=False)
@@ -99,8 +99,19 @@ def generate_new_ports_conf_hash(module):
 
 
 def compare_new_and_old_port_conf_hash(module):
-    pass
+    existing_ports_conf_hash_copy = module.exist_ports_conf_hash.copy()
+    module.existing_ports_conf_hash.update(module.new_ports_hash)
+    if existing_ports_conf_hash_copy == module.existing_ports_conf_hash:
+        return False
+    return True
 
+def make_copy_of_orig_ports_conf():
+    if not os.path.exists(PORTS_CONF + '.orig'):
+        shutil.copyfile(PORTS_CONF, PORTS_CONF + '.orig')
+
+
+def write_to_ports_conf(module):
+    pass
 
 def main():
     module = AnsibleModule(
@@ -120,11 +131,12 @@ def main():
     hash_existing_ports_conf(module)
     generate_new_ports_conf_hash(module)
     if compare_new_and_old_port_conf_hash(module):
+        make_copy_of_orig_ports_conf()
+        write_to_ports_conf(module)
         _changed = True
         _msg = "/etc/cumulus/ports.conf changed"
-
-    _msg = 'No change in /etc/ports.conf'
-#    module.fail_json(msg=_msg)
+    else:
+        _msg = 'No change in /etc/ports.conf'
     module.exit_json(changed=_changed, msg=_msg)
 
 
@@ -132,6 +144,7 @@ def main():
 from ansible.module_utils.basic import *
 # from ansible.module_utils.urls import *
 import os
+import shutil
 
 if __name__ == '__main__':
     main()
