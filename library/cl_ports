@@ -76,7 +76,7 @@ def hash_existing_ports_conf(module):
 def generate_new_ports_conf_hash(module):
     new_ports_conf_hash = {}
     convert_hash = {
-        'speed_40g_div4': '40G/4',
+        'speed_40g_div_4': '40G/4',
         'speed_4_by_10g': '4x10G',
         'speed_10g': '10G',
         'speed_40g': '40G'
