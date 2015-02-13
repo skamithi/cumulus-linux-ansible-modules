@@ -7,12 +7,12 @@ Cumulus Linux is Linux so Ansible works right out of the box.  However Cumulus N
 ## OVERVIEW OF MODULES
 - cl_img_install — Install a different version of Cumulus Linux in the inactive slot.
 - cl_interface — Configures a front panel, bridge or bond interface on a Cumulus Linux switch.
-- cl_license — Install a Cumulus Linux license. 
+- cl_license — Install a Cumulus Linux license.
 - cl_prefix_check - Check to see if a route exists.
 - cl_quagga_ospf - Configures basic OSPFv2 global parameters and OSPFv2 interface configuration.
 - cl_quagga_protocol - Enable Quagga services available on Cumulus Linux.
 
-## INSTALLATION 
+## INSTALLATION
 To download the CumulusLinux role to the Ansible host, execute the ansible-galaxy install command, and specify **cumulus.CumulusLinux**.
 
 
@@ -43,7 +43,7 @@ hosts
 
 # cat ansible.cfg
 [defaults]
-library=/etc/ansible/roles/cumulus.CumulusLinux/library/:/usr/share/ansible 
+library=/etc/ansible/roles/cumulus.CumulusLinux/library/:/usr/share/ansible
 hostfile = /files/ansible_playbooks/hosts
 
 # cat site.yml
@@ -58,8 +58,12 @@ hostfile = /files/ansible_playbooks/hosts
 
 ##Development
 
-All dev work should be done in devel branch.
-When module is stable, merge to master branch.
+1. Fork it.
+2. Create your feature branch (`git checkout -b my-new-feature`).
+3. Commit your changes (`git commit -am 'Add some feature'`).
+4. Push to the branch (`git push origin my-new-feature`).
+5. Create new Pull Request.
+
 
 ###Description of Folders for this git repo
 
