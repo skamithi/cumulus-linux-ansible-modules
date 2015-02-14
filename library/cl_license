@@ -15,8 +15,8 @@ the new license expiration date. This will be done in a future release.  \
 For more details go the Cumulus Linux License Documentation @ \
 http://docs.cumulusnetwork.com
 notes:
-    - to activate a license change the switchd service must be restarted. this
-    is disruptive. See examples for proper way to issue this notify action.
+    - to activate a license, the switchd service must be restarted. \
+This action is disruptive. See EXAMPLES, for the proper way to issue this notify action.
 options:
     src:
         description:
@@ -30,12 +30,12 @@ license. It overwrites the existing license without checking if the license has 
         default: 'no'
 '''
 EXAMPLES = '''
-Example playbook using the cl_license module to manage
+Example playbook using the cl_license module to manage \
 licenses on Cumulus Linux
 
-## Install a license. Note that the license install task is place in a separate "hosts" block.
+## Install a license. Note that the license install task is placed in a separate "hosts" block.
 ## This is to ensure that switchd restarts before configuring the interfaces. You could also
-## perform this task using "register" variables as shown in  http://bit.ly/1EpQQzd. But this
+## perform this task using "register" variables, as shown in  http://bit.ly/1EpQQzd. But this
 ## can get cumbersome.
 
 ---
