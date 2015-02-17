@@ -1,0 +1,163 @@
+#!/usr/bin/env python
+#
+# Copyright (C) 2015, Cumulus Networks www.cumulusnetworks.com
+#
+#
+DOCUMENTATION = '''
+---
+module: cl_ports
+author: Stanley Karunditu
+short_description: Configure Cumulus Switch port attributes (ports.conf)
+description:
+    - Set the initial port attribute defined in the Cumulus Linux ports.conf, \
+file. This module does not do any error checking at the moment. Be careful to \
+not include ports that do not exist on the switch. \
+Carefully read the original \
+ports.conf file for any exceptions or limitations. \
+For more details go the Configure Switch Port Attribute Documentation @ \
+http://docs.cumulusnetworks.com
+options:
+    speed_10g:
+        description:
+            - list of ports to run initial run at 10G
+    speed_40g:
+        description:
+            - list of ports to run initial run at 40G
+    speed_4_by_10g:
+        description:
+            - list of 40G ports that will be unganged to run as 4 10G ports.
+    speed_40g_div_4:
+        description:
+            - list of 10G ports that will be ganged to form a 40G port
+'''
+EXAMPLES = '''
+Example playbook entries using the cl_ports module to \
+manage the switch attributes
+defined in the ports.conf file on Cumulus Linux
+
+## Unganged port configuration on certain ports.
+
+    - name: configure ports.conf setup
+      cl_ports:
+          speed_4_by_10g: ['swp1-3', 'swp6']
+          speed_40g: ['swp4-5', 'swp7-32']
+
+'''
+PORTS_CONF = '/etc/cumulus/ports.conf'
+
+
+def run_cl_cmd(module, cmd, check_rc=True):
+    try:
+        (rc, out, err) = module.run_command(cmd, check_rc=check_rc)
+    except Exception, e:
+        module.fail_json(msg=e.strerror)
+    # trim last line as it is always empty
+    ret = out.splitlines()
+    return ret[:-1]
+
+
+def hash_existing_ports_conf(module):
+    module.ports_conf_hash = {}
+    if os.path.exists(PORTS_CONF):
+        existing_ports_conf = open(PORTS_CONF).readlines()
+        for _line in existing_ports_conf:
+            m0 = re.match('^(\d+)=(\w+)', _line)
+            if m0:
+                _portnum = int(m0.group(1))
+                _speed = m0.group(2)
+                module.ports_conf_hash[_portnum] = _speed
+    else:
+        _msg = '/etc/cumulus/ports.conf is missing'
+        module.fail_json(msg=_msg, changed=False)
+        # for unit test purposes only
+        return False
+
+
+def generate_new_ports_conf_hash(module):
+    new_ports_conf_hash = {}
+    convert_hash = {
+        'speed_40g_div_4': '40G/4',
+        'speed_4_by_10g': '4x10G',
+        'speed_10g': '10G',
+        'speed_40g': '40G'
+    }
+    for k in module.params.keys():
+        port_range = module.params[k]
+        port_setting = convert_hash[k]
+        if port_range:
+            for port_str in port_range:
+                port_range_str = port_str.replace('swp', '').split('-')
+                if len(port_range_str) == 1:
+                    new_ports_conf_hash[int(port_range_str[0])] = \
+                        port_setting
+                else:
+                    int_range = map(int, port_range_str)
+                    portnum_range = range(int_range[0], int_range[1]+1)
+                    for i in portnum_range:
+                        new_ports_conf_hash[i] = port_setting
+    module.new_ports_hash = new_ports_conf_hash
+
+
+def compare_new_and_old_port_conf_hash(module):
+    ports_conf_hash_copy = module.ports_conf_hash.copy()
+    module.ports_conf_hash.update(module.new_ports_hash)
+    port_num_length = len(module.ports_conf_hash.keys())
+    orig_port_num_length = len(ports_conf_hash_copy.keys())
+    if port_num_length != orig_port_num_length:
+        module.fail_json(msg="Port numbering is wrong. Too many or two few ports configured")
+        return False
+    elif ports_conf_hash_copy == module.ports_conf_hash:
+        return False
+    return True
+
+
+def make_copy_of_orig_ports_conf():
+    if not os.path.exists(PORTS_CONF + '.orig'):
+        shutil.copyfile(PORTS_CONF, PORTS_CONF + '.orig')
+
+
+def write_to_ports_conf(module):
+    write_to_file = open(PORTS_CONF, 'w')
+    write_to_file.write('# Managed By Ansible\n')
+    for k in sorted(module.ports_conf_hash.keys()):
+        port_setting = module.ports_conf_hash[k]
+        _str = "%s=%s\n" % (k, port_setting)
+        write_to_file.write(_str)
+    write_to_file.close()
+
+
+def main():
+    module = AnsibleModule(
+        argument_spec=dict(
+            speed_40g_div_4=dict(type='list'),
+            speed_4_by_10g=dict(type='list'),
+            speed_10g=dict(type='list'),
+            speed_40g=dict(type='list')
+        ),
+        required_one_of=[['speed_40g_div_4',
+                          'speed_4_by_10g',
+                          'speed_10g',
+                          'speed_40g']]
+    )
+
+    _changed = False
+    hash_existing_ports_conf(module)
+    generate_new_ports_conf_hash(module)
+    if compare_new_and_old_port_conf_hash(module):
+        make_copy_of_orig_ports_conf()
+        write_to_ports_conf(module)
+        _changed = True
+        _msg = "/etc/cumulus/ports.conf changed"
+    else:
+        _msg = 'No change in /etc/ports.conf'
+    module.exit_json(changed=_changed, msg=_msg)
+
+
+# import module snippets
+from ansible.module_utils.basic import *
+# from ansible.module_utils.urls import *
+import os
+import shutil
+
+if __name__ == '__main__':
+    main()

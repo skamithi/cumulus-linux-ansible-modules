@@ -8,3 +8,4 @@
 *.swo
 *.txt
 /.temp_mods
+tests/write_to_ports_conf
