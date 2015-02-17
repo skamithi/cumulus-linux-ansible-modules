@@ -13,18 +13,15 @@ description:
 it will be replaced with the new license. The module currently doesn't check \
 the new license expiration date. This will be done in a future release.  \
 For more details go the Cumulus Linux License Documentation @ \
-http://cumulusnetworks.com/docs/2.2/
+http://docs.cumulusnetwork.com
+notes:
+    - to activate a license, the switchd service must be restarted. \
+This action is disruptive. See EXAMPLES, for the proper way to issue this notify action.
 options:
     src:
         description:
             - full path to the license. Can be local path or http url
         required: true
-    restart_switchd:
-        description:
-            - restart switchd process after installing the license. \
-This is required to activate the license. It disrupts all network traffic so making this knob optionally
-        choices: ['yes', 'no']
-        default: 'no'
     force:
         description:
             - force installation of the license. This does not active the new \
@@ -33,25 +30,35 @@ license. It overwrites the existing license without checking if the license has 
         default: 'no'
 '''
 EXAMPLES = '''
-Example playbook entries using the cl_license module to manage
+Example playbook using the cl_license module to manage \
 licenses on Cumulus Linux
 
-## Install a license using a HTTP URL
+## Install a license. Note that the license install task is placed in a separate "hosts" block.
+## This is to ensure that switchd restarts before configuring the interfaces. You could also
+## perform this task using "register" variables, as shown in  http://bit.ly/1EpQQzd. But this
+## can get cumbersome.
 
-    - name: install license using http url
-      cl_license: src='http://10.1.1.1/license.txt'
+---
+   - hosts: all
+     tasks:
+      - name: install license using http url
+        cl_license: src='http://10.1.1.1/license.txt'
+        notify: restart switchd
 
-## Install a license from the local filesystem
+   handlers:
+     - name: restart switchd
+       service: name=switchd state=restarted
 
-    - name: copy license to the switch
-      copy: license.txt dest=/tmp/license.txt
-    - name: install license from local filesystem
-      cl_license: src='/tmp/license.txt'
+   - hosts: all
+     tasks:
+        - name: configure interfaces
+          template: src=interfaces.j2 dest=/etc/network/interfaces
+          notify: restart networking
 
-## Install a license and activate the license by restarting the switchd daemon
+     handlers:
+       - name: restart networking
+         service: name=networking state=reloaded
 
-    - name: install license from local filesystem restart switchd
-      cl_license: src='/home/nfsshare/licence.txt' restart_switchd=yes
 '''
 LICENSE_PATH = '/etc/cumulus/.license.txt'
 
@@ -98,22 +105,6 @@ def license_upto_date(module):
                          msg="license is installed and has not expired")
 
 
-def check_for_switchd_run_ready(module):
-    count = 29
-    while count >= 0:
-        if os.path.exists('/var/run/switchd.ready'):
-            return True
-        count -= 1
-        time.sleep(1)
-    module.fail_json(
-        msg='license updated/installed. switchd failed to restart')
-
-
-def restart_switchd_now(module):
-    run_cl_cmd(module, 'service switchd restart')
-    return check_for_switchd_run_ready(module)
-
-
 def check_license_url(module, license_url):
     parsed_url = urlparse(license_url)
     if parsed_url.scheme == 'http' and len(parsed_url.path) > 0:
@@ -128,7 +119,6 @@ def main():
     module = AnsibleModule(
         argument_spec=dict(
             src=dict(required=True, type='str'),
-            restart_switchd=dict(type='bool', choices=BOOLEANS, default=False),
             force=dict(type='bool', choices=BOOLEANS, default=False)
         ),
     )
@@ -141,20 +131,14 @@ def main():
 
     cl_license_path = '/usr/cumulus/bin/cl-license'
     _changed = False
-    _msg = ""
+    _msg = "License installed and not expired"
 
     check_license_url(module, license_url)
 
     cl_lic_cmd = ('%s -i %s') % (cl_license_path, license_url)
     run_cl_cmd(module, cl_lic_cmd)
     _changed = True
-    _msg = 'license updated/installed. no request to restart switchd'
-    if module.params.get('restart_switchd') is True:
-        if restart_switchd_now(module):
-            _msg = 'license updated/installed. switchd restarted'
-        else:
-            _msg = 'license updated/installed. switchd failed to restart'
-            module.fail_json(msg=_msg)
+    _msg = 'license updated/installed. remember to restart switchd'
     module.exit_json(changed=_changed, msg=_msg)
 
 
