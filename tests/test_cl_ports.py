@@ -1,4 +1,5 @@
 import mock
+import os
 from nose.tools import set_trace
 import dev_modules.cl_ports as cl_ports
 from asserts import assert_equals
@@ -105,23 +106,25 @@ def test_compare_new_and_old_port_conf_hash_too_many_ports(mock_module):
 @mock.patch('dev_modules.cl_ports.AnsibleModule')
 def test_write_to_ports_conf(mock_module):
     """ test writing to ports.conf file """
-    test_port_conf = './tests/write_to_ports_conf'
-    lf = open(test_port_conf, 'w')
+    test_port_conf = '/tmp/ports.conf'
+    if os.path.exists(test_port_conf):
+        os.remove(test_port_conf)
     instance = mock_module.return_value
+    old_ports_value = cl_ports.PORTS_CONF
+    cl_ports.PORTS_CONF = test_port_conf
     instance.ports_conf_hash = {1: '40G',
                                 10: '10G',
                                 22: '4x10G',
                                 2: '40/4'}
-    with mock.patch('__builtin__.open') as mock_open:
-        mock_open.return_value = lf
-        cl_ports.write_to_ports_conf(instance)
-    lf.close()
+    cl_ports.write_to_ports_conf(instance)
     result = open(test_port_conf, 'r').readlines()
-    mock_open.assert_called_with('/etc/cumulus/ports.conf', 'w')
     assert_equals(result[0].strip(), '# Managed By Ansible')
     result.pop(0)
     assert_equals(map(lambda x: x.strip(), result),
                   ['1=40G', '2=40/4', '10=10G', '22=4x10G'])
+    # comment this out to troubleshoot ports.conf printout
+    os.unlink(test_port_conf)
+    cl_ports.PORTS_CONF = old_ports_value
 
 
 @mock.patch('dev_modules.cl_ports.AnsibleModule')
