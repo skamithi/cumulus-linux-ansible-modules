@@ -117,13 +117,23 @@ def make_copy_of_orig_ports_conf():
 
 
 def write_to_ports_conf(module):
-    write_to_file = open(PORTS_CONF, 'w')
-    write_to_file.write('# Managed By Ansible\n')
-    for k in sorted(module.ports_conf_hash.keys()):
-        port_setting = module.ports_conf_hash[k]
-        _str = "%s=%s\n" % (k, port_setting)
-        write_to_file.write(_str)
-    write_to_file.close()
+    """
+    use tempfile to first write out config in temp file
+    then write to actual location. may help prevent file
+    corruption. Ports.conf is a critical file for Cumulus.
+    Don't want to corrupt this file under any circumstance.
+    """
+    temp = tempfile.NamedTemporaryFile()
+    try:
+        temp.write('# Managed By Ansible\n')
+        for k in sorted(module.ports_conf_hash.keys()):
+            port_setting = module.ports_conf_hash[k]
+            _str = "%s=%s\n" % (k, port_setting)
+            temp.write(_str)
+        temp.seek(0)
+        shutil.copyfile(temp.name, PORTS_CONF)
+    finally:
+        temp.close()
 
 
 def main():
@@ -157,6 +167,7 @@ def main():
 from ansible.module_utils.basic import *
 # from ansible.module_utils.urls import *
 import os
+import tempfile
 import shutil
 
 if __name__ == '__main__':
