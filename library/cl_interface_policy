@@ -105,7 +105,7 @@ def main():
     module.custom_currentportlist = []
     module.custom_allowedportlist = []
     module.changed = False
-    module.msg = 'configured port list == allowed port list'
+    module.msg = 'configured port list is part of allowed port list'
     read_current_int_dir(module)
     convert_allowed_list_to_port_range(module)
     if int_policy_enforce(module):
