@@ -45,12 +45,33 @@ def run_cmd(module, exec_path, failure_msg):
 # get list of interface files that are currently "configured".
 # doesn't mean actually applied to the system, but most likely are
 def read_current_int_dir(module):
-    return os.listdir(module.params.get('location'))
+    module.custom_currentportlist = os.listdir(module.params.get('location'))
 
 # take the allowed list and conver it to into a list
 # of ports.
 def convert_allowed_list_to_port_range(module):
-    pass
+    allowedlist = module.params.get('allowed')
+    for portrange in allowedlist:
+        module.custom_allowedportlist += breakout_portrange(portrange)
+
+
+def breakout_portrange(prange):
+    m0 = re.match('(\w+[a-z.])(\d+)-?(\d+)?(\w+)?', prange)
+    # no range defined
+    if m0.group(3) is None:
+        return [prange]
+    else:
+        portarray = []
+        intrange = range(int(m0.group(2)), int(m0.group(3)) + 1)
+        for _int in intrange:
+            portarray.append(''.join([m0.group(1),
+                                      str(_int),
+                                      str(m0.group(4) or '')
+                                      ]
+                                     )
+                             )
+        return portarray
+
 
 # deletes the interface files
 def unconfigure_interfaces(module):
@@ -60,7 +81,10 @@ def unconfigure_interfaces(module):
 # returns true if policy needs to be enforced
 # that is delete interface files
 def int_policy_enforce(module):
-    pass
+    currentportset = set(module.custom_currentportlist)
+    allowedportset = set(module.custom_allowedportlist)
+    return not (currentportset.issubset(allowedportset))
+
 
 def main():
     module = AnsibleModule(
@@ -69,7 +93,8 @@ def main():
             location=dict(type='str', default='/etc/network/interfaces.d/')
         ),
     )
-
+    module.custom_currentportlist = []
+    module.custom_allowedportlist = []
     read_current_int_dir(module)
     convert_allowed_list_to_port_range(module)
     if int_policy_enforce(module):
