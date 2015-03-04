@@ -46,6 +46,10 @@ def test_breakout_portrange(mock_module):
     assert_equals(cl_int_policy.breakout_portrange(prange),
                   ['swp10s0', 'swp11s0', 'swp12s0', 'swp13s0'])
 
+    # word with no number at the end like lo or bridge
+    prange = 'lo'
+    assert_equals(cl_int_policy.breakout_portrange(prange), ['lo'])
+
 @mock.patch('dev_modules.cl_interface_policy.AnsibleModule')
 def test_convert_allowed_list_to_port_range(mock_module):
     """ cl_int_policy - test getting allow list """
