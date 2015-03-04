@@ -66,4 +66,13 @@ def  test_int_policy_enforce(mock_module):
     mock_module.custom_currentportlist = ['swp1', 'swp2', 'bond1']
     assert_equals(cl_int_policy.int_policy_enforce(mock_module), True)
 
+@mock.patch('dev_modules.cl_interface_policy.os.unlink')
+@mock.patch('dev_modules.cl_interface_policy.AnsibleModule')
+def test_unconfigure_interfaces(mock_module, mock_unlink):
+    mock_module.custom_currentportlist = ['swp1', 'swp2', 'bond0', 'bond1']
+    mock_module.custom_allowedportlist = ['swp1', 'swp2']
+    cl_int_policy.unconfigure_interfaces(mock_module)
+    assert_equals(mock_unlink.call_count, 2)
+    assert_equals(mock_module.msg,
+                  'remove config for interfaces bond0, bond1')
 

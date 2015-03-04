@@ -75,7 +75,15 @@ def breakout_portrange(prange):
 
 # deletes the interface files
 def unconfigure_interfaces(module):
-    pass
+    currentportset = set(module.custom_currentportlist)
+    allowedportset = set(module.custom_allowedportlist)
+    remove_list = currentportset.difference(allowedportset)
+    fileprefix = module.params.get('location')
+    module.msg = "remove config for interfaces %s" % (', '.join(remove_list))
+    for _file in remove_list:
+        os.unlink(fileprefix + _file )
+
+
 
 # check to see if policy should be enforced
 # returns true if policy needs to be enforced
@@ -95,10 +103,13 @@ def main():
     )
     module.custom_currentportlist = []
     module.custom_allowedportlist = []
+    module.changed = False
+    module.msg = 'configured port list == allowed port list'
     read_current_int_dir(module)
     convert_allowed_list_to_port_range(module)
     if int_policy_enforce(module):
-      unconfigure_interfaces(module)
+        module.changed = True
+        unconfigure_interfaces(module)
     module.exit_json(changed=module.changed, msg=module.msg)
 
 
