@@ -36,13 +36,6 @@ Example playbook entries using the cl_interface_policy module.
           allowed: "lo eth0 swp1-9, swp11, swp12-13s0, swp12-30s1, swp12-30s2, bond0-12"
 
 '''
-
-def run_cmd(module, exec_path, failure_msg):
-    (rc, out, err) = module.run_command(exec_path)
-    if rc == 0:
-        module.fail_json(msg=failure_msg)
-    return out
-
 # get list of interface files that are currently "configured".
 # doesn't mean actually applied to the system, but most likely are
 def read_current_int_dir(module):
