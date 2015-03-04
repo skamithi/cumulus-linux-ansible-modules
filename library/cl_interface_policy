@@ -1,0 +1,87 @@
+#Copyright (C) 2015, Cumulus Networks www.cumulusnetworks.com
+#
+#
+DOCUMENTATION = '''
+---
+module: cl_interface_policy
+author: Stanley Karunditu
+short_description: Configure interface enforcement policy on Cumulus Linux
+description:
+    - This module affects the configuration files located in the interfaces \
+folder defined by ifupdown2. Interfaces port and port ranges listed in the \
+"allowed" parameter define what interfaces will be available on the switch. \
+If the user runs this module and has an interface configured on the switch, \
+but not found in the "allowed" list, this interface will be unconfigured. \
+By default this is `/etc/network/interface.d` \
+For more details go the Configuring Interfaces @ \
+http://docs.cumulusnetworks.com
+notes:
+    - lo must be included in the allowed list (FIXME)
+    - eth0 must be in allowed list if out of band management is done
+options:
+    allowed:
+        description:
+            - list of ports to run initial run at 10G
+    location:
+        description:
+            - folder to store interface files.
+        default: '/etc/network/interfaces.d/'
+'''
+EXAMPLES = '''
+Example playbook entries using the cl_interface_policy module.
+
+    - name: mix
+      cl_interface_policy:
+          allowed: "swp1-9, swp11, swp12-13s0, swp12-30s1, swp12-30s2, bond0-12"
+
+'''
+
+def run_cmd(module, exec_path, failure_msg):
+    (rc, out, err) = module.run_command(exec_path)
+    if rc == 0:
+        module.fail_json(msg=failure_msg)
+    return out
+
+# get list of interface files that are currently "configured".
+# doesn't mean actually applied to the system, but most likely are
+def read_current_int_dir(module):
+    pass
+
+# take the allowed list and conver it to into a list
+# of ports.
+def convert_allowed_list_to_port_range(module):
+    pass
+
+# deletes the interface files
+def unconfigure_interfaces(module):
+    pass
+
+# check to see if policy should be enforced
+# returns true if policy needs to be enforced
+# that is delete interface files
+def int_policy_enforce(module):
+    pass
+
+def main():
+    module = AnsibleModule(
+        argument_spec=dict(
+            allowed=dict(type='list', required=True),
+            location=dict(type='str')
+        ),
+    )
+
+    read_current_int_dir(module)
+    convert_allowed_list_to_port_range(module)
+    if int_policy_enforce(module):
+      unconfigure_interfaces(module)
+    module.exit_json(changed=module.changed, msg=module.msg)
+
+
+# import module snippets
+from ansible.module_utils.basic import *
+# from ansible.module_utils.urls import *
+import os
+import shutil
+
+if __name__ == '__main__':
+    main()
