@@ -45,7 +45,7 @@ def run_cmd(module, exec_path, failure_msg):
 # get list of interface files that are currently "configured".
 # doesn't mean actually applied to the system, but most likely are
 def read_current_int_dir(module):
-    pass
+    return os.listdir(module.params.get('location'))
 
 # take the allowed list and conver it to into a list
 # of ports.
@@ -66,7 +66,7 @@ def main():
     module = AnsibleModule(
         argument_spec=dict(
             allowed=dict(type='list', required=True),
-            location=dict(type='str')
+            location=dict(type='str', default='/etc/network/interfaces.d/')
         ),
     )
 

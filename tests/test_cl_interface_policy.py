@@ -16,5 +16,17 @@ def test_module_args(mock_module,
     cl_int_policy.main()
     mock_module.assert_called_with(
         argument_spec={'allowed': {'type': 'list', 'required': True},
-                       'location': {'type': 'str'}}
+                       'location': {'type': 'str',
+                                    'default': '/etc/network/interfaces.d/'}}
     )
+
+@mock.patch('dev_modules.cl_interface_policy.os.listdir')
+@mock.patch('dev_modules.cl_interface_policy.AnsibleModule')
+def test_getting_list_of_ports(mock_module, mock_read_dir):
+    """ cl_int_policy - get list of current configured ports """
+    mock_module.params = { 'location': '/etc/network/interfaces.d' }
+    cl_int_policy.read_current_int_dir(mock_module)
+    mock_read_dir.assert_called_with('/etc/network/interfaces.d')
+
+
+
