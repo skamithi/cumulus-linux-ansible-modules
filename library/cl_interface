@@ -13,7 +13,9 @@ description:
     - Configures a front panel, sub-interface, SVI, management \
 or loopback port on a Cumulus Linux switch. For bridge ports \
 use the cl_bridge module. For bond ports use the \
-cl_bond module. For more details \
+cl_bond module. When configuring bridge related features like \
+the "vid" option, please follow the guidelines for configuring \
+"vlan aware" bridging. For more details \
 review the Layer2 Interface Guide @ \
 http://docs.cumulusnetworks.com
 options:
@@ -43,6 +45,13 @@ management(eth0) interface. speed is in MB
     mtu:
         description:
             - set MTU. Configure Jumbo Frame by setting MTU to 9000.
+
+    virtual_ip:
+        description:
+            - define IPv4 virtual IP used by the Cumulus VRR feature
+    virtual_mac:
+        description:
+            - define Ethernet mac associated with Cumulus VRR feature
     state:
         description:
             - set to 'noconfig' to remove all config from an interface. \
@@ -54,6 +63,59 @@ ifupdown2 @ github.com/CumulusNetworks/ifupdown2 ]
 notes:
     - For the config to be activated, i.e installed in the kernel, \
 "service networking reloaded" needs be be executed. See EXAMPLES section.
+'''
+
+EXAMPLES = '''
+# Options ['virtual_mac', 'virtual_ip'] are required together
+# configure a front panel port with an IP
+cl_interface: name=swp1  ipv4=10.1.1.1/24
+
+# configure front panel to use DHCP
+cl_interface: name=swp2 addr_family=dhcp
+
+# configure a SVI for vlan 100 interface with an IP
+cl_interface: name=bridge.100 ipv4=10.1.1.1/24
+
+# configure subinterface with an IP
+cl_interface: name=bond0.100  alias='clag peer link' ipv4=10.1.1.1/24
+
+# configure ports using variable data structure
+cl_interface:
+    name: {{ item.key }}
+    ipv4:  {{ item.value.ipv4|default(none) }}
+    ipv6: {{ item.value.ipv6|default(none) }}
+    alias: {{ item.value.alias|default(none) }}
+    addr_method: {{ item.value.addr_method|default(none) }}
+    speed: {{ item.value.speed|default(none) }}
+    mtu: {{ item.value.mtu|default(none) }}
+    vids: {{ item.value.vids|default(none) }}
+    virtual_ip: {{ item.value.virtual_ip|default(none) }}
+    virtual_mac: {{ item.value.virtual_mac|default(none) }}
+with_dict=cl_interfaces
+
+# In vars file
+# ============
+cl_interfaces:
+    swp1:
+        alias: 'uplink to isp'
+        ipv4: '10.1.1.1/24'
+    swp2:
+        alias: 'l2 trunk connection'
+        vids: [1, 50]
+    swp3:
+        speed: 1000
+        alias: 'connects to 1G link'
+##########
+#   br0 interface is configured by cl_bridge
+##########
+    br0.100:
+        alias: 'SVI for vlan 100'
+        ipv4: '10.2.2.2/24'
+        ipv6: '10:2:2::2/127'
+        virtual_ip: '10.2.2.254'
+        virtual_mac: '00:00:5E:00:10:10'
+
+
 '''
 
 # handy helper for calling system calls.
@@ -79,9 +141,11 @@ def main():
             speed=dict(type='str'),
             mtu=dict(type='str'),
             state=dict(type='str', choices=['noconfig', 'hasconfig'],
-                       default='hasconfig'),
-
+                       default='hasconfig')
         ),
+        required_together=[
+            ['virtual_ip', 'virtual_mac']
+        ]
     )
 
 
