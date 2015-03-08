@@ -52,6 +52,12 @@ management(eth0) interface. speed is in MB
     virtual_mac:
         description:
             - define Ethernet mac associated with Cumulus VRR feature
+    vids:
+        description:
+            - in vlan aware mode, lists vlans defined under the interface
+    pvid:
+        description:
+            - in vlan aware mode, defines vlan that is the untagged vlan
     state:
         description:
             - set to 'noconfig' to remove all config from an interface. \
@@ -124,10 +130,19 @@ cl_interfaces:
 # E.g "/sbin/ip -o link show"
 # failure_msg - what message to print on failure
 def run_cmd(module, exec_path, failure_msg):
-    (rc, out, err) = module.run_command(exec_path)
-    if rc == 0:
+    (_rc, out, _err) = module.run_command(exec_path)
+    if _rc == 0:
         module.fail_json(msg=failure_msg)
     return out
+
+def build_current_iface_config(module):
+    fail_msg = "unable to execute ifquery"
+    _cmd = "/sbin/ifquery -o json %s" % (module.params.get('name'))
+    module.custom_curr_confg = json.loads(
+        run_cmd(module, _cmd, fail_msg)[0])
+
+def build_desired_iface_config(module):
+    pass
 
 def main():
     module = AnsibleModule(
@@ -140,6 +155,10 @@ def main():
                              choices=['loopback', 'dhcp']),
             speed=dict(type='str'),
             mtu=dict(type='str'),
+            virtual_ip=dict(type='str'),
+            virtual_mac=dict(type='str'),
+            vids=dict(type='list'),
+            pvid=dict(type='int'),
             state=dict(type='str', choices=['noconfig', 'hasconfig'],
                        default='hasconfig')
         ),
@@ -148,11 +167,13 @@ def main():
         ]
     )
 
+    build_current_iface_config(module)
+    build_desired_iface_config(module)
+
 
 # import module snippets
 from ansible.module_utils.basic import *
-# incompatible with ansible 1.4.4 ubuntu 12.04 version
-# from ansible.module_utils.urls import *
+import json
 
 if __name__ == '__main__':
     main()
