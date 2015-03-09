@@ -19,7 +19,7 @@ def test_module_args(mock_module,
                 'type': 'str',
                 'choices': ['loopback', 'dhcp']},
             'name': {'required': True, 'type': 'str'},
-            'mtu': {'type': 'str'},
+            'mtu': {'type': 'int'},
             'alias': {'type': 'str'},
             'state': {'default': 'hasconfig',
                       'type': 'str',
@@ -31,7 +31,7 @@ def test_module_args(mock_module,
             'virtual_ip': {'type': 'str'},
             'vids': {'type': 'list'},
             'pvid': {'type': 'int'},
-            'speed': {'type': 'str'}}
+            'speed': {'type': 'int'}}
     )
 
 
@@ -81,3 +81,17 @@ def test_build_pvid(mock_module):
     cl_int.build_pvid(mock_module)
     assert_equals(mock_module.custom_desired_config,
                   {'config': {'bridge-pvid': '2'}})
+
+
+@mock.patch('dev_modules.cl_interface.AnsibleModule')
+def test_build_speed(mock_module):
+    """
+    cl_interface - test building speed config
+    """
+    mock_module.custom_desired_config = {'config': {}}
+    mock_module.params = {'speed': 1000}
+    cl_int.build_speed(mock_module)
+    assert_equals(mock_module.custom_desired_config,
+                  {'config': {
+                      'link-speed': '1000',
+                      'link-duplex': 'full'}})
