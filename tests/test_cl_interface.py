@@ -95,3 +95,19 @@ def test_build_speed(mock_module):
                   {'config': {
                       'link-speed': '1000',
                       'link-duplex': 'full'}})
+
+
+@mock.patch('dev_modules.cl_interface.AnsibleModule')
+def test_build_generic_attr(mock_module):
+    """
+    cl_interface - adding values from module parameters that match
+    the ones provided by ifupdown2 json output.
+    """
+    mock_module.custom_desired_config = {'config': {}}
+    mock_module.params = {'mtu': '1000'}
+    cl_int.build_generic_attr(mock_module, 'mtu')
+    assert_equals(mock_module.custom_desired_config,
+                  {'config': {
+                      'mtu': '1000'}})
+
+

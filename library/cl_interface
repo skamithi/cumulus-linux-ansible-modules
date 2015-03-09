@@ -169,11 +169,14 @@ def build_speed(module):
         module.custom_desired_config['config']['link-duplex'] = 'full'
 
 def build_generic_attr(module, _attr):
-    pass
+    _value = module.params.get(_attr)
+    if _value is not None:
+        module.custom_desired_config['config'][_attr] = str(_value)
 
 def build_desired_iface_config(module):
     module.custom_desired_config = {
-        'addr_family': null,
+        'addr_family': None,
+        'auto': True,
         'config': {},
         'name': module.params('name')
     }
