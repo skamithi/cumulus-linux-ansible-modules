@@ -6,7 +6,7 @@ from mock import MagicMock
 
 
 @mock.patch('dev_modules.cl_interface.replace_config')
-@mock.patch('dev_modules.cl_interface.compare_dicts')
+@mock.patch('dev_modules.cl_interface.config_changed')
 @mock.patch('dev_modules.cl_interface.build_desired_iface_config')
 @mock.patch('dev_modules.cl_interface.current_iface_config')
 @mock.patch('dev_modules.cl_interface.AnsibleModule')
@@ -40,7 +40,7 @@ def test_module_args(mock_module,
     )
 
 @mock.patch('dev_modules.cl_interface.replace_config')
-@mock.patch('dev_modules.cl_interface.compare_dicts')
+@mock.patch('dev_modules.cl_interface.config_changed')
 @mock.patch('dev_modules.cl_interface.build_desired_iface_config')
 @mock.patch('dev_modules.cl_interface.current_iface_config')
 @mock.patch('dev_modules.cl_interface.AnsibleModule')
@@ -51,14 +51,14 @@ def test_main_integration_test(mock_module,
                      mock_replace):
     """ cl_interface - basic integration test of main """
     instance = mock_module.return_value
-    # if compare_dicts == false. no change
-    instance.params = { 'name': 'swp1' }
+    # if config_changed == false. no change
+    instance.params = {'name': 'swp1'}
     mock_compare.return_value = False
     cl_int.main()
     instance.exit_json.assert_called_with(
         msg='interface swp1 config not changed',
         changed=False)
-    # if compare_dicts == true, change
+    # if config_changed == true, change
     mock_compare.return_value = True
     cl_int.main()
     instance.exit_json.assert_called_with(
@@ -142,3 +142,54 @@ def test_build_generic_attr(mock_module):
                       'mtu': '1000'}})
 
 
+@mock.patch('dev_modules.cl_interface.AnsibleModule')
+def test_config_changed(mock_module):
+    """
+    cl_interface - test config change
+    """
+    # no change
+    mock_module.custom_desired_config = {
+        'name': 'swp1',
+        'addr_method': None,
+        'config':
+        {'address': '10.1.1.1/24',
+         'mtu': '9000'}
+    }
+    mock_module.custom_current_config = {
+        'name': 'swp1',
+        'addr_method': None,
+        'config':
+        {'address': '10.1.1.1/24',
+         'mtu': '9000'}
+    }
+    assert_equals(cl_int.config_changed(mock_module), False)
+    # change
+    mock_module.custom_desired_config = {
+        'name': 'swp1',
+        'addr_method': None,
+        'config':
+        {'address': '10.1.1.2/24',
+         'mtu': '9000'}
+    }
+    mock_module.custom_current_config = {
+        'name': 'swp1',
+        'addr_method': None,
+        'config':
+        {'address': '10.1.1.1/24',
+         'mtu': '9000'}
+    }
+    assert_equals(cl_int.config_changed(mock_module), True)
+    # config hash has no changed, but  addr_method has changed
+    mock_module.custom_desired_config = {
+        'name': 'swp1',
+        'addr_method': 'dhcp',
+        'config':
+        {'mtu': '9000'}
+    }
+    mock_module.custom_current_config = {
+        'name': 'swp1',
+        'addr_method': None,
+        'config':
+        {'mtu': '9000'}
+    }
+    assert_equals(cl_int.config_changed(mock_module), True)

@@ -142,6 +142,9 @@ def current_iface_config(module):
         run_cmd(module, _cmd, fail_msg))[0]
 
 def build_address(module):
+    # if addr_method == 'dhcp', dont add IP address
+    if module.params.get('addr_method') == 'dhcp':
+        return
     _ipv4 = module.params.get('ipv4')
     _ipv6 = module.params.get('ipv6')
     _addresslist = []
@@ -174,6 +177,9 @@ def build_generic_attr(module, _attr):
         module.custom_desired_config['config'][_attr] = str(_value)
 
 def build_desired_iface_config(module):
+    """
+    take parameters defined and build ifupdown2 compatible hash
+    """
     module.custom_desired_config = {
         'addr_family': None,
         'auto': True,
@@ -187,8 +193,24 @@ def build_desired_iface_config(module):
     for _attr in ['mtu', 'alias']:
         build_generic_attr(module, _attr)
 
-def compare_dicts(module):
-    pass
+def config_dict_changed(module):
+    """
+    return true if 'config' dict in hash is different
+    between desired and current config
+    """
+    current_config = module.custom_current_config['config']
+    desired_config = module.custom_desired_config['config']
+    return current_config != desired_config
+
+def config_changed(module):
+    """
+    returns true if config has changed
+    """
+    if config_dict_changed(module):
+        return True
+    # check if addr_method is changed
+    return module.custom_desired_config.get('addr_method') != \
+        module.custom_current_config.get('addr_method')
 
 def replace_config(module):
     pass
@@ -221,7 +243,7 @@ def main():
     _msg = "interface %s config not changed" % (ifacename)
     current_iface_config(module)
     build_desired_iface_config(module)
-    if compare_dicts(module):
+    if config_changed(module):
         replace_config(module)
         _msg = "interface %s config updated" % (ifacename)
         _changed = True
