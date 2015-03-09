@@ -219,7 +219,7 @@ def replace_config(module):
     temp = tempfile.NamedTemporaryFile()
     desired_config = module.custom_desired_config
     # by default it will be something like /etc/network/interfaces.d/swp1
-    final_location = module.params.get('interfaces_dir') + '/' + \
+    final_location = module.params.get('location') + '/' + \
         module.params.get('name')
     # make sure to put hash in array or else ifquery will fail
     # write to temp file
@@ -248,7 +248,7 @@ def main():
             virtual_mac=dict(type='str'),
             vids=dict(type='list'),
             pvid=dict(type='int'),
-            interfaces_dir=dict(type='str',
+            location=dict(type='str',
                                 default='/etc/network/interfaces.d')
         ),
         required_together=[

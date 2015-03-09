@@ -32,7 +32,7 @@ def test_module_args(mock_module,
             'virtual_ip': {'type': 'str'},
             'vids': {'type': 'list'},
             'pvid': {'type': 'int'},
-            'interfaces_dir': {'type': 'str',
+            'location': {'type': 'str',
                                'default': '/etc/network/interfaces.d'},
             'link_speed': {'type': 'int'}}
     )
