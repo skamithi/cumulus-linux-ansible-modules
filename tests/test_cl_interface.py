@@ -70,3 +70,14 @@ def test_build_vids(mock_module):
     cl_int.build_vids(mock_module)
     assert_equals(mock_module.custom_desired_config,
                   {'config': {'bridge-vids': '1 10-40'}})
+
+@mock.patch('dev_modules.cl_interface.AnsibleModule')
+def test_build_pvid(mock_module):
+    """
+    cl_interface - test building desired pvid
+    """
+    mock_module.custom_desired_config = {'config': {}}
+    mock_module.params = {'pvid': 2}
+    cl_int.build_pvid(mock_module)
+    assert_equals(mock_module.custom_desired_config,
+                  {'config': {'bridge-pvid': '2'}})

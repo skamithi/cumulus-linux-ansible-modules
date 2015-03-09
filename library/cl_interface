@@ -159,8 +159,8 @@ def build_vids(module):
 
 def build_pvid(module):
     _pvid = module.params.get('pvid')
-    if _pvid is not None and len(_pvid) == 1:
-            module.custom_desired_config['config']['bridge-pvid'] = _pvid
+    if _pvid is not None:
+            module.custom_desired_config['config']['bridge-pvid'] = str(_pvid)
 
 def build_speed(module):
     pass
