@@ -34,7 +34,7 @@ def test_module_args(mock_module,
             'pvid': {'type': 'int'},
             'interfaces_dir': {'type': 'str',
                                'default': '/etc/network/interfaces.d'},
-            'speed': {'type': 'int'}}
+            'link_speed': {'type': 'int'}}
     )
 
 @mock.patch('dev_modules.cl_interface.replace_config')
@@ -118,7 +118,7 @@ def test_build_speed(mock_module):
     cl_interface - test building speed config
     """
     mock_module.custom_desired_config = {'config': {}}
-    mock_module.params = {'speed': 1000}
+    mock_module.params = {'link_speed': 1000}
     cl_int.build_speed(mock_module)
     assert_equals(mock_module.custom_desired_config,
                   {'config': {

@@ -38,7 +38,7 @@ use X:X:X::X/YYY syntax
         description:
             - can be loopback for loopback interfaces or dhcp for dhcp \
 interfaces.
-    speed:
+    link_speed:
         description:
             - set speed of the swp(front panel) or \
 management(eth0) interface. speed is in MB
@@ -58,12 +58,6 @@ management(eth0) interface. speed is in MB
     pvid:
         description:
             - in vlan aware mode, defines vlan that is the untagged vlan
-    state:
-        description:
-            - set to 'noconfig' to remove all config from an interface. \
-Provides the ability to reset the configuration. See the examples section for more details.
-        choices: ['noconfig', 'hasconfig']
-        default: 'hasconfig'
 requirements: [ Alternate Debian network interface manager - \
 ifupdown2 @ github.com/CumulusNetworks/ifupdown2 ]
 notes:
@@ -92,7 +86,7 @@ cl_interface:
     ipv6: {{ item.value.ipv6|default(none) }}
     alias: {{ item.value.alias|default(none) }}
     addr_method: {{ item.value.addr_method|default(none) }}
-    speed: {{ item.value.speed|default(none) }}
+    link_speed: {{ item.value.link_speed|default(none) }}
     mtu: {{ item.value.mtu|default(none) }}
     vids: {{ item.value.vids|default(none) }}
     virtual_ip: {{ item.value.virtual_ip|default(none) }}
@@ -109,7 +103,7 @@ cl_interfaces:
         alias: 'l2 trunk connection'
         vids: [1, 50]
     swp3:
-        speed: 1000
+        link_speed: 1000
         alias: 'connects to 1G link'
 ##########
 #   br0 interface is configured by cl_bridge
@@ -166,7 +160,7 @@ def build_pvid(module):
         module.custom_desired_config['config']['bridge-pvid'] = str(_pvid)
 
 def build_speed(module):
-    _speed = module.params.get('speed')
+    _speed = module.params.get('link_speed')
     if _speed is not None:
         module.custom_desired_config['config']['link-speed'] = str(_speed)
         module.custom_desired_config['config']['link-duplex'] = 'full'
@@ -186,6 +180,9 @@ def build_desired_iface_config(module):
         'config': {},
         'name': module.params('name')
     }
+    # if
+    if module.params.get('addr_method'):
+        module.custom_desired_config['addr_family'] = 'inet'
     build_address(module)
     build_vids(module)
     build_pvid(module)
@@ -213,7 +210,22 @@ def config_changed(module):
         module.custom_current_config.get('addr_method')
 
 def replace_config(module):
-    pass
+    temp = tempfile.NamedTemporaryFile()
+    desired_config = module.custom_desired_config
+    # by default it will be something like /etc/network/interfaces.d/swp1
+    final_location = module.params.get('interfaces_dir') + '/' + \
+        module.params.get('name')
+    # make sure to put hash in array or else ifquery will fail
+    # write to temp file
+    try:
+        temp.write(json.dumps([desired_config]))
+        fail_msg = "unable to execute ifquery"
+        _cmd = "/sbin/ifquery -a -i %s -t json > %s " % \
+            (temp.name, final_location)
+        run_cmd(module, _cmd, fail_msg)
+    finally:
+        temp.close()
+
 
 def main():
     module = AnsibleModule(
@@ -224,7 +236,7 @@ def main():
             alias=dict(type='str'),
             addr_method=dict(type='str',
                              choices=['loopback', 'dhcp']),
-            speed=dict(type='int'),
+            link_speed=dict(type='int'),
             mtu=dict(type='int'),
             virtual_ip=dict(type='str'),
             virtual_mac=dict(type='str'),
@@ -253,6 +265,7 @@ def main():
 # import module snippets
 from ansible.module_utils.basic import *
 import json
+import tempfile
 
 if __name__ == '__main__':
     main()
