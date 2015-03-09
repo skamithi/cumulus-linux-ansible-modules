@@ -135,11 +135,11 @@ def run_cmd(module, exec_path, failure_msg):
         module.fail_json(msg=failure_msg)
     return out
 
-def build_current_iface_config(module):
+def current_iface_config(module):
     fail_msg = "unable to execute ifquery"
     _cmd = "/sbin/ifquery -o json %s" % (module.params.get('name'))
-    module.custom_curr_confg = json.loads(
-        run_cmd(module, _cmd, fail_msg)[0])
+    module.custom_curr_config = json.loads(
+        run_cmd(module, _cmd, fail_msg))[0]
 
 def build_desired_iface_config(module):
     pass
@@ -167,7 +167,7 @@ def main():
         ]
     )
 
-    build_current_iface_config(module)
+    current_iface_config(module)
     build_desired_iface_config(module)
 
 

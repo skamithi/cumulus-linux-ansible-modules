@@ -5,7 +5,7 @@ from asserts import assert_equals
 from mock import MagicMock
 
 @mock.patch('dev_modules.cl_interface.build_desired_iface_config')
-@mock.patch('dev_modules.cl_interface.build_current_iface_config')
+@mock.patch('dev_modules.cl_interface.current_iface_config')
 @mock.patch('dev_modules.cl_interface.AnsibleModule')
 def test_module_args(mock_module,
                      mock_curr_config,
@@ -33,3 +33,17 @@ def test_module_args(mock_module,
             'pvid': { 'type': 'int' },
             'speed': {'type': 'str'}}
     )
+
+
+@mock.patch('dev_modules.cl_interface.AnsibleModule')
+def test_current_iface_config(mock_module):
+    mock_module.run_command = MagicMock()
+    # mock AnsibleModule.run_command
+    mock_module.run_command.return_value = (1, open('tests/ifquery.json').read(), None)
+    cl_int.current_iface_config(mock_module)
+    current_config = mock_module.custom_curr_config.get('config')
+    assert_equals(current_config.get('address'), '10.152.5.10/24')
+
+
+
+
