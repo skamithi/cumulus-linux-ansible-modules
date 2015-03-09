@@ -153,10 +153,14 @@ def build_address(module):
     module.custom_desired_config['config']['address'] = ' '.join(_addresslist)
 
 def build_vids(module):
-    pass
+    _vids = module.params.get('vids')
+    if _vids is not None and len(_vids) > 0:
+        module.custom_desired_config['config']['bridge-vids'] = ' '.join(_vids)
 
 def build_pvid(module):
-    pass
+    _pvid = module.params.get('pvid')
+    if _pvid is not None and len(_pvid) == 1:
+            module.custom_desired_config['config']['bridge-pvid'] = _pvid
 
 def build_speed(module):
     pass
