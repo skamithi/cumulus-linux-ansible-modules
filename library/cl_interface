@@ -187,6 +187,11 @@ def build_desired_iface_config(module):
     for _attr in ['mtu', 'alias']:
         build_generic_attr(module, _attr)
 
+def compare_dicts(module):
+    pass
+
+def replace_config(module):
+    pass
 
 def main():
     module = AnsibleModule(
@@ -211,9 +216,17 @@ def main():
         ]
     )
 
+    ifacename = module.params.get('name')
+    _changed = False
+    _msg = "interface %s config not changed" % (ifacename)
     current_iface_config(module)
     build_desired_iface_config(module)
+    if compare_dicts(module):
+        replace_config(module)
+        _msg = "interface %s config updated" % (ifacename)
+        _changed = True
 
+    module.exit_json(changed=_changed, msg=_msg)
 
 # import module snippets
 from ansible.module_utils.basic import *

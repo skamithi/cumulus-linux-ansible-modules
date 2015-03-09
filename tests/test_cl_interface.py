@@ -4,12 +4,17 @@ import dev_modules.cl_interface as cl_int
 from asserts import assert_equals
 from mock import MagicMock
 
+
+@mock.patch('dev_modules.cl_interface.replace_config')
+@mock.patch('dev_modules.cl_interface.compare_dicts')
 @mock.patch('dev_modules.cl_interface.build_desired_iface_config')
 @mock.patch('dev_modules.cl_interface.current_iface_config')
 @mock.patch('dev_modules.cl_interface.AnsibleModule')
 def test_module_args(mock_module,
                      mock_curr_config,
-                     mock_desired_config):
+                     mock_desired_config,
+                     mock_compare,
+                     mock_replace):
     """ cl_interface - test module args """
     cl_int.main()
     mock_module.assert_called_with(
@@ -33,6 +38,32 @@ def test_module_args(mock_module,
             'pvid': {'type': 'int'},
             'speed': {'type': 'int'}}
     )
+
+@mock.patch('dev_modules.cl_interface.replace_config')
+@mock.patch('dev_modules.cl_interface.compare_dicts')
+@mock.patch('dev_modules.cl_interface.build_desired_iface_config')
+@mock.patch('dev_modules.cl_interface.current_iface_config')
+@mock.patch('dev_modules.cl_interface.AnsibleModule')
+def test_main_integration_test(mock_module,
+                     mock_curr_config,
+                     mock_desired_config,
+                     mock_compare,
+                     mock_replace):
+    """ cl_interface - basic integration test of main """
+    instance = mock_module.return_value
+    # if compare_dicts == false. no change
+    instance.params = { 'name': 'swp1' }
+    mock_compare.return_value = False
+    cl_int.main()
+    instance.exit_json.assert_called_with(
+        msg='interface swp1 config not changed',
+        changed=False)
+    # if compare_dicts == true, change
+    mock_compare.return_value = True
+    cl_int.main()
+    instance.exit_json.assert_called_with(
+        msg='interface swp1 config updated',
+        changed=True)
 
 
 @mock.patch('dev_modules.cl_interface.AnsibleModule')
