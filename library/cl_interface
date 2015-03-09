@@ -230,8 +230,8 @@ def main():
             virtual_mac=dict(type='str'),
             vids=dict(type='list'),
             pvid=dict(type='int'),
-            state=dict(type='str', choices=['noconfig', 'hasconfig'],
-                       default='hasconfig')
+            interfaces_dir=dict(type='str',
+                                default='/etc/network/interfaces.d')
         ),
         required_together=[
             ['virtual_ip', 'virtual_mac']

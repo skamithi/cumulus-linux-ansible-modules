@@ -26,16 +26,14 @@ def test_module_args(mock_module,
             'name': {'required': True, 'type': 'str'},
             'mtu': {'type': 'int'},
             'alias': {'type': 'str'},
-            'state': {'default': 'hasconfig',
-                      'type': 'str',
-                      'choices': ['noconfig', 'hasconfig']
-                      },
             'ipv4': {'type': 'list'},
             'ipv6': {'type': 'list'},
             'virtual_mac': {'type': 'str'},
             'virtual_ip': {'type': 'str'},
             'vids': {'type': 'list'},
             'pvid': {'type': 'int'},
+            'interfaces_dir': {'type': 'str',
+                               'default': '/etc/network/interfaces.d'},
             'speed': {'type': 'int'}}
     )
 
