@@ -23,7 +23,7 @@ options:
         description:
             - name of the interface
         required: true
-    alias:
+    alias_name:
         description:
             - add a port description
     ipv4:
@@ -77,14 +77,14 @@ cl_interface: name=swp2 addr_family=dhcp
 cl_interface: name=bridge.100 ipv4=10.1.1.1/24
 
 # configure subinterface with an IP
-cl_interface: name=bond0.100  alias='clag peer link' ipv4=10.1.1.1/24
+cl_interface: name=bond0.100  alias_name='clag peer link' ipv4=10.1.1.1/24
 
 # configure ports using variable data structure
 cl_interface:
     name: {{ item.key }}
     ipv4:  {{ item.value.ipv4|default(none) }}
     ipv6: {{ item.value.ipv6|default(none) }}
-    alias: {{ item.value.alias|default(none) }}
+    alias_name: {{ item.value.alias|default(none) }}
     addr_method: {{ item.value.addr_method|default(none) }}
     link_speed: {{ item.value.link_speed|default(none) }}
     mtu: {{ item.value.mtu|default(none) }}
@@ -97,19 +97,19 @@ with_dict=cl_interfaces
 # ============
 cl_interfaces:
     swp1:
-        alias: 'uplink to isp'
+        alias_name: 'uplink to isp'
         ipv4: '10.1.1.1/24'
     swp2:
-        alias: 'l2 trunk connection'
+        alias_name: 'l2 trunk connection'
         vids: [1, 50]
     swp3:
         link_speed: 1000
-        alias: 'connects to 1G link'
+        alias_name: 'connects to 1G link'
 ##########
 #   br0 interface is configured by cl_bridge
 ##########
     br0.100:
-        alias: 'SVI for vlan 100'
+        alias_name: 'SVI for vlan 100'
         ipv4: '10.2.2.2/24'
         ipv6: '10:2:2::2/127'
         virtual_ip: '10.2.2.254'
@@ -170,6 +170,11 @@ def build_generic_attr(module, _attr):
     if _value is not None:
         module.custom_desired_config['config'][_attr] = str(_value)
 
+def build_alias_name(module):
+    alias_name = module.params.get('alias_name')
+    if alias_name is not None:
+        module.custom_desired_config['config']['alias'] = alias_name
+
 def build_desired_iface_config(module):
     """
     take parameters defined and build ifupdown2 compatible hash
@@ -187,7 +192,8 @@ def build_desired_iface_config(module):
     build_vids(module)
     build_pvid(module)
     build_speed(module)
-    for _attr in ['mtu', 'alias']:
+    build_alias_name(module)
+    for _attr in ['mtu']:
         build_generic_attr(module, _attr)
 
 def config_dict_changed(module):
@@ -233,7 +239,7 @@ def main():
             name=dict(required=True, type='str'),
             ipv4=dict(type='list'),
             ipv6=dict(type='list'),
-            alias=dict(type='str'),
+            alias_name=dict(type='str'),
             addr_method=dict(type='str',
                              choices=['loopback', 'dhcp']),
             link_speed=dict(type='int'),
