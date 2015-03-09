@@ -44,6 +44,13 @@ def test_current_iface_config(mock_module):
     current_config = mock_module.custom_curr_config.get('config')
     assert_equals(current_config.get('address'), '10.152.5.10/24')
 
+@mock.patch('dev_modules.cl_interface.AnsibleModule')
+def test_build_address(mock_module):
+    mock_module.custom_desired_config = {'config': {}}
+    mock_module.params = {'ipv6': ['1.1.1.1/24']}
+    cl_int.build_address(mock_module)
+    assert_equals(mock_module.custom_desired_config,
+                  {'config': {'address': '1.1.1.1/24'}})
 
 
 

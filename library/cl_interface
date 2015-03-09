@@ -141,8 +141,42 @@ def current_iface_config(module):
     module.custom_curr_config = json.loads(
         run_cmd(module, _cmd, fail_msg))[0]
 
-def build_desired_iface_config(module):
+def build_address(module):
+    _ipv4 = module.params.get('ipv4')
+    _ipv6 = module.params.get('ipv6')
+    _addresslist = []
+    if _ipv4 is not None and len(_ipv4) > 0:
+        _addresslist += _ipv4
+
+    if _ipv6 is not None and len(_ipv6) > 0:
+        _addresslist += _ipv6
+    module.custom_desired_config['config']['address'] = ' '.join(_addresslist)
+
+def build_vids(module):
     pass
+
+def build_pvid(module):
+    pass
+
+def build_speed(module):
+    pass
+
+def build_generic_attr(module, _attr):
+    pass
+
+def build_desired_iface_config(module):
+    module.custom_desired_config = {
+        'addr_family': null,
+        'config': {},
+        'name': module.params('name')
+    }
+    build_address(module)
+    build_vids(module)
+    build_pvid(module)
+    build_speed(module)
+    for _attr in ['mtu', 'alias']:
+        build_generic_attr(module, _attr)
+
 
 def main():
     module = AnsibleModule(
