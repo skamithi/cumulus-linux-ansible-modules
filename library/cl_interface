@@ -123,9 +123,10 @@ cl_interfaces:
 # exec_path - path to file to execute, with all its arguments.
 # E.g "/sbin/ip -o link show"
 # failure_msg - what message to print on failure
-def run_cmd(module, exec_path, failure_msg):
+def run_cmd(module, exec_path):
     (_rc, out, _err) = module.run_command(exec_path)
-    if _rc == 0:
+    if _rc == 1:
+        failure_msg = "Failed; %s Error: %s" % (exec_path, _err)
         module.fail_json(msg=failure_msg)
     return out
 
@@ -137,10 +138,9 @@ def current_iface_config(module):
     _int_dir = module.params.get('location')
     module.custom_current_config = {}
     if os.path.exists(_int_dir + '/' + _ifacename):
-        fail_msg = "unable to execute ifquery"
         _cmd = "/sbin/ifquery -o json %s" % (module.params.get('name'))
         module.custom_current_config = json.loads(
-            run_cmd(module, _cmd, fail_msg))[0]
+            run_cmd(module, _cmd))[0]
 
 def build_address(module):
     # if addr_method == 'dhcp', dont add IP address
@@ -232,10 +232,9 @@ def replace_config(module):
     # write to temp file
     try:
         temp.write(json.dumps([desired_config]))
-        fail_msg = "unable to execute ifquery"
         _cmd = "/sbin/ifquery -a -i %s -t json > %s " % \
             (temp.name, final_location)
-        run_cmd(module, _cmd, fail_msg)
+        run_cmd(module, _cmd)
     finally:
         temp.close()
 
