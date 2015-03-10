@@ -95,6 +95,18 @@ def test_build_address(mock_module):
     assert_equals(mock_module.custom_desired_config,
                   {'config': {'address': '1.1.1.1/24'}})
 
+@mock.patch('dev_modules.cl_interface.AnsibleModule')
+def test_build_addr_method(mock_module):
+    """
+    cl_interface - test building desired addr_method
+    """
+    mock_module.custom_desired_config = {'config': {}}
+    mock_module.params = {'addr_method': 'loopback'}
+    cl_int.build_addr_method(mock_module)
+    assert_equals(mock_module.custom_desired_config.get('addr_family'),
+                  'inet')
+    assert_equals(mock_module.custom_desired_config.get('addr_method'),
+                  'loopback')
 
 @mock.patch('dev_modules.cl_interface.AnsibleModule')
 def test_build_vids(mock_module):

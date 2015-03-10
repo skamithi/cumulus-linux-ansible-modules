@@ -183,6 +183,12 @@ def build_alias_name(module):
     if alias_name is not None:
         module.custom_desired_config['config']['alias'] = alias_name
 
+def build_addr_method(module):
+    _addr_method = module.params.get('addr_method')
+    if _addr_method:
+        module.custom_desired_config['addr_family'] = 'inet'
+        module.custom_desired_config['addr_method'] = _addr_method
+
 def build_desired_iface_config(module):
     """
     take parameters defined and build ifupdown2 compatible hash
@@ -194,8 +200,7 @@ def build_desired_iface_config(module):
         'name': module.params.get('name')
     }
 
-    if module.params.get('addr_method'):
-        module.custom_desired_config['addr_family'] = 'inet'
+    build_addr_method(module)
     build_address(module)
     build_vids(module)
     build_pvid(module)
