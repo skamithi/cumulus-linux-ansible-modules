@@ -118,6 +118,14 @@ def test_vrr(mock_module):
                       'address-virtual':
                       '00:00:5e:00:01:01 192.168.1.1/24'}})
 
+    # if virtual_ip/mac is blank
+    mock_module.custom_desired_config = {'config': {}}
+    mock_module.params = {}
+    cl_int.build_vrr(mock_module)
+    assert_equals(mock_module.custom_desired_config,
+                  {'config': {}})
+
+
 @mock.patch('dev_modules.cl_interface.AnsibleModule')
 def test_build_address(mock_module):
     """
