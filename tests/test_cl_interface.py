@@ -145,6 +145,11 @@ def test_build_generic_attr(mock_module):
                   {'config': {
                       'mtu': '1000'}})
 
+@mock.patch('dev_modules.cl_interface.AnsibleModule')
+def test_config_dict_changed(mock_module):
+    mock_module.custom_desired_config = {'config': { 'address': '10.1.1.1/24'}}
+    mock_module.custom_current_config = {}
+    assert_equals(cl_int.config_dict_changed(mock_module), True)
 
 @mock.patch('dev_modules.cl_interface.AnsibleModule')
 def test_config_changed(mock_module):
@@ -197,3 +202,4 @@ def test_config_changed(mock_module):
         {'mtu': '9000'}
     }
     assert_equals(cl_int.config_changed(mock_module), True)
+

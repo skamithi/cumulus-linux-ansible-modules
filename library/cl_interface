@@ -208,8 +208,8 @@ def config_dict_changed(module):
     return true if 'config' dict in hash is different
     between desired and current config
     """
-    current_config = module.custom_current_config['config']
-    desired_config = module.custom_desired_config['config']
+    current_config = module.custom_current_config.get('config')
+    desired_config = module.custom_desired_config.get('config')
     return current_config != desired_config
 
 def config_changed(module):
