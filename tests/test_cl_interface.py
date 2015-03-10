@@ -22,7 +22,7 @@ def test_module_args(mock_module,
     cl_int.main()
     mock_module.assert_called_with(
         required_together=[['virtual_ip', 'virtual_mac'],
-                           ['clagd_enable', 'clagd_priority', 'clagd_peer_ip','clagd_sys_mac']],
+                           ['clagd_enable', 'clagd_priority', 'clagd_peer_ip', 'clagd_sys_mac']],
         argument_spec={
             'addr_method': {
                 'type': 'str',
@@ -89,13 +89,13 @@ def test_current_iface_config(mock_module, mock_exists):
     """
     cl_interface - test getting current iface config
     """
-    mock_module.params = { 'name': 'swp1', 'location': '/etc/network/ansible' }
+    mock_module.params = {'name': 'swp1', 'location': '/etc/network/ansible'}
     mock_exists.return_value = True
     mock_module.run_command = MagicMock()
     # mock AnsibleModule.run_command
     json_output = open('tests/ifquery.json').read()
     mock_module.run_command.return_value = \
-        (0, json_output , None)
+        (0, json_output, None)
     mock_module.from_json.return_value = json.loads(json_output)
     cl_int.current_iface_config(mock_module)
     current_config = mock_module.custom_current_config.get('config')
@@ -109,7 +109,7 @@ def test_vrr(mock_module):
     """
     cl_interface: - test build vrr config
     """
-    mock_module.custom_desired_config = { 'config': {}}
+    mock_module.custom_desired_config = {'config': {}}
     mock_module.params = {'virtual_ip': '192.168.1.1/24',
                            'virtual_mac': '00:00:5e:00:01:01'}
     cl_int.build_vrr(mock_module)
@@ -202,7 +202,7 @@ def test_build_generic_attr(mock_module):
 
 @mock.patch('dev_modules.cl_interface.AnsibleModule')
 def test_config_dict_changed(mock_module):
-    mock_module.custom_desired_config = {'config': { 'address': '10.1.1.1/24'}}
+    mock_module.custom_desired_config = {'config': {'address': '10.1.1.1/24'}}
     mock_module.custom_current_config = {}
     assert_equals(cl_int.config_dict_changed(mock_module), True)
 
