@@ -83,6 +83,7 @@ def test_current_iface_config(mock_module, mock_exists):
     current_config = mock_module.custom_current_config.get('config')
     assert_equals(current_config.get('address'), '10.152.5.10/24')
     mock_exists.assert_called_with('/etc/network/ansible/swp1')
+    mock_module.run_command.assert_called_with('/sbin/ifquery -o json swp1')
 
 @mock.patch('dev_modules.cl_interface.AnsibleModule')
 def test_build_address(mock_module):
