@@ -240,7 +240,7 @@ def replace_config(module):
         temp.write(json.dumps([desired_config]))
         # need to seek to 0 so that data is written to tempfile.
         temp.seek(0)
-        _cmd = "/sbin/ifquery -a -i %s -t json > %s " % \
+        _cmd = "/sbin/ifquery -i %s -t json > %s " % \
             (temp.name, final_location)
         run_cmd(module, _cmd)
     finally:
