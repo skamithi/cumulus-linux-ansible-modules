@@ -280,8 +280,11 @@ def main():
         ]
     )
 
-    if not os.path.exists(module.params.get('location')):
-        module.fail_json(msg="%s does not exist. Please create it")
+    _location = module.params.get('location')
+    if not os.path.exists(_location):
+        _msg = "%s does not exist." % (_location)
+        module.fail_json(msg=_msg)
+        return # for testing purposes only
 
     ifacename = module.params.get('name')
     _changed = False

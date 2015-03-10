@@ -67,6 +67,11 @@ def test_main_integration_test(mock_module,
     instance.exit_json.assert_called_with(
         msg='interface swp1 config updated',
         changed=True)
+    # if location does not exist
+    instance.params['location'] = '/etc/network/ansible'
+    mock_exists.return_value = False
+    cl_int.main()
+    instance.fail_json.assert_called_with(msg='/etc/network/ansible does not exist.')
 
 @mock.patch('dev_modules.cl_interface.os.path.exists')
 @mock.patch('dev_modules.cl_interface.AnsibleModule')
