@@ -193,6 +193,18 @@ def build_addr_method(module):
         module.custom_desired_config['addr_family'] = 'inet'
         module.custom_desired_config['addr_method'] = _addr_method
 
+def build_vrr(module):
+    _virtual_ip = module.params.get('virtual_ip')
+    _virtual_mac = module.params.get('virtual_mac')
+    vrr_config = []
+    if _virtual_ip:
+        vrr_config.append(_virtual_mac)
+        vrr_config.append(_virtual_ip)
+    module.custom_desired_config.get('config')['address-virtual'] = \
+        ' '.join(vrr_config)
+
+
+
 def build_desired_iface_config(module):
     """
     take parameters defined and build ifupdown2 compatible hash
@@ -210,7 +222,11 @@ def build_desired_iface_config(module):
     build_pvid(module)
     build_speed(module)
     build_alias_name(module)
-    for _attr in ['mtu']:
+    build_vrr(module)
+    for _attr in ['mtu', 'mstpctl_portnetwork',
+                  'mstpctl_bpduguard', 'clagd_enable',
+                  'clagd_priority', 'clagd_peer_ip',
+                  'clagd_sys_mac']:
         build_generic_attr(module, _attr)
 
 def config_dict_changed(module):
@@ -272,11 +288,19 @@ def main():
             virtual_mac=dict(type='str'),
             vids=dict(type='list'),
             pvid=dict(type='int'),
+            mstpctl_portnetwork=dict(type='bool', choices=BOOLEANS),
+            mstpctl_bpduguard=dict(type='bool', choices=BOOLEANS),
+            clagd_enable=dict(type='bool', choices=BOOLEANS),
+            clagd_priority=dict(type='int'),
+            clagd_peer_ip=dict(type='str'),
+            clagd_sys_mac=dict(type='str'),
             location=dict(type='str',
                                 default='/etc/network/interfaces.d')
         ),
         required_together=[
-            ['virtual_ip', 'virtual_mac']
+            ['virtual_ip', 'virtual_mac'],
+            ['clagd_enable', 'clagd_priority',
+             'clagd_peer_ip', 'clagd_sys_mac']
         ]
     )
 

@@ -21,7 +21,8 @@ def test_module_args(mock_module,
     mock_exists.return_value = True
     cl_int.main()
     mock_module.assert_called_with(
-        required_together=[['virtual_ip', 'virtual_mac']],
+        required_together=[['virtual_ip', 'virtual_mac'],
+                           ['clagd_enable', 'clagd_priority', 'clagd_peer_ip','clagd_sys_mac']],
         argument_spec={
             'addr_method': {
                 'type': 'str',
@@ -35,6 +36,15 @@ def test_module_args(mock_module,
             'virtual_ip': {'type': 'str'},
             'vids': {'type': 'list'},
             'pvid': {'type': 'int'},
+            'mstpctl_portnetwork': {'type': 'bool', 'choices': [
+                'yes', 'on', '1', 'true', 1, 'no', 'off', '0', 'false', 0]},
+            'mstpctl_bpduguard': {'type': 'bool', 'choices': [
+                'yes', 'on', '1', 'true', 1, 'no', 'off', '0', 'false', 0]},
+            'clagd_enable': {'type': 'bool', 'choices': [
+                'yes', 'on', '1', 'true', 1, 'no', 'off', '0', 'false', 0]},
+            'clagd_peer_ip': {'type': 'str'},
+            'clagd_sys_mac': {'type': 'str'},
+            'clagd_priority': {'type': 'int'},
             'location': {'type': 'str',
                                'default': '/etc/network/interfaces.d'},
             'speed': {'type': 'int'}}
@@ -92,6 +102,21 @@ def test_current_iface_config(mock_module, mock_exists):
     assert_equals(current_config.get('address'), '10.152.5.10/24')
     mock_exists.assert_called_with('/etc/network/ansible/swp1')
     mock_module.run_command.assert_called_with('/sbin/ifquery -o json swp1')
+
+
+@mock.patch('dev_modules.cl_interface.AnsibleModule')
+def test_vrr(mock_module):
+    """
+    cl_interface: - test build vrr config
+    """
+    mock_module.custom_desired_config = { 'config': {}}
+    mock_module.params = {'virtual_ip': '192.168.1.1/24',
+                           'virtual_mac': '00:00:5e:00:01:01'}
+    cl_int.build_vrr(mock_module)
+    assert_equals(mock_module.custom_desired_config,
+                  {'config': {
+                      'address-virtual':
+                      '00:00:5e:00:01:01 192.168.1.1/24'}})
 
 @mock.patch('dev_modules.cl_interface.AnsibleModule')
 def test_build_address(mock_module):
