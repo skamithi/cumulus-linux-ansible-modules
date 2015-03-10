@@ -256,6 +256,8 @@ def main():
         ]
     )
 
+    if os.path.exists(module.params.get('location')):
+        module.fail_json(msg="%s does not exist. Please create it")
     ifacename = module.params.get('name')
     _changed = False
     _msg = "interface %s config not changed" % (ifacename)
@@ -272,6 +274,7 @@ def main():
 from ansible.module_utils.basic import *
 import json
 import tempfile
+import os
 
 if __name__ == '__main__':
     main()
