@@ -205,8 +205,8 @@ def build_vrr(module):
     if _virtual_ip:
         vrr_config.append(_virtual_mac)
         vrr_config.append(_virtual_ip)
-    module.custom_desired_config.get('config')['address-virtual'] = \
-        ' '.join(vrr_config)
+        module.custom_desired_config.get('config')['address-virtual'] = \
+            ' '.join(vrr_config)
 
 
 
