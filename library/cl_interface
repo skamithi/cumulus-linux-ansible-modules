@@ -128,7 +128,8 @@ def run_cmd(module, exec_path):
     if _rc == 1:
         failure_msg = "Failed; %s Error: %s" % (exec_path, _err)
         module.fail_json(msg=failure_msg)
-    return out
+    else:
+        return out
 
 def current_iface_config(module):
     # due to a bug in ifquery, have to check for presence of interface file
