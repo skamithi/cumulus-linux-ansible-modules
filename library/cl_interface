@@ -55,6 +55,28 @@ management(eth0) interface. speed is in MB
     vids:
         description:
             - in vlan aware mode, lists vlans defined under the interface
+    mstpctl_bpduguard:
+        description:
+            - Enables BPDU Guard on a port in vlan-aware mode
+    mstpctl_portnetwork:
+        description:
+            - Enables bridge assurance in vlan-aware mode
+    clagd_enable:
+        description:
+            - Enables the clagd daemon. This command should only \
+be applied to the clag peerlink interface
+    clagd_priority:
+        description:
+            - Integer that changes the role the switch has in the clag domain \
+The lower priority switch will assume the primary role. The number can be \
+0 and 65535
+    clagd_peer_ip:
+        description:
+            - IP address of the directly connected peer switch interface
+    clagd_sys_mac:
+        description:
+            - Clagd system mac address. Recommended to use the range starting \
+with 44:38:39:ff. Needs to be the same between 2 Clag switches
     pvid:
         description:
             - in vlan aware mode, defines vlan that is the untagged vlan
@@ -69,15 +91,19 @@ EXAMPLES = '''
 # Options ['virtual_mac', 'virtual_ip'] are required together
 # configure a front panel port with an IP
 cl_interface: name=swp1  ipv4=10.1.1.1/24
+notify: reload networking
 
 # configure front panel to use DHCP
 cl_interface: name=swp2 addr_family=dhcp
+notify: reload networking
 
 # configure a SVI for vlan 100 interface with an IP
 cl_interface: name=bridge.100 ipv4=10.1.1.1/24
+notify: reload networking
 
 # configure subinterface with an IP
 cl_interface: name=bond0.100  alias_name='my bond' ipv4=10.1.1.1/24
+notify: reload networking
 
 # configure ports using variable data structure
 cl_interface:
@@ -87,11 +113,18 @@ cl_interface:
     alias_name: {{ item.value.alias_name|default(none) }}
     addr_method: {{ item.value.addr_method|default(none) }}
     speed: {{ item.value.link_speed|default(none) }}
-    mtu: {{ item.value.mtu|default(none) }}
+    mtu: {{ item.value.mtu|default(none) }}a
+    clagd_enable: {{ item.value.clagd_enable|default(none) }}
+    clagd_peer_ip: {{ item.value.clagd_peer_ip|default(none) }}
+    clagd_sys_mac: {{ item.value.clagd_sys_mac|default(none) }}
+    clagd_priority: {{ item.value.clagd_priority|default(none) }}
     vids: {{ item.value.vids|default(none) }}
     virtual_ip: {{ item.value.virtual_ip|default(none) }}
     virtual_mac: {{ item.value.virtual_mac|default(none) }}
+    mstpctl_portnetwork: {{ item.value.mstpctl_portnetwork|default(none) }}
+    mstpctl_bpduguard: {{ item.value.mstpctl_bpduguard|default(none) }}
 with_dict=cl_interfaces
+notify: reload networking
 
 # In vars file
 # ============
