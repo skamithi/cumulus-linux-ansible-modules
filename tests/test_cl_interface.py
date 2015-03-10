@@ -37,7 +37,7 @@ def test_module_args(mock_module,
             'pvid': {'type': 'int'},
             'location': {'type': 'str',
                                'default': '/etc/network/interfaces.d'},
-            'link_speed': {'type': 'int'}}
+            'speed': {'type': 'int'}}
     )
 
 @mock.patch('dev_modules.cl_interface.os.path.exists')
@@ -142,7 +142,7 @@ def test_build_speed(mock_module):
     cl_interface - test building speed config
     """
     mock_module.custom_desired_config = {'config': {}}
-    mock_module.params = {'link_speed': 1000}
+    mock_module.params = {'speed': 1000}
     cl_int.build_speed(mock_module)
     assert_equals(mock_module.custom_desired_config,
                   {'config': {
@@ -220,3 +220,7 @@ def test_config_changed(mock_module):
     }
     assert_equals(cl_int.config_changed(mock_module), True)
 
+
+@mock.patch('dev_modules.cl_interface.AnsibleModule')
+def test_replace_config(mock_module):
+    pass
