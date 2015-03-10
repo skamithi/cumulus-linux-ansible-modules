@@ -78,7 +78,7 @@ def test_current_iface_config(mock_module, mock_exists):
     mock_module.run_command = MagicMock()
     # mock AnsibleModule.run_command
     mock_module.run_command.return_value = \
-        (1, open('tests/ifquery.json').read(), None)
+        (0, open('tests/ifquery.json').read(), None)
     cl_int.current_iface_config(mock_module)
     current_config = mock_module.custom_current_config.get('config')
     assert_equals(current_config.get('address'), '10.152.5.10/24')
