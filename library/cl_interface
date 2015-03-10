@@ -140,7 +140,7 @@ def current_iface_config(module):
     module.custom_current_config = {}
     if os.path.exists(_int_dir + '/' + _ifacename):
         _cmd = "/sbin/ifquery -o json %s" % (module.params.get('name'))
-        module.custom_current_config = json.loads(
+        module.custom_current_config = module.from_json(
             run_cmd(module, _cmd))[0]
 
 def build_address(module):
@@ -234,17 +234,23 @@ def replace_config(module):
     # by default it will be something like /etc/network/interfaces.d/swp1
     final_location = module.params.get('location') + '/' + \
         module.params.get('name')
+    final_text = ''
+    _fh = open(final_location, 'w')
     # make sure to put hash in array or else ifquery will fail
     # write to temp file
     try:
-        temp.write(json.dumps([desired_config]))
+        temp.write(module.jsonify([desired_config]))
         # need to seek to 0 so that data is written to tempfile.
         temp.seek(0)
-        _cmd = "/sbin/ifquery -i %s -t json > %s " % \
-            (temp.name, final_location)
-        run_cmd(module, _cmd)
+        _cmd = "/sbin/ifquery -i %s -t json" % (temp.name)
+        final_text = run_cmd(module, _cmd)
     finally:
         temp.close()
+
+    try:
+        _fh.write(final_text)
+    finally:
+        _fh.close()
 
 
 def main():
@@ -287,7 +293,6 @@ def main():
 
 # import module snippets
 from ansible.module_utils.basic import *
-import json
 import tempfile
 import os
 
