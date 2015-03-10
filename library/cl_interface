@@ -130,10 +130,17 @@ def run_cmd(module, exec_path, failure_msg):
     return out
 
 def current_iface_config(module):
-    fail_msg = "unable to execute ifquery"
-    _cmd = "/sbin/ifquery -o json %s" % (module.params.get('name'))
-    module.custom_curr_config = json.loads(
-        run_cmd(module, _cmd, fail_msg))[0]
+    # due to a bug in ifquery, have to check for presence of interface file
+    # and not rely solely on ifquery. when bug is fixed, this check can be
+    # removed
+    _ifacename = module.params.get('name')
+    _int_dir = module.params.get('location')
+    module.custom_current_config = {}
+    if os.path.exists(_int_dir + '/' + _ifacename):
+        fail_msg = "unable to execute ifquery"
+        _cmd = "/sbin/ifquery -o json %s" % (module.params.get('name'))
+        module.custom_current_config = json.loads(
+            run_cmd(module, _cmd, fail_msg))[0]
 
 def build_address(module):
     # if addr_method == 'dhcp', dont add IP address
@@ -258,6 +265,7 @@ def main():
 
     if not os.path.exists(module.params.get('location')):
         module.fail_json(msg="%s does not exist. Please create it")
+
     ifacename = module.params.get('name')
     _changed = False
     _msg = "interface %s config not changed" % (ifacename)

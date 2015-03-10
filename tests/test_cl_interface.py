@@ -4,7 +4,7 @@ import dev_modules.cl_interface as cl_int
 from asserts import assert_equals
 from mock import MagicMock
 
-
+@mock.patch('dev_modules.cl_interface.os.path.exists')
 @mock.patch('dev_modules.cl_interface.replace_config')
 @mock.patch('dev_modules.cl_interface.config_changed')
 @mock.patch('dev_modules.cl_interface.build_desired_iface_config')
@@ -14,8 +14,10 @@ def test_module_args(mock_module,
                      mock_curr_config,
                      mock_desired_config,
                      mock_compare,
-                     mock_replace):
+                     mock_replace,
+                     mock_exists):
     """ cl_interface - test module args """
+    mock_exists.return_value = True
     cl_int.main()
     mock_module.assert_called_with(
         required_together=[['virtual_ip', 'virtual_mac']],
@@ -37,6 +39,7 @@ def test_module_args(mock_module,
             'link_speed': {'type': 'int'}}
     )
 
+@mock.patch('dev_modules.cl_interface.os.path.exists')
 @mock.patch('dev_modules.cl_interface.replace_config')
 @mock.patch('dev_modules.cl_interface.config_changed')
 @mock.patch('dev_modules.cl_interface.build_desired_iface_config')
@@ -46,8 +49,9 @@ def test_main_integration_test(mock_module,
                      mock_curr_config,
                      mock_desired_config,
                      mock_compare,
-                     mock_replace):
+                     mock_replace, mock_exists):
     """ cl_interface - basic integration test of main """
+    mock_exists.return_value = True
     instance = mock_module.return_value
     # if config_changed == false. no change
     instance.params = {'name': 'swp1'}
@@ -63,19 +67,22 @@ def test_main_integration_test(mock_module,
         msg='interface swp1 config updated',
         changed=True)
 
-
+@mock.patch('dev_modules.cl_interface.os.path.exists')
 @mock.patch('dev_modules.cl_interface.AnsibleModule')
-def test_current_iface_config(mock_module):
+def test_current_iface_config(mock_module, mock_exists):
     """
     cl_interface - test getting current iface config
     """
+    mock_module.params = { 'name': 'swp1', 'location': '/etc/network/ansible' }
+    mock_exists.return_value = True
     mock_module.run_command = MagicMock()
     # mock AnsibleModule.run_command
     mock_module.run_command.return_value = \
         (1, open('tests/ifquery.json').read(), None)
     cl_int.current_iface_config(mock_module)
-    current_config = mock_module.custom_curr_config.get('config')
+    current_config = mock_module.custom_current_config.get('config')
     assert_equals(current_config.get('address'), '10.152.5.10/24')
+    mock_exists.assert_called_with('/etc/network/ansible/swp1')
 
 @mock.patch('dev_modules.cl_interface.AnsibleModule')
 def test_build_address(mock_module):
@@ -124,7 +131,6 @@ def test_build_speed(mock_module):
                   {'config': {
                       'link-speed': '1000',
                       'link-duplex': 'full'}})
-
 
 @mock.patch('dev_modules.cl_interface.AnsibleModule')
 def test_build_generic_attr(mock_module):
