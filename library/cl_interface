@@ -190,9 +190,9 @@ def build_desired_iface_config(module):
         'addr_family': None,
         'auto': True,
         'config': {},
-        'name': module.params('name')
+        'name': module.params.get('name')
     }
-    # if
+
     if module.params.get('addr_method'):
         module.custom_desired_config['addr_family'] = 'inet'
     build_address(module)
