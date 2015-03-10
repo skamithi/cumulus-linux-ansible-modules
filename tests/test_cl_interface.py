@@ -185,12 +185,20 @@ def test_build_generic_attr(mock_module):
     cl_interface - adding values from module parameters that match
     the ones provided by ifupdown2 json output.
     """
+    # test integer
     mock_module.custom_desired_config = {'config': {}}
-    mock_module.params = {'mtu': '1000'}
+    mock_module.params = {'mtu': 1000}
     cl_int.build_generic_attr(mock_module, 'mtu')
     assert_equals(mock_module.custom_desired_config,
                   {'config': {
                       'mtu': '1000'}})
+    # test bool
+    mock_module.custom_desired_config = {'config': {}}
+    mock_module.params = {'clagd_enable': True}
+    cl_int.build_generic_attr(mock_module, 'clagd_enable')
+    assert_equals(mock_module.custom_desired_config,
+                  {'config': {
+                      'clagd_enable': 'yes'}})
 
 @mock.patch('dev_modules.cl_interface.AnsibleModule')
 def test_config_dict_changed(mock_module):

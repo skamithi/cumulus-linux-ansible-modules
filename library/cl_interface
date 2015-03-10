@@ -179,6 +179,11 @@ def build_speed(module):
 
 def build_generic_attr(module, _attr):
     _value = module.params.get(_attr)
+    if isinstance(_value, bool):
+        if _value is True:
+            _value = 'yes'
+        else:
+            _value = 'no'
     if _value is not None:
         module.custom_desired_config['config'][_attr] = str(_value)
 
