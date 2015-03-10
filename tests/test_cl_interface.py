@@ -3,6 +3,7 @@ from nose.tools import set_trace
 import dev_modules.cl_interface as cl_int
 from asserts import assert_equals
 from mock import MagicMock
+import json
 
 @mock.patch('dev_modules.cl_interface.os.path.exists')
 @mock.patch('dev_modules.cl_interface.replace_config')
@@ -77,8 +78,10 @@ def test_current_iface_config(mock_module, mock_exists):
     mock_exists.return_value = True
     mock_module.run_command = MagicMock()
     # mock AnsibleModule.run_command
+    json_output = open('tests/ifquery.json').read()
     mock_module.run_command.return_value = \
-        (0, open('tests/ifquery.json').read(), None)
+        (0, json_output , None)
+    mock_module.from_json.return_value = json.loads(json_output)
     cl_int.current_iface_config(mock_module)
     current_config = mock_module.custom_current_config.get('config')
     assert_equals(current_config.get('address'), '10.152.5.10/24')
@@ -91,11 +94,12 @@ def test_build_address(mock_module):
     cl_interface: - test building desired address config
     """
     mock_module.custom_desired_config = {'config': {}}
-    mock_module.params = {'ipv6': ['1.1.1.1/24']}
+    mock_module.params = {'ipv4': ['1.1.1.1/24']}
     cl_int.build_address(mock_module)
     assert_equals(mock_module.custom_desired_config,
                   {'config': {'address': '1.1.1.1/24'}})
 
+    #
 @mock.patch('dev_modules.cl_interface.AnsibleModule')
 def test_build_addr_method(mock_module):
     """
