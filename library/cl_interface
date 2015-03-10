@@ -256,7 +256,7 @@ def main():
         ]
     )
 
-    if os.path.exists(module.params.get('location')):
+    if not os.path.exists(module.params.get('location')):
         module.fail_json(msg="%s does not exist. Please create it")
     ifacename = module.params.get('name')
     _changed = False
