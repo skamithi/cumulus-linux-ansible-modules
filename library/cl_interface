@@ -77,14 +77,14 @@ cl_interface: name=swp2 addr_family=dhcp
 cl_interface: name=bridge.100 ipv4=10.1.1.1/24
 
 # configure subinterface with an IP
-cl_interface: name=bond0.100  alias_name='clag peer link' ipv4=10.1.1.1/24
+cl_interface: name=bond0.100  alias_name='my bond' ipv4=10.1.1.1/24
 
 # configure ports using variable data structure
 cl_interface:
     name: {{ item.key }}
     ipv4:  {{ item.value.ipv4|default(none) }}
     ipv6: {{ item.value.ipv6|default(none) }}
-    alias_name: {{ item.value.alias|default(none) }}
+    alias_name: {{ item.value.alias_name|default(none) }}
     addr_method: {{ item.value.addr_method|default(none) }}
     speed: {{ item.value.link_speed|default(none) }}
     mtu: {{ item.value.mtu|default(none) }}
@@ -177,15 +177,20 @@ def build_speed(module):
         module.custom_desired_config['config']['link-speed'] = str(_speed)
         module.custom_desired_config['config']['link-duplex'] = 'full'
 
-def build_generic_attr(module, _attr):
-    _value = module.params.get(_attr)
+def conv_bool_to_str(_value):
     if isinstance(_value, bool):
         if _value is True:
-            _value = 'yes'
+            return 'yes'
         else:
-            _value = 'no'
+            return 'no'
+    return _value
+
+def build_generic_attr(module, _attr):
+    _value = module.params.get(_attr)
+    _value = conv_bool_to_str(_value)
     if _value is not None:
-        module.custom_desired_config['config'][re.sub('_', '-',_attr)] = str(_value)
+        module.custom_desired_config['config'][
+            re.sub('_', '-', _attr)] = str(_value)
 
 def build_alias_name(module):
     alias_name = module.params.get('alias_name')
@@ -207,7 +212,6 @@ def build_vrr(module):
         vrr_config.append(_virtual_ip)
         module.custom_desired_config.get('config')['address-virtual'] = \
             ' '.join(vrr_config)
-
 
 
 def build_desired_iface_config(module):
