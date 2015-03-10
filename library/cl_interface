@@ -185,7 +185,7 @@ def build_generic_attr(module, _attr):
         else:
             _value = 'no'
     if _value is not None:
-        module.custom_desired_config['config'][_attr] = str(_value)
+        module.custom_desired_config['config'][re.sub('_', '-',_attr)] = str(_value)
 
 def build_alias_name(module):
     alias_name = module.params.get('alias_name')

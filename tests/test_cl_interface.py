@@ -206,7 +206,7 @@ def test_build_generic_attr(mock_module):
     cl_int.build_generic_attr(mock_module, 'clagd_enable')
     assert_equals(mock_module.custom_desired_config,
                   {'config': {
-                      'clagd_enable': 'yes'}})
+                      'clagd-enable': 'yes'}})
 
 @mock.patch('dev_modules.cl_interface.AnsibleModule')
 def test_config_dict_changed(mock_module):
