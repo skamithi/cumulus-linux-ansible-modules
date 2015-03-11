@@ -236,7 +236,7 @@ def build_desired_iface_config(module):
         'name': module.params.get('name')
     }
 
-    for _attr in ['vlan_aware', 'pvid', 'ports']:
+    for _attr in ['vlan_aware', 'pvid', 'ports', 'stp']:
         build_bridge_attr(module, _attr)
 
     build_addr_method(module)

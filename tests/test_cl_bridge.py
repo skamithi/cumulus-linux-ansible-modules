@@ -255,6 +255,27 @@ def test_config_changed(mock_module):
     }
     assert_equals(cl_int.config_changed(mock_module), True)
 
+@mock.patch('dev_modules.cl_bridge.build_bridge_attr')
+@mock.patch('dev_modules.cl_bridge.build_generic_attr')
+@mock.patch('dev_modules.cl_bridge.build_vrr')
+@mock.patch('dev_modules.cl_bridge.build_alias_name')
+@mock.patch('dev_modules.cl_bridge.build_vids')
+@mock.patch('dev_modules.cl_bridge.build_address')
+@mock.patch('dev_modules.cl_bridge.build_addr_method')
+@mock.patch('dev_modules.cl_bridge.AnsibleModule')
+def test_build_desired_iface_config(mock_module,
+                                    mock_addr_method,
+                                    mock_address,
+                                    mock_vids,
+                                    mock_alias_name,
+                                    mock_vrr,
+                                    mock_generic,
+                                    mock_bridge):
+    cl_int.build_desired_iface_config(mock_module)
+    assert_equals(mock_bridge.call_count, 4)
+    assert_equals(mock_generic.call_count, 2)
+
+
 
 @mock.patch('dev_modules.cl_bridge.AnsibleModule')
 def test_replace_config(mock_module):
