@@ -308,7 +308,7 @@ def main():
             pvid=dict(type='int'),
             mstpctl_treeprio=dict(type='int'),
             vlan_aware=dict(type='bool', choices=BOOLEANS),
-            stp=dict(type='bool', choices=BOOLEANS),
+            stp=dict(type='bool', default='on', choices=BOOLEANS),
             location=dict(type='str',
                                 default='/etc/network/interfaces.d')
         ),

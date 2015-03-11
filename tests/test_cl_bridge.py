@@ -37,7 +37,7 @@ def test_module_args(mock_module,
             'vids': {'type': 'list'},
             'pvid': {'type': 'int'},
             'mstpctl_treeprio': {'type': 'int'},
-            'stp': {'type': 'bool', 'choices': [
+            'stp': {'type': 'bool', 'default': 'on', 'choices': [
                 'yes', 'on', '1', 'true', 1, 'no', 'off', '0', 'false', 0]},
             'vlan_aware': {'type': 'bool', 'choices': ['yes', 'on', '1',
                            'true', 1, 'no', 'off', '0', 'false', 0]},
