@@ -99,11 +99,11 @@ notes:
 EXAMPLES = '''
 # Options ['virtual_mac', 'virtual_ip'] are required together
 # configure a bond interface with IP address
-cl_interface: name=bond0  slaves="swp4-5" ipv4=10.1.1.1/24
+cl_bond: name=bond0  slaves="swp4-5" ipv4=10.1.1.1/24
 notify: reload networking
 
 # configure bond as a dual-connected clag bond
-cl_interface: name=bond1 slaves="swp1s0 swp2s0" clag_id=1
+cl_bond: name=bond1 slaves="swp1s0 swp2s0" clag_id=1
 notify: reload networking
 
 # configure ports using variable data structure
