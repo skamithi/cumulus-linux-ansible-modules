@@ -228,6 +228,10 @@ def build_vrr(module):
             ' '.join(vrr_config)
 
 def add_glob_to_array(_bondmems):
+    """
+    goes through each bond member if it sees a dash add glob
+    before it
+    """
     result = []
     if isinstance(_bondmems, list):
         for _entry in _bondmems:
