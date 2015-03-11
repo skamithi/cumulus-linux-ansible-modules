@@ -45,6 +45,7 @@ def test_module_args(mock_module,
             'clagd_peer_ip': {'type': 'str'},
             'clagd_sys_mac': {'type': 'str'},
             'clagd_priority': {'type': 'int'},
+            'clagd_args': { 'type': 'str' },
             'location': {'type': 'str',
                                'default': '/etc/network/interfaces.d'},
             'speed': {'type': 'int'}}

@@ -268,7 +268,7 @@ def build_desired_iface_config(module):
     for _attr in ['mtu', 'mstpctl_portnetwork',
                   'mstpctl_bpduguard', 'clagd_enable',
                   'clagd_priority', 'clagd_peer_ip',
-                  'clagd_sys_mac']:
+                  'clagd_sys_mac', 'clagd_args']:
         build_generic_attr(module, _attr)
 
 def config_dict_changed(module):
@@ -336,6 +336,7 @@ def main():
             clagd_priority=dict(type='int'),
             clagd_peer_ip=dict(type='str'),
             clagd_sys_mac=dict(type='str'),
+            clagd_args=dict(type='str'),
             location=dict(type='str',
                                 default='/etc/network/interfaces.d')
         ),
