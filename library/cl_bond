@@ -227,9 +227,20 @@ def build_vrr(module):
         module.custom_desired_config.get('config')['address-virtual'] = \
             ' '.join(vrr_config)
 
-def build_bond_config(module, _attr):
+def add_glob_to_array(_bondmems):
+    result = []
+    if isinstance(_bondmems, list):
+        for _entry in _bondmems:
+            if re.search('-', _entry):
+                _entry = 'glob ' + _entry
+            result.append(_entry)
+        return ' '.join(result)
+    return _bondmems
+
+def build_bond_attr(module, _attr):
     _value = module.params.get(_attr)
     _value = conv_bool_to_str(_value)
+    _value = add_glob_to_array(_value)
     if _value is not None:
         module.custom_desired_config['config'][
             'bond-' + re.sub('_', '-', _attr)] = str(_value)
@@ -248,7 +259,7 @@ def build_desired_iface_config(module):
 
     for _attr in ['slaves', 'xmit_hash_policy',
                   'miimon', 'lacp_rate', 'min_links']:
-        build_bond_config(module, _attr)
+        build_bond_attr(module, _attr)
 
     build_addr_method(module)
     build_address(module)
@@ -357,6 +368,7 @@ def main():
 from ansible.module_utils.basic import *
 import tempfile
 import os
+import re
 
 if __name__ == '__main__':
     main()

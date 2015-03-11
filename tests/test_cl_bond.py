@@ -174,6 +174,26 @@ def test_build_pvid(mock_module):
 
 
 @mock.patch('dev_modules.cl_bond.AnsibleModule')
+def test_build_bond_attr(mock_module):
+    """
+    cl_bond - setting ifupdown2 bond related options
+    """
+    # test integer
+    mock_module.custom_desired_config = {'config': {}}
+    mock_module.params = {'lacp_rate': 1}
+    cl_int.build_bond_attr(mock_module, 'lacp_rate')
+    assert_equals(mock_module.custom_desired_config,
+                  {'config': {
+                      'bond-lacp-rate': '1'}})
+    # test doing slaves
+    mock_module.custom_desired_config = {'config': {}}
+    mock_module.params = {'slaves': ['swp1-3', 'swp5']}
+    cl_int.build_bond_attr(mock_module, 'slaves')
+    assert_equals(mock_module.custom_desired_config,
+                  {'config': {
+                      'bond-slaves': 'glob swp1-3 swp5'}})
+    #
+@mock.patch('dev_modules.cl_bond.AnsibleModule')
 def test_build_generic_attr(mock_module):
     """
     cl_bond - adding values from module parameters that match
@@ -188,11 +208,11 @@ def test_build_generic_attr(mock_module):
                       'mtu': '1000'}})
     # test bool
     mock_module.custom_desired_config = {'config': {}}
-    mock_module.params = {'clagd_enable': True}
-    cl_int.build_generic_attr(mock_module, 'clagd_enable')
+    mock_module.params = {'mstpctl_portnetwork': True}
+    cl_int.build_generic_attr(mock_module, 'mstpctl_portnetwork')
     assert_equals(mock_module.custom_desired_config,
                   {'config': {
-                      'clagd-enable': 'yes'}})
+                      'mstpctl-portnetwork': 'yes'}})
 
 @mock.patch('dev_modules.cl_bond.AnsibleModule')
 def test_config_dict_changed(mock_module):
