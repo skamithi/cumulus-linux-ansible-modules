@@ -107,7 +107,7 @@ cl_interface: name=bond1 slaves="swp1s0 swp2s0" clag_id=1
 notify: reload networking
 
 # configure ports using variable data structure
-cl_interface:
+cl_bond:
     name: {{ item.key }}
     slaves: {{ item.key.slaves }}
     clag_id: {{ item.valu.clag_id|default(none)}}
