@@ -80,6 +80,12 @@ with 44:38:39:ff. Needs to be the same between 2 Clag switches
     pvid:
         description:
             - in vlan aware mode, defines vlan that is the untagged vlan
+    location:
+        description:
+            - interface directory location
+        default:
+            - /etc/network/interfaces.d
+
 requirements: [ Alternate Debian network interface manager - \
 ifupdown2 @ github.com/CumulusNetworks/ifupdown2 ]
 notes:
