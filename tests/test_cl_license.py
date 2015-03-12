@@ -87,8 +87,7 @@ def test_run_main(mock_ansible_module,
     instance.run_command.return_value = ['0', '', '']
     main()
     instance.run_command.assert_called_with(
-        '/usr/cumulus/bin/cl-license -i http://10.1.1.1/license.txt',
-        check_rc=True)
+        '/usr/cumulus/bin/cl-license -i http://10.1.1.1/license.txt')
     _msg = 'license updated/installed. remember to restart switchd'
     instance.exit_json.assert_called_with(msg=_msg, changed=True)
 

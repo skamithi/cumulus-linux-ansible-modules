@@ -63,15 +63,18 @@ licenses on Cumulus Linux
 LICENSE_PATH = '/etc/cumulus/.license.txt'
 
 
-def run_cl_cmd(module, cmd, check_rc=True):
-    try:
-        (rc, out, err) = module.run_command(cmd, check_rc=check_rc)
-    except Exception, e:
-        module.fail_json(msg=e.strerror)
-    # trim last line as it is always empty
-    ret = out.splitlines()
-    return ret[:-1]
-
+# handy helper for calling system calls.
+# calls AnsibleModule.run_command and prints a more appropriate message
+# exec_path - path to file to execute, with all its arguments.
+# E.g "/sbin/ip -o link show"
+# failure_msg - what message to print on failure
+def run_cmd(module, exec_path):
+    (_rc, out, _err) = module.run_command(exec_path)
+    if _rc == 1:
+        failure_msg = "Failed; %s Error: %s" % (exec_path, _err)
+        module.fail_json(msg=failure_msg)
+    else:
+        return out
 
 def get_todays_date():
     """
@@ -136,7 +139,7 @@ def main():
     check_license_url(module, license_url)
 
     cl_lic_cmd = ('%s -i %s') % (cl_license_path, license_url)
-    run_cl_cmd(module, cl_lic_cmd)
+    run_cmd(module, cl_lic_cmd)
     _changed = True
     _msg = 'license updated/installed. remember to restart switchd'
     module.exit_json(changed=_changed, msg=_msg)
