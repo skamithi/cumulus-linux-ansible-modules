@@ -46,16 +46,6 @@ defined in the ports.conf file on Cumulus Linux
 PORTS_CONF = '/etc/cumulus/ports.conf'
 
 
-def run_cl_cmd(module, cmd, check_rc=True):
-    try:
-        (rc, out, err) = module.run_command(cmd, check_rc=check_rc)
-    except Exception, e:
-        module.fail_json(msg=e.strerror)
-    # trim last line as it is always empty
-    ret = out.splitlines()
-    return ret[:-1]
-
-
 def hash_existing_ports_conf(module):
     module.ports_conf_hash = {}
     if not os.path.exists(PORTS_CONF):
