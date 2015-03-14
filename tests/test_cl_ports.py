@@ -165,9 +165,8 @@ def test_hash_existing_ports_conf_doesntwork(mock_module, mock_exists):
     """ test missing ports.conf """
     instance = mock_module.return_value
     mock_exists.return_value = False
-    assert_equals(cl_ports.hash_existing_ports_conf(instance), False)
-    instance.fail_json.assert_called_with(
-        msg='/etc/cumulus/ports.conf is missing', changed=False)
+    cl_ports.hash_existing_ports_conf(instance)
+    assert_equals(instance.ports_conf_hash, {})
 
 
 @mock.patch('dev_modules.cl_ports.os.path.exists')
