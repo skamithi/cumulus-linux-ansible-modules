@@ -58,19 +58,16 @@ def run_cl_cmd(module, cmd, check_rc=True):
 
 def hash_existing_ports_conf(module):
     module.ports_conf_hash = {}
-    if os.path.exists(PORTS_CONF):
-        existing_ports_conf = open(PORTS_CONF).readlines()
-        for _line in existing_ports_conf:
-            m0 = re.match('^(\d+)=(\w+)', _line)
-            if m0:
-                _portnum = int(m0.group(1))
-                _speed = m0.group(2)
-                module.ports_conf_hash[_portnum] = _speed
-    else:
-        _msg = '/etc/cumulus/ports.conf is missing'
-        module.fail_json(msg=_msg, changed=False)
-        # for unit test purposes only
+    if not os.path.exists(PORTS_CONF):
         return False
+
+    existing_ports_conf = open(PORTS_CONF).readlines()
+    for _line in existing_ports_conf:
+        _m0 = re.match(r'^(\d+)=(\w+)', _line)
+        if _m0:
+            _portnum = int(_m0.group(1))
+            _speed = _m0.group(2)
+            module.ports_conf_hash[_portnum] = _speed
 
 
 def generate_new_ports_conf_hash(module):
