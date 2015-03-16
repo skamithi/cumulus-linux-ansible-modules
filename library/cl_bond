@@ -145,7 +145,7 @@ cl_bonds:
 # failure_msg - what message to print on failure
 def run_cmd(module, exec_path):
     (_rc, out, _err) = module.run_command(exec_path)
-    if _rc == 1:
+    if _rc > 0:
         if re.search('cannot find interface', _err):
             return '[{}]'
         failure_msg = "Failed; %s Error: %s" % (exec_path, _err)
