@@ -109,8 +109,8 @@ notify: reload networking
 # configure ports using variable data structure
 cl_bond:
     name: {{ item.key }}
-    slaves: {{ item.key.slaves }}
-    clag_id: {{ item.valu.clag_id|default(none)}}
+    slaves: {{ item.values.slaves }}
+    clag_id: {{ item.values.clag_id|default(none)}}
     ipv4:  {{ item.value.ipv4|default(none) }}
     ipv6: {{ item.value.ipv6|default(none) }}
     alias_name: {{ item.value.alias_name|default(none) }}
@@ -119,8 +119,8 @@ cl_bond:
     vids: {{ item.value.vids|default(none) }}
     virtual_ip: {{ item.value.virtual_ip|default(none) }}
     virtual_mac: {{ item.value.virtual_mac|default(none) }}
-    mstpctl_portnetwork: {{ item.value.mstpctl_portnetwork|default(none) }}
-    mstpctl_bpduguard: {{ item.value.mstpctl_bpduguard|default(none) }}
+    mstpctl_portnetwork: {{ item.value.mstpctl_portnetwork|default('no') }}
+    mstpctl_bpduguard: {{ item.value.mstpctl_bpduguard|default('no') }}
 
 with_dict: cl_bonds
 notify: reload networking
