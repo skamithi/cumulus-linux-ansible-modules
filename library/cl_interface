@@ -191,10 +191,10 @@ def build_address(module):
     _ipv4 = module.params.get('ipv4')
     _ipv6 = module.params.get('ipv6')
     _addresslist = []
-    if _ipv4 is not None and len(_ipv4) > 0:
+    if _ipv4 and len(_ipv4) > 0:
         _addresslist += _ipv4
 
-    if _ipv6 is not None and len(_ipv6) > 0:
+    if  _ipv6 and len(_ipv6) > 0:
         _addresslist += _ipv6
     if len(_addresslist) > 0:
         module.custom_desired_config['config']['address'] = ' '.join(
@@ -202,12 +202,12 @@ def build_address(module):
 
 def build_vids(module):
     _vids = module.params.get('vids')
-    if _vids is not None and len(_vids) > 0:
+    if _vids and len(_vids) > 0:
         module.custom_desired_config['config']['bridge-vids'] = ' '.join(_vids)
 
 def build_pvid(module):
     _pvid = module.params.get('pvid')
-    if _pvid is not None:
+    if _pvid:
         module.custom_desired_config['config']['bridge-pvid'] = str(_pvid)
 
 def build_speed(module):
@@ -227,13 +227,13 @@ def conv_bool_to_str(_value):
 def build_generic_attr(module, _attr):
     _value = module.params.get(_attr)
     _value = conv_bool_to_str(_value)
-    if _value is not None:
+    if _value:
         module.custom_desired_config['config'][
             re.sub('_', '-', _attr)] = str(_value)
 
 def build_alias_name(module):
     alias_name = module.params.get('alias_name')
-    if alias_name is not None:
+    if alias_name:
         module.custom_desired_config['config']['alias'] = alias_name
 
 def build_addr_method(module):
