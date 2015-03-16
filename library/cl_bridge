@@ -85,22 +85,21 @@ cl_bridge: name=bridge ports='swp1-12' vlan_aware='yes' vids='1-100'
 notify: reload networking
 
 # configure ports using variable data structure
-cl_interface:
+cl_bridge:
     name: {{ item.key }}
-    ports: {{ item.key.ports }}
+    ports: {{ item.value.ports }}
+    stp: {{ item.value.stp|default('yes') }}
     vlan_aware: {{ item.value.vlan_aware|default(none) }}
     ipv4:  {{ item.value.ipv4|default(none) }}
     ipv6: {{ item.value.ipv6|default(none) }}
     alias_name: {{ item.value.alias_name|default(none) }}
-    addr_method: {{ item.value.addr_method|default(none) }}
+    addr_method: {{ item.value.addr_method|default('') }}
     mtu: {{ item.value.mtu|default(none) }}
     vids: {{ item.value.vids|default(none) }}
     virtual_ip: {{ item.value.virtual_ip|default(none) }}
     virtual_mac: {{ item.value.virtual_mac|default(none) }}
     mstpctl_treeprio: {{ item.value.mstpctl_treeprio|default(none) }}
-
-
-with_dict=cl_bridge
+with_dict: cl_bridge
 notify: reload networking
 
 # In vars file
@@ -300,15 +299,15 @@ def main():
             ipv6=dict(type='list'),
             alias_name=dict(type='str'),
             addr_method=dict(type='str',
-                             choices=['dhcp']),
-            mtu=dict(type='int'),
+                             choices=['', 'dhcp']),
+            mtu=dict(type='str'),
             virtual_ip=dict(type='str'),
             virtual_mac=dict(type='str'),
             vids=dict(type='list'),
-            pvid=dict(type='int'),
-            mstpctl_treeprio=dict(type='int'),
+            pvid=dict(type='str'),
+            mstpctl_treeprio=dict(type='str'),
             vlan_aware=dict(type='bool', choices=BOOLEANS),
-            stp=dict(type='bool', default='on', choices=BOOLEANS),
+            stp=dict(type='bool', default='yes', choices=BOOLEANS),
             location=dict(type='str',
                                 default='/etc/network/interfaces.d')
         ),
