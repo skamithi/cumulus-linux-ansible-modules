@@ -53,7 +53,7 @@ To enable this feature use the option 'dhcp'
     mstpctl_portnetwork:
         description:
             - Enables bridge assurance in vlan-aware mode
-    clagd_id:
+    clag_id:
         description:
             - specify a unique clag_id for every dual connected bond on each \
 on each peer switch. The value must be between 1 and 65535 and must be the \
@@ -116,7 +116,7 @@ cl_bond:
     alias_name: {{ item.value.alias_name|default(none) }}
     addr_method: {{ item.value.addr_method|default(none) }}
     mtu: {{ item.value.mtu|default(none) }}
-    clagd_id: {{ item.value.clagd_id|default(none) }}
+    clag_id: {{ item.value.clag_id|default(none) }}
     vids: {{ item.value.vids|default(none) }}
     virtual_ip: {{ item.value.virtual_ip|default(none) }}
     virtual_mac: {{ item.value.virtual_mac|default(none) }}
@@ -272,7 +272,7 @@ def build_desired_iface_config(module):
     build_alias_name(module)
     build_vrr(module)
     for _attr in ['mtu', 'mstpctl_portnetwork',
-                  'mstpctl_bpduguard', 'clagd_id']:
+                  'mstpctl_bpduguard', 'clag_id']:
         build_generic_attr(module, _attr)
 
 def config_dict_changed(module):
@@ -336,7 +336,7 @@ def main():
             pvid=dict(type='int'),
             mstpctl_portnetwork=dict(type='bool', choices=BOOLEANS),
             mstpctl_bpduguard=dict(type='bool', choices=BOOLEANS),
-            clagd_id=dict(type='int'),
+            clag_id=dict(type='int'),
             min_links=dict(type='int', default=1),
             mode=dict(type='str', default='802.3ad'),
             miimon=dict(type='int', default=100),

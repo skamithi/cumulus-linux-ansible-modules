@@ -40,7 +40,7 @@ def test_module_args(mock_module,
                 'yes', 'on', '1', 'true', 1, 'no', 'off', '0', 'false', 0]},
             'mstpctl_bpduguard': {'type': 'bool', 'choices': [
                 'yes', 'on', '1', 'true', 1, 'no', 'off', '0', 'false', 0]},
-            'clagd_id': {'type': 'int'},
+            'clag_id': {'type': 'int'},
             'lacp_rate': {'type': 'int', 'default': 1},
             'miimon': {'type': 'int', 'default': 100},
             'min_links': {'type': 'int', 'default': 1},
