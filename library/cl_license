@@ -70,7 +70,7 @@ LICENSE_PATH = '/etc/cumulus/.license.txt'
 # failure_msg - what message to print on failure
 def run_cmd(module, exec_path):
     (_rc, out, _err) = module.run_command(exec_path)
-    if _rc == 1:
+    if _rc == 0:
         failure_msg = "Failed; %s Error: %s" % (exec_path, _err)
         module.fail_json(msg=failure_msg)
     else:
