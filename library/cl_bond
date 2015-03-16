@@ -116,14 +116,13 @@ cl_bond:
     alias_name: {{ item.value.alias_name|default(none) }}
     addr_method: {{ item.value.addr_method|default(none) }}
     mtu: {{ item.value.mtu|default(none) }}
-    clag_id: {{ item.value.clag_id|default(none) }}
     vids: {{ item.value.vids|default(none) }}
     virtual_ip: {{ item.value.virtual_ip|default(none) }}
     virtual_mac: {{ item.value.virtual_mac|default(none) }}
     mstpctl_portnetwork: {{ item.value.mstpctl_portnetwork|default(none) }}
     mstpctl_bpduguard: {{ item.value.mstpctl_bpduguard|default(none) }}
 
-with_dict=cl_bonds
+with_dict: cl_bonds
 notify: reload networking
 
 # In vars file
@@ -333,10 +332,10 @@ def main():
             virtual_ip=dict(type='str'),
             virtual_mac=dict(type='str'),
             vids=dict(type='list'),
-            pvid=dict(type='int'),
+            pvid=dict(type='str'),
             mstpctl_portnetwork=dict(type='bool', choices=BOOLEANS),
             mstpctl_bpduguard=dict(type='bool', choices=BOOLEANS),
-            clag_id=dict(type='int'),
+            clag_id=dict(type='str'),
             min_links=dict(type='int', default=1),
             mode=dict(type='str', default='802.3ad'),
             miimon=dict(type='int', default=100),
