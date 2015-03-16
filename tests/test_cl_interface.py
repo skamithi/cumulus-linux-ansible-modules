@@ -28,14 +28,14 @@ def test_module_args(mock_module,
                 'type': 'str',
                 'choices': ['', 'loopback', 'dhcp']},
             'name': {'required': True, 'type': 'str'},
-            'mtu': {'type': 'int'},
+            'mtu': {'type': 'str'},
             'alias_name': {'type': 'str'},
             'ipv4': {'type': 'list'},
             'ipv6': {'type': 'list'},
             'virtual_mac': {'type': 'str'},
             'virtual_ip': {'type': 'str'},
             'vids': {'type': 'list'},
-            'pvid': {'type': 'int'},
+            'pvid': {'type': 'str'},
             'mstpctl_portnetwork': {'type': 'bool', 'choices': [
                 'yes', 'on', '1', 'true', 1, 'no', 'off', '0', 'false', 0]},
             'mstpctl_bpduguard': {'type': 'bool', 'choices': [
@@ -44,11 +44,11 @@ def test_module_args(mock_module,
                 'yes', 'on', '1', 'true', 1, 'no', 'off', '0', 'false', 0]},
             'clagd_peer_ip': {'type': 'str'},
             'clagd_sys_mac': {'type': 'str'},
-            'clagd_priority': {'type': 'int'},
+            'clagd_priority': {'type': 'str'},
             'clagd_args': { 'type': 'str' },
             'location': {'type': 'str',
                                'default': '/etc/network/interfaces.d'},
-            'speed': {'type': 'int'}}
+            'speed': {'type': 'str'}}
     )
 
 @mock.patch('dev_modules.cl_interface.os.path.exists')

@@ -127,8 +127,8 @@ cl_interface:
     vids: {{ item.value.vids|default(none) }}
     virtual_ip: {{ item.value.virtual_ip|default(none) }}
     virtual_mac: {{ item.value.virtual_mac|default(none) }}
-    mstpctl_portnetwork: {{ item.value.mstpctl_portnetwork|default(none) }}
-    mstpctl_bpduguard: {{ item.value.mstpctl_bpduguard|default(none) }}
+    mstpctl_portnetwork: {{ item.value.mstpctl_portnetwork|default('no') }}
+    mstpctl_bpduguard: {{ item.value.mstpctl_bpduguard|default('no') }}
 with_dict: cl_interfaces
 notify: reload networking
 
@@ -330,16 +330,16 @@ def main():
             alias_name=dict(type='str'),
             addr_method=dict(type='str',
                              choices=['', 'loopback', 'dhcp']),
-            speed=dict(type='int'),
-            mtu=dict(type='int'),
+            speed=dict(type='str'),
+            mtu=dict(type='str'),
             virtual_ip=dict(type='str'),
             virtual_mac=dict(type='str'),
             vids=dict(type='list'),
-            pvid=dict(type='int'),
+            pvid=dict(type='str'),
             mstpctl_portnetwork=dict(type='bool', choices=BOOLEANS),
             mstpctl_bpduguard=dict(type='bool', choices=BOOLEANS),
             clagd_enable=dict(type='bool', choices=BOOLEANS),
-            clagd_priority=dict(type='int'),
+            clagd_priority=dict(type='str'),
             clagd_peer_ip=dict(type='str'),
             clagd_sys_mac=dict(type='str'),
             clagd_args=dict(type='str'),
