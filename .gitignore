@@ -1,4 +1,7 @@
 *.swp
+ansible.cfg
+site.yml
+ansible.hosts
 *.ropeproject
 *MANIFEST
 *deb_dist
