@@ -26,7 +26,7 @@ def test_module_args(mock_module,
         argument_spec={
             'addr_method': {
                 'type': 'str',
-                'choices': ['loopback', 'dhcp']},
+                'choices': ['', 'loopback', 'dhcp']},
             'name': {'required': True, 'type': 'str'},
             'mtu': {'type': 'int'},
             'alias_name': {'type': 'str'},

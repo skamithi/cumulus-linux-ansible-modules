@@ -329,7 +329,7 @@ def main():
             ipv6=dict(type='list'),
             alias_name=dict(type='str'),
             addr_method=dict(type='str',
-                             choices=['loopback', 'dhcp']),
+                             choices=['', 'loopback', 'dhcp']),
             speed=dict(type='int'),
             mtu=dict(type='int'),
             virtual_ip=dict(type='str'),
