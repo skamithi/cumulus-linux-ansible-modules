@@ -119,7 +119,7 @@ cl_interface:
     alias_name: {{ item.value.alias_name|default(none) }}
     addr_method: {{ item.value.addr_method|default(none) }}
     speed: {{ item.value.link_speed|default(none) }}
-    mtu: {{ item.value.mtu|default(none) }}a
+    mtu: {{ item.value.mtu|default(none) }}
     clagd_enable: {{ item.value.clagd_enable|default(none) }}
     clagd_peer_ip: {{ item.value.clagd_peer_ip|default(none) }}
     clagd_sys_mac: {{ item.value.clagd_sys_mac|default(none) }}
@@ -129,7 +129,7 @@ cl_interface:
     virtual_mac: {{ item.value.virtual_mac|default(none) }}
     mstpctl_portnetwork: {{ item.value.mstpctl_portnetwork|default(none) }}
     mstpctl_bpduguard: {{ item.value.mstpctl_bpduguard|default(none) }}
-with_dict=cl_interfaces
+with_dict: cl_interfaces
 notify: reload networking
 
 # In vars file
