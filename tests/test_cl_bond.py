@@ -25,10 +25,10 @@ def test_module_args(mock_module,
         argument_spec={
             'addr_method': {
                 'type': 'str',
-                'choices': ['dhcp']},
+                'choices': ['', 'dhcp']},
             'name': {'required': True, 'type': 'str'},
             'slaves': {'required': True, 'type': 'list'},
-            'mtu': {'type': 'int'},
+            'mtu': {'type': 'str'},
             'alias_name': {'type': 'str'},
             'ipv4': {'type': 'list'},
             'ipv6': {'type': 'list'},
