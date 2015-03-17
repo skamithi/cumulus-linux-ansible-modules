@@ -114,19 +114,19 @@ notify: reload networking
 # configure ports using variable data structure
 cl_interface:
     name: {{ item.key }}
-    ipv4:  {{ item.value.ipv4|default(none) }}
-    ipv6: {{ item.value.ipv6|default(none) }}
-    alias_name: {{ item.value.alias_name|default(none) }}
-    addr_method: {{ item.value.addr_method|default(none) }}
-    speed: {{ item.value.link_speed|default(none) }}
-    mtu: {{ item.value.mtu|default(none) }}
-    clagd_enable: {{ item.value.clagd_enable|default(none) }}
-    clagd_peer_ip: {{ item.value.clagd_peer_ip|default(none) }}
-    clagd_sys_mac: {{ item.value.clagd_sys_mac|default(none) }}
-    clagd_priority: {{ item.value.clagd_priority|default(none) }}
-    vids: {{ item.value.vids|default(none) }}
-    virtual_ip: {{ item.value.virtual_ip|default(none) }}
-    virtual_mac: {{ item.value.virtual_mac|default(none) }}
+    ipv4:  {{ item.value.ipv4|default() }}
+    ipv6: {{ item.value.ipv6|default() }}
+    alias_name: {{ item.value.alias_name|default() }}
+    addr_method: {{ item.value.addr_method|default() }}
+    speed: {{ item.value.link_speed|default() }}
+    mtu: {{ item.value.mtu|default() }}
+    clagd_enable: {{ item.value.clagd_enable|default() }}
+    clagd_peer_ip: {{ item.value.clagd_peer_ip|default() }}
+    clagd_sys_mac: {{ item.value.clagd_sys_mac|default() }}
+    clagd_priority: {{ item.value.clagd_priority|default() }}
+    vids: {{ item.value.vids|default() }}
+    virtual_ip: {{ item.value.virtual_ip|default() }}
+    virtual_mac: {{ item.value.virtual_mac|default() }}
     mstpctl_portnetwork: {{ item.value.mstpctl_portnetwork|default('no') }}
     mstpctl_bpduguard: {{ item.value.mstpctl_bpduguard|default('no') }}
 with_dict: cl_interfaces
