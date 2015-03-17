@@ -14,3 +14,4 @@ ansible.hosts
 tests/write_to_ports_conf
 Session.vim
 ansible.cfg
+ansible.hosts
