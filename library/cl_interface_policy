@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#Copyright (C) 2015, Cumulus Networks www.cumulusnetworks.com
+# Copyright (C) 2015, Cumulus Networks www.cumulusnetworks.com
 #
 #
 DOCUMENTATION = '''
@@ -36,10 +36,13 @@ Example playbook entries using the cl_interface_policy module.
           allowed: "lo eth0 swp1-9, swp11, swp12-13s0, swp12-30s1, swp12-30s2, bond0-12"
 
 '''
+
+
 # get list of interface files that are currently "configured".
 # doesn't mean actually applied to the system, but most likely are
 def read_current_int_dir(module):
     module.custom_currentportlist = os.listdir(module.params.get('location'))
+
 
 # take the allowed list and conver it to into a list
 # of ports.
@@ -50,17 +53,17 @@ def convert_allowed_list_to_port_range(module):
 
 
 def breakout_portrange(prange):
-    m0 = re.match('(\w+[a-z.])(\d+)?-?(\d+)?(\w+)?', prange.strip())
+    _m0 = re.match(r'(\w+[a-z.])(\d+)?-?(\d+)?(\w+)?', prange.strip())
     # no range defined
-    if m0.group(3) is None:
-        return [prange]
+    if _m0.group(3) is None:
+        return [_m0.group(0)]
     else:
         portarray = []
-        intrange = range(int(m0.group(2)), int(m0.group(3)) + 1)
+        intrange = range(int(_m0.group(2)), int(_m0.group(3)) + 1)
         for _int in intrange:
-            portarray.append(''.join([m0.group(1),
+            portarray.append(''.join([_m0.group(1),
                                       str(_int),
-                                      str(m0.group(4) or '')
+                                      str(_m0.group(4) or '')
                                       ]
                                      )
                              )
@@ -75,8 +78,7 @@ def unconfigure_interfaces(module):
     fileprefix = module.params.get('location')
     module.msg = "remove config for interfaces %s" % (', '.join(remove_list))
     for _file in remove_list:
-        os.unlink(fileprefix + _file )
-
+        os.unlink(fileprefix + _file)
 
 
 # check to see if policy should be enforced
@@ -85,7 +87,7 @@ def unconfigure_interfaces(module):
 def int_policy_enforce(module):
     currentportset = set(module.custom_currentportlist)
     allowedportset = set(module.custom_allowedportlist)
-    return not (currentportset.issubset(allowedportset))
+    return not currentportset.issubset(allowedportset)
 
 
 def main():
