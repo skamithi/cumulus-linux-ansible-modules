@@ -55,7 +55,7 @@ To enable this feature use the option 'dhcp'
             - enables spanning tree. As of Cumulus Linux 2.5 the default \
 bridging mode, only per vlan RSTP or 802.1d is supported. For the vlan \
 aware mode, only common instance STP is supported
-        default: 'on'
+        default: 'yes'
     ports:
         description:
             - list of bridge members
@@ -88,17 +88,16 @@ notify: reload networking
 cl_bridge:
     name: {{ item.key }}
     ports: {{ item.value.ports }}
-    stp: {{ item.value.stp|default('yes') }}
-    vlan_aware: {{ item.value.vlan_aware|default(none) }}
-    ipv4:  {{ item.value.ipv4|default(none) }}
-    ipv6: {{ item.value.ipv6|default(none) }}
-    alias_name: {{ item.value.alias_name|default(none) }}
-    addr_method: {{ item.value.addr_method|default('') }}
-    mtu: {{ item.value.mtu|default(none) }}
-    vids: {{ item.value.vids|default(none) }}
-    virtual_ip: {{ item.value.virtual_ip|default(none) }}
-    virtual_mac: {{ item.value.virtual_mac|default(none) }}
-    mstpctl_treeprio: {{ item.value.mstpctl_treeprio|default(none) }}
+    vlan_aware: {{ item.value.vlan_aware|default() }}
+    ipv4:  {{ item.value.ipv4|default() }}
+    ipv6: {{ item.value.ipv6|default() }}
+    alias_name: {{ item.value.alias_name|default() }}
+    addr_method: {{ item.value.addr_method|default() }}
+    mtu: {{ item.value.mtu|default() }}
+    vids: {{ item.value.vids|default() }}
+    virtual_ip: {{ item.value.virtual_ip|default() }}
+    virtual_mac: {{ item.value.virtual_mac|default() }}
+    mstpctl_treeprio: {{ item.value.mstpctl_treeprio|default() }}
 with_dict: cl_bridge
 notify: reload networking
 
@@ -111,6 +110,7 @@ cl_bridge:
         vlan_aware: true
         vids: ['1-100']
 '''
+
 
 # handy helper for calling system calls.
 # calls AnsibleModule.run_command and prints a more appropriate message
@@ -127,6 +127,7 @@ def run_cmd(module, exec_path):
     else:
         return out
 
+
 def current_iface_config(module):
     # due to a bug in ifquery, have to check for presence of interface file
     # and not rely solely on ifquery. when bug is fixed, this check can be
@@ -138,6 +139,7 @@ def current_iface_config(module):
         _cmd = "/sbin/ifquery -o json %s" % (module.params.get('name'))
         module.custom_current_config = module.from_json(
             run_cmd(module, _cmd))[0]
+
 
 def build_address(module):
     # if addr_method == 'dhcp', dont add IP address
@@ -155,15 +157,18 @@ def build_address(module):
         module.custom_desired_config['config']['address'] = ' '.join(
             _addresslist)
 
+
 def build_vids(module):
     _vids = module.params.get('vids')
     if _vids and len(_vids) > 0:
         module.custom_desired_config['config']['bridge-vids'] = ' '.join(_vids)
 
+
 def build_pvid(module):
     _pvid = module.params.get('pvid')
     if _pvid:
         module.custom_desired_config['config']['bridge-pvid'] = str(_pvid)
+
 
 def conv_bool_to_str(_value):
     if isinstance(_value, bool):
@@ -173,6 +178,7 @@ def conv_bool_to_str(_value):
             return 'no'
     return _value
 
+
 def build_generic_attr(module, _attr):
     _value = module.params.get(_attr)
     _value = conv_bool_to_str(_value)
@@ -180,16 +186,19 @@ def build_generic_attr(module, _attr):
         module.custom_desired_config['config'][
             re.sub('_', '-', _attr)] = str(_value)
 
+
 def build_alias_name(module):
     alias_name = module.params.get('alias_name')
     if alias_name:
         module.custom_desired_config['config']['alias'] = alias_name
+
 
 def build_addr_method(module):
     _addr_method = module.params.get('addr_method')
     if _addr_method:
         module.custom_desired_config['addr_family'] = 'inet'
         module.custom_desired_config['addr_method'] = _addr_method
+
 
 def build_vrr(module):
     _virtual_ip = module.params.get('virtual_ip')
@@ -200,6 +209,7 @@ def build_vrr(module):
         vrr_config.append(_virtual_ip)
         module.custom_desired_config.get('config')['address-virtual'] = \
             ' '.join(vrr_config)
+
 
 def add_glob_to_array(_bridgemems):
     """
@@ -214,6 +224,7 @@ def add_glob_to_array(_bridgemems):
             result.append(_entry)
         return ' '.join(result)
     return _bridgemems
+
 
 def build_bridge_attr(module, _attr):
     _value = module.params.get(_attr)
@@ -246,6 +257,7 @@ def build_desired_iface_config(module):
     for _attr in ['mtu', 'mstpctl_treeprio']:
         build_generic_attr(module, _attr)
 
+
 def config_dict_changed(module):
     """
     return true if 'config' dict in hash is different
@@ -254,6 +266,7 @@ def config_dict_changed(module):
     current_config = module.custom_current_config.get('config')
     desired_config = module.custom_desired_config.get('config')
     return current_config != desired_config
+
 
 def config_changed(module):
     """
@@ -264,6 +277,7 @@ def config_changed(module):
     # check if addr_method is changed
     return module.custom_desired_config.get('addr_method') != \
         module.custom_current_config.get('addr_method')
+
 
 def replace_config(module):
     temp = tempfile.NamedTemporaryFile()
@@ -309,7 +323,7 @@ def main():
             vlan_aware=dict(type='bool', choices=BOOLEANS),
             stp=dict(type='bool', default='yes', choices=BOOLEANS),
             location=dict(type='str',
-                                default='/etc/network/interfaces.d')
+                          default='/etc/network/interfaces.d')
         ),
         required_together=[
             ['virtual_ip', 'virtual_mac']
@@ -329,7 +343,7 @@ def main():
     if not os.path.exists(_location):
         _msg = "%s does not exist." % (_location)
         module.fail_json(msg=_msg)
-        return # for testing purposes only
+        return  # for testing purposes only
 
     ifacename = module.params.get('name')
     _changed = False
