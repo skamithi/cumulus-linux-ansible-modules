@@ -137,6 +137,7 @@ cl_bonds:
         clag_id: 1
 '''
 
+
 # handy helper for calling system calls.
 # calls AnsibleModule.run_command and prints a more appropriate message
 # exec_path - path to file to execute, with all its arguments.
@@ -152,6 +153,7 @@ def run_cmd(module, exec_path):
     else:
         return out
 
+
 def current_iface_config(module):
     # due to a bug in ifquery, have to check for presence of interface file
     # and not rely solely on ifquery. when bug is fixed, this check can be
@@ -163,6 +165,7 @@ def current_iface_config(module):
         _cmd = "/sbin/ifquery -o json %s" % (module.params.get('name'))
         module.custom_current_config = module.from_json(
             run_cmd(module, _cmd))[0]
+
 
 def build_address(module):
     # if addr_method == 'dhcp', dont add IP address
@@ -180,15 +183,18 @@ def build_address(module):
         module.custom_desired_config['config']['address'] = ' '.join(
             _addresslist)
 
+
 def build_vids(module):
     _vids = module.params.get('vids')
     if _vids and len(_vids) > 0:
         module.custom_desired_config['config']['bridge-vids'] = ' '.join(_vids)
 
+
 def build_pvid(module):
     _pvid = module.params.get('pvid')
     if _pvid:
         module.custom_desired_config['config']['bridge-pvid'] = str(_pvid)
+
 
 def conv_bool_to_str(_value):
     if isinstance(_value, bool):
@@ -198,6 +204,7 @@ def conv_bool_to_str(_value):
             return 'no'
     return _value
 
+
 def build_generic_attr(module, _attr):
     _value = module.params.get(_attr)
     _value = conv_bool_to_str(_value)
@@ -205,16 +212,19 @@ def build_generic_attr(module, _attr):
         module.custom_desired_config['config'][
             re.sub('_', '-', _attr)] = str(_value)
 
+
 def build_alias_name(module):
     alias_name = module.params.get('alias_name')
     if alias_name:
         module.custom_desired_config['config']['alias'] = alias_name
+
 
 def build_addr_method(module):
     _addr_method = module.params.get('addr_method')
     if _addr_method:
         module.custom_desired_config['addr_family'] = 'inet'
         module.custom_desired_config['addr_method'] = _addr_method
+
 
 def build_vrr(module):
     _virtual_ip = module.params.get('virtual_ip')
@@ -225,6 +235,7 @@ def build_vrr(module):
         vrr_config.append(_virtual_ip)
         module.custom_desired_config.get('config')['address-virtual'] = \
             ' '.join(vrr_config)
+
 
 def add_glob_to_array(_bondmems):
     """
@@ -239,6 +250,7 @@ def add_glob_to_array(_bondmems):
             result.append(_entry)
         return ' '.join(result)
     return _bondmems
+
 
 def build_bond_attr(module, _attr):
     _value = module.params.get(_attr)
@@ -274,6 +286,7 @@ def build_desired_iface_config(module):
                   'mstpctl_bpduguard', 'clag_id']:
         build_generic_attr(module, _attr)
 
+
 def config_dict_changed(module):
     """
     return true if 'config' dict in hash is different
@@ -282,6 +295,7 @@ def config_dict_changed(module):
     current_config = module.custom_current_config.get('config')
     desired_config = module.custom_desired_config.get('config')
     return current_config != desired_config
+
 
 def config_changed(module):
     """
@@ -292,6 +306,7 @@ def config_changed(module):
     # check if addr_method is changed
     return module.custom_desired_config.get('addr_method') != \
         module.custom_current_config.get('addr_method')
+
 
 def replace_config(module):
     temp = tempfile.NamedTemporaryFile()
@@ -342,18 +357,27 @@ def main():
             xmit_hash_policy=dict(type='str', default='layer3+4'),
             lacp_rate=dict(type='int', default=1),
             location=dict(type='str',
-                                default='/etc/network/interfaces.d')
+                          default='/etc/network/interfaces.d')
         ),
         required_together=[
             ['virtual_ip', 'virtual_mac']
         ]
     )
 
+    # if using the jinja default filter, this resolves to
+    # create an list with an empty string ['']. The following
+    # checks all lists and removes it, so that functions expecting
+    # an empty list, get this result. May upstream this fix into
+    # the AnsibleModule code to have it check for this.
+    for k, _param in module.params.iteritems():
+        if isinstance(_param, list):
+            module.params[k] = [x for x in _param if x]
+
     _location = module.params.get('location')
     if not os.path.exists(_location):
         _msg = "%s does not exist." % (_location)
         module.fail_json(msg=_msg)
-        return # for testing purposes only
+        return  # for testing purposes only
 
     ifacename = module.params.get('name')
     _changed = False

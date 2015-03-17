@@ -352,6 +352,15 @@ def main():
         ]
     )
 
+    # if using the jinja default filter, this resolves to
+    # create an list with an empty string ['']. The following
+    # checks all lists and removes it, so that functions expecting
+    # an empty list, get this result. May upstream this fix into
+    # the AnsibleModule code to have it check for this.
+    for k, _param in module.params.iteritems():
+        if isinstance(_param, list):
+            module.params[k] = [x for x in _param if x]
+
     _location = module.params.get('location')
     if not os.path.exists(_location):
         _msg = "%s does not exist." % (_location)
