@@ -89,7 +89,7 @@ supported
 layer3+4 policy is supported
         default: layer3+4
 
-requirements: [ Alternate Debian network interface manager - \
+requirements: Alternate Debian network interface manager - \
 ifupdown2 @ github.com/CumulusNetworks/ifupdown2 ]
 notes:
     - For the config to be activated, i.e installed in the kernel, \
@@ -272,7 +272,7 @@ def build_desired_iface_config(module):
         'name': module.params.get('name')
     }
 
-    for _attr in ['slaves', 'xmit_hash_policy',
+    for _attr in ['slaves', 'mode', 'xmit_hash_policy',
                   'miimon', 'lacp_rate', 'min_links']:
         build_bond_attr(module, _attr)
 
