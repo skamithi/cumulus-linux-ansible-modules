@@ -158,6 +158,13 @@ def test_generate_new_ports_conf_hash(mock_module):
                                             9: '40G/4',
                                             10: '10G'})
 
+    # test if string is empty and none type
+    instance.params = {
+        'speed_40g': [''],
+        'speed_10g': None
+    }
+    cl_ports.generate_new_ports_conf_hash(instance)
+    assert_equals(instance.new_ports_hash, {})
 
 @mock.patch('dev_modules.cl_ports.os.path.exists')
 @mock.patch('dev_modules.cl_ports.AnsibleModule')

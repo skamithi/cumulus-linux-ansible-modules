@@ -78,6 +78,7 @@ def generate_new_ports_conf_hash(module):
         port_range = module.params[k]
         port_setting = convert_hash[k]
         if port_range:
+            port_range = [x for x in port_range if x]
             for port_str in port_range:
                 port_range_str = port_str.replace('swp', '').split('-')
                 if len(port_range_str) == 1:
@@ -97,7 +98,8 @@ def compare_new_and_old_port_conf_hash(module):
     port_num_length = len(module.ports_conf_hash.keys())
     orig_port_num_length = len(ports_conf_hash_copy.keys())
     if port_num_length != orig_port_num_length:
-        module.fail_json(msg="Port numbering is wrong. Too many or two few ports configured")
+        module.fail_json(msg="Port numbering is wrong. \
+Too many or two few ports configured")
         return False
     elif ports_conf_hash_copy == module.ports_conf_hash:
         return False
