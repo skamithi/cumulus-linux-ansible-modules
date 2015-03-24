@@ -5,6 +5,23 @@ from asserts import assert_equals
 from mock import MagicMock
 import json
 
+
+@mock.patch('dev_modules.cl_bond.build_bond_attr')
+@mock.patch('dev_modules.cl_bond.AnsibleModule')
+def test_build_desired_iface_config(mock_module,
+                                    mock_build_bond_attr):
+    """ test desired iface grabs all the necessary info """
+    mock_module.params = {'virtual_ip': None}
+    cl_int.build_desired_iface_config(mock_module)
+    assert_equals(mock_build_bond_attr.call_args_list,
+                  [mock.call(mock_module, 'slaves'),
+                   mock.call(mock_module, 'mode'),
+                   mock.call(mock_module, 'xmit_hash_policy'),
+                   mock.call(mock_module, 'miimon'),
+                   mock.call(mock_module, 'lacp_rate'),
+                   mock.call(mock_module, 'min_links')])
+
+
 @mock.patch('dev_modules.cl_bond.os.path.exists')
 @mock.patch('dev_modules.cl_bond.replace_config')
 @mock.patch('dev_modules.cl_bond.config_changed')
@@ -49,6 +66,7 @@ def test_module_args(mock_module,
             'location': {'type': 'str', 'default': '/etc/network/interfaces.d'}}
     )
 
+
 @mock.patch('dev_modules.cl_bond.os.path.exists')
 @mock.patch('dev_modules.cl_bond.replace_config')
 @mock.patch('dev_modules.cl_bond.config_changed')
@@ -56,10 +74,10 @@ def test_module_args(mock_module,
 @mock.patch('dev_modules.cl_bond.current_iface_config')
 @mock.patch('dev_modules.cl_bond.AnsibleModule')
 def test_main_integration_test(mock_module,
-                     mock_curr_config,
-                     mock_desired_config,
-                     mock_compare,
-                     mock_replace, mock_exists):
+                               mock_curr_config,
+                               mock_desired_config,
+                               mock_compare,
+                               mock_replace, mock_exists):
     """ cl_bond - basic integration test of main """
     mock_exists.return_value = True
     instance = mock_module.return_value
@@ -80,7 +98,9 @@ def test_main_integration_test(mock_module,
     instance.params['location'] = '/etc/network/ansible'
     mock_exists.return_value = False
     cl_int.main()
-    instance.fail_json.assert_called_with(msg='/etc/network/ansible does not exist.')
+    instance.fail_json.assert_called_with(
+        msg='/etc/network/ansible does not exist.')
+
 
 @mock.patch('dev_modules.cl_bond.os.path.exists')
 @mock.patch('dev_modules.cl_bond.AnsibleModule')
@@ -110,7 +130,7 @@ def test_vrr(mock_module):
     """
     mock_module.custom_desired_config = {'config': {}}
     mock_module.params = {'virtual_ip': '192.168.1.1/24',
-                           'virtual_mac': '00:00:5e:00:01:01'}
+                          'virtual_mac': '00:00:5e:00:01:01'}
     cl_int.build_vrr(mock_module)
     assert_equals(mock_module.custom_desired_config,
                   {'config': {
@@ -137,18 +157,19 @@ def test_build_address(mock_module):
                   {'config': {'address': '1.1.1.1/24'}})
 
     #
-@mock.patch('dev_modules.cl_bond.AnsibleModule')
-def test_build_addr_method(mock_module):
-    """
-    cl_bond - test building desired addr_method
-    """
-    mock_module.custom_desired_config = {'config': {}}
-    mock_module.params = {'addr_method': 'loopback'}
-    cl_int.build_addr_method(mock_module)
-    assert_equals(mock_module.custom_desired_config.get('addr_family'),
-                  'inet')
-    assert_equals(mock_module.custom_desired_config.get('addr_method'),
-                  'loopback')
+    @mock.patch('dev_modules.cl_bond.AnsibleModule')
+    def test_build_addr_method(mock_module):
+        """
+        cl_bond - test building desired addr_method
+        """
+        mock_module.custom_desired_config = {'config': {}}
+        mock_module.params = {'addr_method': 'loopback'}
+        cl_int.build_addr_method(mock_module)
+        assert_equals(mock_module.custom_desired_config.get('addr_family'),
+                      'inet')
+        assert_equals(mock_module.custom_desired_config.get('addr_method'),
+                      'loopback')
+
 
 @mock.patch('dev_modules.cl_bond.AnsibleModule')
 def test_build_vids(mock_module):
@@ -160,6 +181,7 @@ def test_build_vids(mock_module):
     cl_int.build_vids(mock_module)
     assert_equals(mock_module.custom_desired_config,
                   {'config': {'bridge-vids': '1 10-40'}})
+
 
 @mock.patch('dev_modules.cl_bond.AnsibleModule')
 def test_build_pvid(mock_module):
@@ -192,7 +214,8 @@ def test_build_bond_attr(mock_module):
     assert_equals(mock_module.custom_desired_config,
                   {'config': {
                       'bond-slaves': 'glob swp1-3 swp5'}})
-    #
+
+
 @mock.patch('dev_modules.cl_bond.AnsibleModule')
 def test_build_generic_attr(mock_module):
     """
@@ -214,11 +237,13 @@ def test_build_generic_attr(mock_module):
                   {'config': {
                       'mstpctl-portnetwork': 'yes'}})
 
+
 @mock.patch('dev_modules.cl_bond.AnsibleModule')
 def test_config_dict_changed(mock_module):
     mock_module.custom_desired_config = {'config': {'address': '10.1.1.1/24'}}
     mock_module.custom_current_config = {}
     assert_equals(cl_int.config_dict_changed(mock_module), True)
+
 
 @mock.patch('dev_modules.cl_bond.AnsibleModule')
 def test_config_changed(mock_module):
