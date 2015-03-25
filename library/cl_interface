@@ -6,7 +6,7 @@
 DOCUMENTATION = '''
 ---
 module: cl_interface
-author: Stanley Karunditu
+author: Cumulus Networks
 short_description: Configures a front panel port, loopback or \
 management port on Cumulus Linux.
 description:
@@ -18,6 +18,8 @@ the "vid" option, please follow the guidelines for configuring \
 "vlan aware" bridging. For more details \
 review the Layer2 Interface Guide @ \
 http://docs.cumulusnetworks.com
+contributors:
+    - Stanley Karunditu
 options:
     name:
         description:

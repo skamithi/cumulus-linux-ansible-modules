@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 #
-# Copyright (C) 2014, Cumulus Networks www.cumulusnetworks.com
+# Copyright (C) 2015, Cumulus Networks www.cumulusnetworks.com
 #
 #
 DOCUMENTATION = '''
 ---
 module: cl_license
-author: Sean Cavanaugh & Stanley Karunditu
+author: Cumulus Networks
 short_description: Install Cumulus Linux license
 description:
     - Install a Cumulus Linux license. If an existing license has expired, \
@@ -25,9 +25,13 @@ options:
     force:
         description:
             - force installation of the license. This does not active the new \
-license. It overwrites the existing license without checking if the license has expired or not.
+license. It overwrites the existing license without checking \
+if the license has expired or not.
         choices: ['yes', 'no']
         default: 'no'
+contributors:
+    - Stanley Karunditu
+    - Sean Cavanaugh
 '''
 EXAMPLES = '''
 Example playbook using the cl_license module to manage \

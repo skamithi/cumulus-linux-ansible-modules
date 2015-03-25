@@ -6,7 +6,7 @@
 DOCUMENTATION = '''
 ---
 module: cl_bond
-author: Stanley Karunditu
+author: Cumulus Networks
 short_description: Configures a bond port on Cumulus Linux
 description:
     - Configures a bond interface on Cumulus Linux To configure a bridge port \
@@ -14,6 +14,8 @@ use the cl_bridge module. To configure any other type of interface use the \
 cl_interface module. Follow the guidelines for \
 bonding found in the Cumulus User Guide @ \
 http://docs.cumulusnetworks.com
+contributors:
+    - Stanley Karunditu
 options:
     name:
         description:
@@ -95,7 +97,7 @@ layer3+4 policy is supported
             - /etc/network/interfaces.d
 
 
-requirements: Alternate Debian network interface manager - \
+requirements:  [ Alternate Debian network interface manager - \
 ifupdown2 @ github.com/CumulusNetworks/ifupdown2 ]
 notes:
     - because the module writes the interface directory location. Ensure that \

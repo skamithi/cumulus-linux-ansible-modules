@@ -6,7 +6,7 @@
 DOCUMENTATION = '''
 ---
 module: cl_ports
-author: Stanley Karunditu
+author: Cumulus Networks
 short_description: Configure Cumulus Switch port attributes (ports.conf)
 description:
     - Set the initial port attribute defined in the Cumulus Linux ports.conf, \
@@ -16,6 +16,8 @@ Carefully read the original \
 ports.conf file for any exceptions or limitations. \
 For more details go the Configure Switch Port Attribute Documentation @ \
 http://docs.cumulusnetworks.com
+contributors:
+    - Stanley Karunditu
 options:
     speed_10g:
         description:

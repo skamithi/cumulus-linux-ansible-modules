@@ -6,7 +6,7 @@
 DOCUMENTATION = '''
 ---
 module: cl_bridge
-author: Stanley Karunditu
+author: Cumulus Networks
 short_description: Configures a bridge port on Cumulus Linux
 description:
     - Configures a bridge interface on Cumulus Linux To configure a bond port \
@@ -14,6 +14,8 @@ use the cl_bond module. To configure any other type of interface use the \
 cl_interface module. Follow the guidelines for \
 bridging found in the Cumulus User Guide @ \
 http://docs.cumulusnetworks.com
+contributors:
+    - Stanley Karunditu
 options:
     name:
         description:
