@@ -99,7 +99,3 @@ tools on networking gear while delivering new levels of innovation and
 
 For further details please see: [cumulusnetworks.com](http://www.cumulusnetworks.com)
 
-## CONTRIBUTORS
-
-- Sean Cavanaugh (@seanx820)
-- Stanley Karunditu (@skamithik)

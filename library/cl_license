@@ -29,9 +29,6 @@ license. It overwrites the existing license without checking \
 if the license has expired or not.
         choices: ['yes', 'no']
         default: 'no'
-contributors:
-    - Stanley Karunditu
-    - Sean Cavanaugh
 '''
 EXAMPLES = '''
 Example playbook using the cl_license module to manage \

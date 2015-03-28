@@ -6,7 +6,7 @@
 DOCUMENTATION = '''
 ---
 module: cl_quagga_protocol
-author: Stanley Karunditu
+author: Cumulus Networks
 short_description: Enable routing protocol services via Quagga
 description:
     - Enable Quagga services available on Cumulus Linux. \

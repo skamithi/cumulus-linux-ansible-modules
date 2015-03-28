@@ -14,8 +14,6 @@ use the cl_bridge module. To configure any other type of interface use the \
 cl_interface module. Follow the guidelines for \
 bonding found in the Cumulus User Guide @ \
 http://docs.cumulusnetworks.com
-contributors:
-    - Stanley Karunditu
 options:
     name:
         description:

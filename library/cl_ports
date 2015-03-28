@@ -16,8 +16,6 @@ Carefully read the original \
 ports.conf file for any exceptions or limitations. \
 For more details go the Configure Switch Port Attribute Documentation @ \
 http://docs.cumulusnetworks.com
-contributors:
-    - Stanley Karunditu
 options:
     speed_10g:
         description:

@@ -18,8 +18,6 @@ the "vid" option, please follow the guidelines for configuring \
 "vlan aware" bridging. For more details \
 review the Layer2 Interface Guide @ \
 http://docs.cumulusnetworks.com
-contributors:
-    - Stanley Karunditu
 options:
     name:
         description:
