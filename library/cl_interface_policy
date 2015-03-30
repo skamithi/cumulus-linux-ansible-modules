@@ -5,7 +5,7 @@
 DOCUMENTATION = '''
 ---
 module: cl_interface_policy
-author: Stanley Karunditu
+author: Cumulus Networks
 short_description: Configure interface enforcement policy on Cumulus Linux
 description:
     - This module affects the configuration files located in the interfaces \
@@ -17,7 +17,7 @@ By default this is `/etc/network/interface.d` \
 For more details go the Configuring Interfaces @ \
 http://docs.cumulusnetworks.com
 notes:
-    - lo must be included in the allowed list (FIXME)
+    - lo must be included in the allowed list.
     - eth0 must be in allowed list if out of band management is done
 options:
     allowed:

@@ -6,7 +6,7 @@
 DOCUMENTATION = '''
 ---
 module: cl_interface
-author: Stanley Karunditu
+author: Cumulus Networks
 short_description: Configures a front panel port, loopback or \
 management port on Cumulus Linux.
 description:

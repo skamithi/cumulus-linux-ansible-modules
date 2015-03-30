@@ -6,7 +6,7 @@
 DOCUMENTATION = '''
 ---
 module: cl_img_install
-author: Stanley Karunditu
+author: Cumulus Networks
 short_description: Install a different Cumulus Linux version.
 description:
     - install a different version of Cumulus Linux in the inactive slot. For \
