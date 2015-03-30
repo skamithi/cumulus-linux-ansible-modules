@@ -1,16 +1,16 @@
 import mock
 from nose.tools import set_trace
-import dev_modules.cl_interface as cl_int
+import library.cl_interface as cl_int
 from asserts import assert_equals
 from mock import MagicMock
 import json
 
-@mock.patch('dev_modules.cl_interface.os.path.exists')
-@mock.patch('dev_modules.cl_interface.replace_config')
-@mock.patch('dev_modules.cl_interface.config_changed')
-@mock.patch('dev_modules.cl_interface.build_desired_iface_config')
-@mock.patch('dev_modules.cl_interface.current_iface_config')
-@mock.patch('dev_modules.cl_interface.AnsibleModule')
+@mock.patch('library.cl_interface.os.path.exists')
+@mock.patch('library.cl_interface.replace_config')
+@mock.patch('library.cl_interface.config_changed')
+@mock.patch('library.cl_interface.build_desired_iface_config')
+@mock.patch('library.cl_interface.current_iface_config')
+@mock.patch('library.cl_interface.AnsibleModule')
 def test_module_args(mock_module,
                      mock_curr_config,
                      mock_desired_config,
@@ -51,12 +51,12 @@ def test_module_args(mock_module,
             'speed': {'type': 'str'}}
     )
 
-@mock.patch('dev_modules.cl_interface.os.path.exists')
-@mock.patch('dev_modules.cl_interface.replace_config')
-@mock.patch('dev_modules.cl_interface.config_changed')
-@mock.patch('dev_modules.cl_interface.build_desired_iface_config')
-@mock.patch('dev_modules.cl_interface.current_iface_config')
-@mock.patch('dev_modules.cl_interface.AnsibleModule')
+@mock.patch('library.cl_interface.os.path.exists')
+@mock.patch('library.cl_interface.replace_config')
+@mock.patch('library.cl_interface.config_changed')
+@mock.patch('library.cl_interface.build_desired_iface_config')
+@mock.patch('library.cl_interface.current_iface_config')
+@mock.patch('library.cl_interface.AnsibleModule')
 def test_main_integration_test(mock_module,
                      mock_curr_config,
                      mock_desired_config,
@@ -84,8 +84,8 @@ def test_main_integration_test(mock_module,
     cl_int.main()
     instance.fail_json.assert_called_with(msg='/etc/network/ansible does not exist.')
 
-@mock.patch('dev_modules.cl_interface.os.path.exists')
-@mock.patch('dev_modules.cl_interface.AnsibleModule')
+@mock.patch('library.cl_interface.os.path.exists')
+@mock.patch('library.cl_interface.AnsibleModule')
 def test_current_iface_config(mock_module, mock_exists):
     """
     cl_interface - test getting current iface config
@@ -105,7 +105,7 @@ def test_current_iface_config(mock_module, mock_exists):
     mock_module.run_command.assert_called_with('/sbin/ifquery -o json swp1')
 
 
-@mock.patch('dev_modules.cl_interface.AnsibleModule')
+@mock.patch('library.cl_interface.AnsibleModule')
 def test_vrr(mock_module):
     """
     cl_interface: - test build vrr config
@@ -127,7 +127,7 @@ def test_vrr(mock_module):
                   {'config': {}})
 
 
-@mock.patch('dev_modules.cl_interface.AnsibleModule')
+@mock.patch('library.cl_interface.AnsibleModule')
 def test_build_address(mock_module):
     """
     cl_interface: - test building desired address config
@@ -139,7 +139,7 @@ def test_build_address(mock_module):
                   {'config': {'address': '1.1.1.1/24'}})
 
     #
-@mock.patch('dev_modules.cl_interface.AnsibleModule')
+@mock.patch('library.cl_interface.AnsibleModule')
 def test_build_addr_method(mock_module):
     """
     cl_interface - test building desired addr_method
@@ -152,7 +152,7 @@ def test_build_addr_method(mock_module):
     assert_equals(mock_module.custom_desired_config.get('addr_method'),
                   'loopback')
 
-@mock.patch('dev_modules.cl_interface.AnsibleModule')
+@mock.patch('library.cl_interface.AnsibleModule')
 def test_build_vids(mock_module):
     """
     cl_interface - test building desired vids config
@@ -163,7 +163,7 @@ def test_build_vids(mock_module):
     assert_equals(mock_module.custom_desired_config,
                   {'config': {'bridge-vids': '1 10-40'}})
 
-@mock.patch('dev_modules.cl_interface.AnsibleModule')
+@mock.patch('library.cl_interface.AnsibleModule')
 def test_build_pvid(mock_module):
     """
     cl_interface - test building desired pvid
@@ -175,7 +175,7 @@ def test_build_pvid(mock_module):
                   {'config': {'bridge-pvid': '2'}})
 
 
-@mock.patch('dev_modules.cl_interface.AnsibleModule')
+@mock.patch('library.cl_interface.AnsibleModule')
 def test_build_speed(mock_module):
     """
     cl_interface - test building speed config
@@ -188,7 +188,7 @@ def test_build_speed(mock_module):
                       'link-speed': '1000',
                       'link-duplex': 'full'}})
 
-@mock.patch('dev_modules.cl_interface.AnsibleModule')
+@mock.patch('library.cl_interface.AnsibleModule')
 def test_build_generic_attr(mock_module):
     """
     cl_interface - adding values from module parameters that match
@@ -209,13 +209,13 @@ def test_build_generic_attr(mock_module):
                   {'config': {
                       'clagd-enable': 'yes'}})
 
-@mock.patch('dev_modules.cl_interface.AnsibleModule')
+@mock.patch('library.cl_interface.AnsibleModule')
 def test_config_dict_changed(mock_module):
     mock_module.custom_desired_config = {'config': {'address': '10.1.1.1/24'}}
     mock_module.custom_current_config = {}
     assert_equals(cl_int.config_dict_changed(mock_module), True)
 
-@mock.patch('dev_modules.cl_interface.AnsibleModule')
+@mock.patch('library.cl_interface.AnsibleModule')
 def test_config_changed(mock_module):
     """
     cl_interface - test config change
@@ -268,6 +268,6 @@ def test_config_changed(mock_module):
     assert_equals(cl_int.config_changed(mock_module), True)
 
 
-@mock.patch('dev_modules.cl_interface.AnsibleModule')
+@mock.patch('library.cl_interface.AnsibleModule')
 def test_replace_config(mock_module):
     pass

@@ -1,7 +1,7 @@
 import mock
 from mock import MagicMock
 from nose.tools import set_trace
-from dev_modules.cl_license import license_upto_date, main, \
+from library.cl_license import license_upto_date, main, \
     check_license_url, get_todays_date
 from asserts import assert_equals
 from datetime import date, datetime
@@ -36,8 +36,8 @@ def test_get_todays_date():
     assert_equals(isinstance(result, datetime), True)
 
 
-@mock.patch('dev_modules.cl_license.get_todays_date')
-@mock.patch('dev_modules.cl_license.os.path.exists')
+@mock.patch('library.cl_license.get_todays_date')
+@mock.patch('library.cl_license.os.path.exists')
 def test_check_license_existence(mock_os_path_exists, mock_date):
     "Test check_license_existence"
     lf = open('tests/license.txt')
@@ -73,9 +73,9 @@ def test_check_license_existence(mock_os_path_exists, mock_date):
         assert_equals(mock_module.exit_json.call_count, 0)
 
 
-@mock.patch('dev_modules.cl_license.time.sleep')
-@mock.patch('dev_modules.cl_license.license_is_current')
-@mock.patch('dev_modules.cl_license.AnsibleModule')
+@mock.patch('library.cl_license.time.sleep')
+@mock.patch('library.cl_license.license_is_current')
+@mock.patch('library.cl_license.AnsibleModule')
 def test_run_main(mock_ansible_module,
                   mock_license,
                   mock_time):
@@ -92,7 +92,7 @@ def test_run_main(mock_ansible_module,
     instance.exit_json.assert_called_with(msg=_msg, changed=True)
 
 
-@mock.patch('dev_modules.cl_license.AnsibleModule')
+@mock.patch('library.cl_license.AnsibleModule')
 def test_check_license_url(mock_module):
     """
     Test to see that license url is properly defined

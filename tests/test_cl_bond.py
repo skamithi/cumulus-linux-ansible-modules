@@ -1,13 +1,13 @@
 import mock
 from nose.tools import set_trace
-import dev_modules.cl_bond as cl_int
+import library.cl_bond as cl_int
 from asserts import assert_equals
 from mock import MagicMock
 import json
 
 
-@mock.patch('dev_modules.cl_bond.build_bond_attr')
-@mock.patch('dev_modules.cl_bond.AnsibleModule')
+@mock.patch('library.cl_bond.build_bond_attr')
+@mock.patch('library.cl_bond.AnsibleModule')
 def test_build_desired_iface_config(mock_module,
                                     mock_build_bond_attr):
     """ test desired iface grabs all the necessary info """
@@ -22,12 +22,12 @@ def test_build_desired_iface_config(mock_module,
                    mock.call(mock_module, 'min_links')])
 
 
-@mock.patch('dev_modules.cl_bond.os.path.exists')
-@mock.patch('dev_modules.cl_bond.replace_config')
-@mock.patch('dev_modules.cl_bond.config_changed')
-@mock.patch('dev_modules.cl_bond.build_desired_iface_config')
-@mock.patch('dev_modules.cl_bond.current_iface_config')
-@mock.patch('dev_modules.cl_bond.AnsibleModule')
+@mock.patch('library.cl_bond.os.path.exists')
+@mock.patch('library.cl_bond.replace_config')
+@mock.patch('library.cl_bond.config_changed')
+@mock.patch('library.cl_bond.build_desired_iface_config')
+@mock.patch('library.cl_bond.current_iface_config')
+@mock.patch('library.cl_bond.AnsibleModule')
 def test_module_args(mock_module,
                      mock_curr_config,
                      mock_desired_config,
@@ -67,12 +67,12 @@ def test_module_args(mock_module,
     )
 
 
-@mock.patch('dev_modules.cl_bond.os.path.exists')
-@mock.patch('dev_modules.cl_bond.replace_config')
-@mock.patch('dev_modules.cl_bond.config_changed')
-@mock.patch('dev_modules.cl_bond.build_desired_iface_config')
-@mock.patch('dev_modules.cl_bond.current_iface_config')
-@mock.patch('dev_modules.cl_bond.AnsibleModule')
+@mock.patch('library.cl_bond.os.path.exists')
+@mock.patch('library.cl_bond.replace_config')
+@mock.patch('library.cl_bond.config_changed')
+@mock.patch('library.cl_bond.build_desired_iface_config')
+@mock.patch('library.cl_bond.current_iface_config')
+@mock.patch('library.cl_bond.AnsibleModule')
 def test_main_integration_test(mock_module,
                                mock_curr_config,
                                mock_desired_config,
@@ -102,8 +102,8 @@ def test_main_integration_test(mock_module,
         msg='/etc/network/ansible does not exist.')
 
 
-@mock.patch('dev_modules.cl_bond.os.path.exists')
-@mock.patch('dev_modules.cl_bond.AnsibleModule')
+@mock.patch('library.cl_bond.os.path.exists')
+@mock.patch('library.cl_bond.AnsibleModule')
 def test_current_iface_config(mock_module, mock_exists):
     """
     cl_bond - test getting current iface config
@@ -123,7 +123,7 @@ def test_current_iface_config(mock_module, mock_exists):
     mock_module.run_command.assert_called_with('/sbin/ifquery -o json swp1')
 
 
-@mock.patch('dev_modules.cl_bond.AnsibleModule')
+@mock.patch('library.cl_bond.AnsibleModule')
 def test_vrr(mock_module):
     """
     cl_bond: - test build vrr config
@@ -145,7 +145,7 @@ def test_vrr(mock_module):
                   {'config': {}})
 
 
-@mock.patch('dev_modules.cl_bond.AnsibleModule')
+@mock.patch('library.cl_bond.AnsibleModule')
 def test_build_address(mock_module):
     """
     cl_bond: - test building desired address config
@@ -157,7 +157,7 @@ def test_build_address(mock_module):
                   {'config': {'address': '1.1.1.1/24'}})
 
     #
-    @mock.patch('dev_modules.cl_bond.AnsibleModule')
+    @mock.patch('library.cl_bond.AnsibleModule')
     def test_build_addr_method(mock_module):
         """
         cl_bond - test building desired addr_method
@@ -171,7 +171,7 @@ def test_build_address(mock_module):
                       'loopback')
 
 
-@mock.patch('dev_modules.cl_bond.AnsibleModule')
+@mock.patch('library.cl_bond.AnsibleModule')
 def test_build_vids(mock_module):
     """
     cl_bond - test building desired vids config
@@ -183,7 +183,7 @@ def test_build_vids(mock_module):
                   {'config': {'bridge-vids': '1 10-40'}})
 
 
-@mock.patch('dev_modules.cl_bond.AnsibleModule')
+@mock.patch('library.cl_bond.AnsibleModule')
 def test_build_pvid(mock_module):
     """
     cl_bond - test building desired pvid
@@ -195,7 +195,7 @@ def test_build_pvid(mock_module):
                   {'config': {'bridge-pvid': '2'}})
 
 
-@mock.patch('dev_modules.cl_bond.AnsibleModule')
+@mock.patch('library.cl_bond.AnsibleModule')
 def test_build_bond_attr(mock_module):
     """
     cl_bond - setting ifupdown2 bond related options
@@ -216,7 +216,7 @@ def test_build_bond_attr(mock_module):
                       'bond-slaves': 'glob swp1-3 swp5'}})
 
 
-@mock.patch('dev_modules.cl_bond.AnsibleModule')
+@mock.patch('library.cl_bond.AnsibleModule')
 def test_build_generic_attr(mock_module):
     """
     cl_bond - adding values from module parameters that match
@@ -238,14 +238,14 @@ def test_build_generic_attr(mock_module):
                       'mstpctl-portnetwork': 'yes'}})
 
 
-@mock.patch('dev_modules.cl_bond.AnsibleModule')
+@mock.patch('library.cl_bond.AnsibleModule')
 def test_config_dict_changed(mock_module):
     mock_module.custom_desired_config = {'config': {'address': '10.1.1.1/24'}}
     mock_module.custom_current_config = {}
     assert_equals(cl_int.config_dict_changed(mock_module), True)
 
 
-@mock.patch('dev_modules.cl_bond.AnsibleModule')
+@mock.patch('library.cl_bond.AnsibleModule')
 def test_config_changed(mock_module):
     """
     cl_bond - test config change
@@ -298,6 +298,6 @@ def test_config_changed(mock_module):
     assert_equals(cl_int.config_changed(mock_module), True)
 
 
-@mock.patch('dev_modules.cl_bond.AnsibleModule')
+@mock.patch('library.cl_bond.AnsibleModule')
 def test_replace_config(mock_module):
     pass
