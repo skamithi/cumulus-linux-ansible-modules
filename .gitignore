@@ -1,3 +1,4 @@
+library/__init__.py
 *.swp
 ansible.cfg
 site.yml

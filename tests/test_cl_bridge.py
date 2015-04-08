@@ -1,16 +1,16 @@
 import mock
 from nose.tools import set_trace
-import dev_modules.cl_bridge as cl_int
+import library.cl_bridge as cl_int
 from asserts import assert_equals
 from mock import MagicMock
 import json
 
-@mock.patch('dev_modules.cl_bridge.os.path.exists')
-@mock.patch('dev_modules.cl_bridge.replace_config')
-@mock.patch('dev_modules.cl_bridge.config_changed')
-@mock.patch('dev_modules.cl_bridge.build_desired_iface_config')
-@mock.patch('dev_modules.cl_bridge.current_iface_config')
-@mock.patch('dev_modules.cl_bridge.AnsibleModule')
+@mock.patch('library.cl_bridge.os.path.exists')
+@mock.patch('library.cl_bridge.replace_config')
+@mock.patch('library.cl_bridge.config_changed')
+@mock.patch('library.cl_bridge.build_desired_iface_config')
+@mock.patch('library.cl_bridge.current_iface_config')
+@mock.patch('library.cl_bridge.AnsibleModule')
 def test_module_args(mock_module,
                      mock_curr_config,
                      mock_desired_config,
@@ -44,12 +44,12 @@ def test_module_args(mock_module,
             'location': {'type': 'str', 'default': '/etc/network/interfaces.d'}}
     )
 
-@mock.patch('dev_modules.cl_bridge.os.path.exists')
-@mock.patch('dev_modules.cl_bridge.replace_config')
-@mock.patch('dev_modules.cl_bridge.config_changed')
-@mock.patch('dev_modules.cl_bridge.build_desired_iface_config')
-@mock.patch('dev_modules.cl_bridge.current_iface_config')
-@mock.patch('dev_modules.cl_bridge.AnsibleModule')
+@mock.patch('library.cl_bridge.os.path.exists')
+@mock.patch('library.cl_bridge.replace_config')
+@mock.patch('library.cl_bridge.config_changed')
+@mock.patch('library.cl_bridge.build_desired_iface_config')
+@mock.patch('library.cl_bridge.current_iface_config')
+@mock.patch('library.cl_bridge.AnsibleModule')
 def test_main_integration_test(mock_module,
                      mock_curr_config,
                      mock_desired_config,
@@ -77,8 +77,8 @@ def test_main_integration_test(mock_module,
     cl_int.main()
     instance.fail_json.assert_called_with(msg='/etc/network/ansible does not exist.')
 
-@mock.patch('dev_modules.cl_bridge.os.path.exists')
-@mock.patch('dev_modules.cl_bridge.AnsibleModule')
+@mock.patch('library.cl_bridge.os.path.exists')
+@mock.patch('library.cl_bridge.AnsibleModule')
 def test_current_iface_config(mock_module, mock_exists):
     """
     cl_bridge - test getting current iface config
@@ -98,7 +98,7 @@ def test_current_iface_config(mock_module, mock_exists):
     mock_module.run_command.assert_called_with('/sbin/ifquery -o json swp1')
 
 
-@mock.patch('dev_modules.cl_bridge.AnsibleModule')
+@mock.patch('library.cl_bridge.AnsibleModule')
 def test_vrr(mock_module):
     """
     cl_bridge: - test build vrr config
@@ -120,7 +120,7 @@ def test_vrr(mock_module):
                   {'config': {}})
 
 
-@mock.patch('dev_modules.cl_bridge.AnsibleModule')
+@mock.patch('library.cl_bridge.AnsibleModule')
 def test_build_address(mock_module):
     """
     cl_bridge: - test building desired address config
@@ -132,7 +132,7 @@ def test_build_address(mock_module):
                   {'config': {'address': '1.1.1.1/24'}})
 
     #
-@mock.patch('dev_modules.cl_bridge.AnsibleModule')
+@mock.patch('library.cl_bridge.AnsibleModule')
 def test_build_addr_method(mock_module):
     """
     cl_bridge - test building desired addr_method
@@ -145,7 +145,7 @@ def test_build_addr_method(mock_module):
     assert_equals(mock_module.custom_desired_config.get('addr_method'),
                   'loopback')
 
-@mock.patch('dev_modules.cl_bridge.AnsibleModule')
+@mock.patch('library.cl_bridge.AnsibleModule')
 def test_build_vids(mock_module):
     """
     cl_bridge - test building desired vids config
@@ -156,7 +156,7 @@ def test_build_vids(mock_module):
     assert_equals(mock_module.custom_desired_config,
                   {'config': {'bridge-vids': '1 10-40'}})
 
-@mock.patch('dev_modules.cl_bridge.AnsibleModule')
+@mock.patch('library.cl_bridge.AnsibleModule')
 def test_build_bridge_attr(mock_module):
     """
     cl_bridge - setting ifupdown2 bridge related options
@@ -176,7 +176,7 @@ def test_build_bridge_attr(mock_module):
                   {'config': {
                       'bridge-ports': 'glob swp1-3 swp5'}})
     #
-@mock.patch('dev_modules.cl_bridge.AnsibleModule')
+@mock.patch('library.cl_bridge.AnsibleModule')
 def test_build_generic_attr(mock_module):
     """
     cl_bridge - adding values from module parameters that match
@@ -197,13 +197,13 @@ def test_build_generic_attr(mock_module):
                   {'config': {
                       'mstpctl-portnetwork': 'yes'}})
 
-@mock.patch('dev_modules.cl_bridge.AnsibleModule')
+@mock.patch('library.cl_bridge.AnsibleModule')
 def test_config_dict_changed(mock_module):
     mock_module.custom_desired_config = {'config': {'address': '10.1.1.1/24'}}
     mock_module.custom_current_config = {}
     assert_equals(cl_int.config_dict_changed(mock_module), True)
 
-@mock.patch('dev_modules.cl_bridge.AnsibleModule')
+@mock.patch('library.cl_bridge.AnsibleModule')
 def test_config_changed(mock_module):
     """
     cl_bridge - test config change
@@ -255,14 +255,14 @@ def test_config_changed(mock_module):
     }
     assert_equals(cl_int.config_changed(mock_module), True)
 
-@mock.patch('dev_modules.cl_bridge.build_bridge_attr')
-@mock.patch('dev_modules.cl_bridge.build_generic_attr')
-@mock.patch('dev_modules.cl_bridge.build_vrr')
-@mock.patch('dev_modules.cl_bridge.build_alias_name')
-@mock.patch('dev_modules.cl_bridge.build_vids')
-@mock.patch('dev_modules.cl_bridge.build_address')
-@mock.patch('dev_modules.cl_bridge.build_addr_method')
-@mock.patch('dev_modules.cl_bridge.AnsibleModule')
+@mock.patch('library.cl_bridge.build_bridge_attr')
+@mock.patch('library.cl_bridge.build_generic_attr')
+@mock.patch('library.cl_bridge.build_vrr')
+@mock.patch('library.cl_bridge.build_alias_name')
+@mock.patch('library.cl_bridge.build_vids')
+@mock.patch('library.cl_bridge.build_address')
+@mock.patch('library.cl_bridge.build_addr_method')
+@mock.patch('library.cl_bridge.AnsibleModule')
 def test_build_desired_iface_config(mock_module,
                                     mock_addr_method,
                                     mock_address,
@@ -277,6 +277,6 @@ def test_build_desired_iface_config(mock_module,
 
 
 
-@mock.patch('dev_modules.cl_bridge.AnsibleModule')
+@mock.patch('library.cl_bridge.AnsibleModule')
 def test_replace_config(mock_module):
     pass

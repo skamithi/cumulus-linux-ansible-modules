@@ -1,16 +1,16 @@
 import mock
 import os
 from nose.tools import set_trace
-import dev_modules.cl_ports as cl_ports
+import library.cl_ports as cl_ports
 from asserts import assert_equals
 
 
-@mock.patch('dev_modules.cl_ports.make_copy_of_orig_ports_conf')
-@mock.patch('dev_modules.cl_ports.write_to_ports_conf')
-@mock.patch('dev_modules.cl_ports.hash_existing_ports_conf')
-@mock.patch('dev_modules.cl_ports.generate_new_ports_conf_hash')
-@mock.patch('dev_modules.cl_ports.compare_new_and_old_port_conf_hash')
-@mock.patch('dev_modules.cl_ports.AnsibleModule')
+@mock.patch('library.cl_ports.make_copy_of_orig_ports_conf')
+@mock.patch('library.cl_ports.write_to_ports_conf')
+@mock.patch('library.cl_ports.hash_existing_ports_conf')
+@mock.patch('library.cl_ports.generate_new_ports_conf_hash')
+@mock.patch('library.cl_ports.compare_new_and_old_port_conf_hash')
+@mock.patch('library.cl_ports.AnsibleModule')
 def test_module_args(mock_module,
                      mock_compare,
                      mock_generate,
@@ -31,12 +31,12 @@ def test_module_args(mock_module,
     )
 
 
-@mock.patch('dev_modules.cl_ports.make_copy_of_orig_ports_conf')
-@mock.patch('dev_modules.cl_ports.write_to_ports_conf')
-@mock.patch('dev_modules.cl_ports.hash_existing_ports_conf')
-@mock.patch('dev_modules.cl_ports.generate_new_ports_conf_hash')
-@mock.patch('dev_modules.cl_ports.compare_new_and_old_port_conf_hash')
-@mock.patch('dev_modules.cl_ports.AnsibleModule')
+@mock.patch('library.cl_ports.make_copy_of_orig_ports_conf')
+@mock.patch('library.cl_ports.write_to_ports_conf')
+@mock.patch('library.cl_ports.hash_existing_ports_conf')
+@mock.patch('library.cl_ports.generate_new_ports_conf_hash')
+@mock.patch('library.cl_ports.compare_new_and_old_port_conf_hash')
+@mock.patch('library.cl_ports.AnsibleModule')
 def test_basic_integration_test(mock_module,
                                 mock_compare,
                                 mock_generate,
@@ -58,8 +58,8 @@ def test_basic_integration_test(mock_module,
         msg='No change in /etc/ports.conf', changed=False)
 
 
-@mock.patch('dev_modules.cl_ports.os.path.exists')
-@mock.patch('dev_modules.cl_ports.shutil.copyfile')
+@mock.patch('library.cl_ports.os.path.exists')
+@mock.patch('library.cl_ports.shutil.copyfile')
 def test_make_copy_of_orig_ports_conf(mock_copy_file,
                                       mock_exists):
     # ports.conf.orig exists.
@@ -75,7 +75,7 @@ def test_make_copy_of_orig_ports_conf(mock_copy_file,
         '/etc/cumulus/ports.conf', '/etc/cumulus/ports.conf.orig')
 
 
-@mock.patch('dev_modules.cl_ports.AnsibleModule')
+@mock.patch('library.cl_ports.AnsibleModule')
 def test_compare_new_and_old_port_conf_hash(mock_module):
     """ test comparing existing and new ports.conf config """
     instance = mock_module.return_value
@@ -88,7 +88,7 @@ def test_compare_new_and_old_port_conf_hash(mock_module):
     assert_equals(result, True)
 
 
-@mock.patch('dev_modules.cl_ports.AnsibleModule')
+@mock.patch('library.cl_ports.AnsibleModule')
 def test_compare_new_and_old_port_conf_hash_too_many_ports(mock_module):
     """ test comparing existing and new ports.conf config """
     instance = mock_module.return_value
@@ -103,7 +103,7 @@ def test_compare_new_and_old_port_conf_hash_too_many_ports(mock_module):
         msg='Port numbering is wrong. Too many or two few ports configured')
 
 
-@mock.patch('dev_modules.cl_ports.AnsibleModule')
+@mock.patch('library.cl_ports.AnsibleModule')
 def test_write_to_ports_conf(mock_module):
     """ test writing to ports.conf file """
     test_port_conf = '/tmp/ports.conf'
@@ -127,7 +127,7 @@ def test_write_to_ports_conf(mock_module):
     cl_ports.PORTS_CONF = old_ports_value
 
 
-@mock.patch('dev_modules.cl_ports.AnsibleModule')
+@mock.patch('library.cl_ports.AnsibleModule')
 def test_compare_new_and_old_port_conf_hash_idempotent(mock_module):
     """ test comparing existing and new ports.conf config """
     instance = mock_module.return_value
@@ -139,7 +139,7 @@ def test_compare_new_and_old_port_conf_hash_idempotent(mock_module):
     assert_equals(result, False)
 
 
-@mock.patch('dev_modules.cl_ports.AnsibleModule')
+@mock.patch('library.cl_ports.AnsibleModule')
 def test_generate_new_ports_conf_hash(mock_module):
     """ test generating ports_conf hash based on user added params """
     instance = mock_module.return_value
@@ -166,8 +166,8 @@ def test_generate_new_ports_conf_hash(mock_module):
     cl_ports.generate_new_ports_conf_hash(instance)
     assert_equals(instance.new_ports_hash, {})
 
-@mock.patch('dev_modules.cl_ports.os.path.exists')
-@mock.patch('dev_modules.cl_ports.AnsibleModule')
+@mock.patch('library.cl_ports.os.path.exists')
+@mock.patch('library.cl_ports.AnsibleModule')
 def test_hash_existing_ports_conf_doesntwork(mock_module, mock_exists):
     """ test missing ports.conf """
     instance = mock_module.return_value
@@ -176,8 +176,8 @@ def test_hash_existing_ports_conf_doesntwork(mock_module, mock_exists):
     assert_equals(instance.ports_conf_hash, {})
 
 
-@mock.patch('dev_modules.cl_ports.os.path.exists')
-@mock.patch('dev_modules.cl_ports.AnsibleModule')
+@mock.patch('library.cl_ports.os.path.exists')
+@mock.patch('library.cl_ports.AnsibleModule')
 def test_hash_existing_ports_conf_works(mock_module, mock_exists):
     """ test putting ports.conf values into a hash """
     # create ansiblemodule mock instance

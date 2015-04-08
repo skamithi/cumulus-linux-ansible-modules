@@ -1,6 +1,6 @@
 import mock
 from nose.tools import set_trace
-from dev_modules.cl_quagga_protocol import main, convert_to_yes_or_no, \
+from library.cl_quagga_protocol import main, convert_to_yes_or_no, \
     setting_is_configured, modify_config
 from asserts import assert_equals
 
@@ -16,10 +16,10 @@ def mod_args_generator(values, *args):
     return mod_args
 
 
-@mock.patch('dev_modules.cl_quagga_protocol.run_cl_cmd')
-@mock.patch('dev_modules.cl_quagga_protocol.modify_config')
-@mock.patch('dev_modules.cl_quagga_protocol.setting_is_configured')
-@mock.patch('dev_modules.cl_quagga_protocol.AnsibleModule')
+@mock.patch('library.cl_quagga_protocol.run_cl_cmd')
+@mock.patch('library.cl_quagga_protocol.modify_config')
+@mock.patch('library.cl_quagga_protocol.setting_is_configured')
+@mock.patch('library.cl_quagga_protocol.AnsibleModule')
 def test_restarting_quagga(mock_module,
                            mock_check_setting,
                            mock_modify_config,
@@ -44,9 +44,9 @@ def test_restarting_quagga(mock_module,
     instance.exit_json.assert_called_with(msg=_msg, changed=True)
 
 
-@mock.patch('dev_modules.cl_quagga_protocol.modify_config')
-@mock.patch('dev_modules.cl_quagga_protocol.setting_is_configured')
-@mock.patch('dev_modules.cl_quagga_protocol.AnsibleModule')
+@mock.patch('library.cl_quagga_protocol.modify_config')
+@mock.patch('library.cl_quagga_protocol.setting_is_configured')
+@mock.patch('library.cl_quagga_protocol.AnsibleModule')
 def test_module_args(mock_module,
                      mock_check_setting,
                      mock_modify_config):
@@ -105,8 +105,8 @@ def check_setting_args_bgp_absent(arg):
     return values[arg]
 
 
-@mock.patch('dev_modules.cl_quagga_protocol.read_daemon_file')
-@mock.patch('dev_modules.cl_quagga_protocol.AnsibleModule')
+@mock.patch('library.cl_quagga_protocol.read_daemon_file')
+@mock.patch('library.cl_quagga_protocol.AnsibleModule')
 def test_setting_is_configured(mock_module,
                                mock_read_daemon_file):
     """
@@ -137,8 +137,8 @@ def test_setting_is_configured(mock_module,
     assert_equals(instance.disable_zebra, True)
 
 
-@mock.patch('dev_modules.cl_quagga_protocol.read_daemon_file')
-@mock.patch('dev_modules.cl_quagga_protocol.AnsibleModule')
+@mock.patch('library.cl_quagga_protocol.read_daemon_file')
+@mock.patch('library.cl_quagga_protocol.AnsibleModule')
 def test_modify_config(mock_module,
                        mock_read_daemon_file):
     """

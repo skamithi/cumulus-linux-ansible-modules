@@ -7,6 +7,11 @@ Cumulus Linux is Linux so Ansible works right out of the box.  However Cumulus N
 ## OVERVIEW OF MODULES
 - cl_img_install — Install a different version of Cumulus Linux in the inactive slot.
 - cl_interface — Configures a front panel, bridge or bond interface on a Cumulus Linux switch.
+- cl_bond - Configures bond interface
+- cl_bridge - Configures bridge interface
+- cl_interface_policy - Configures Interface enforcement policy
+- cl_ports - Configure Switch Port Attributes defined in
+  `/etc/cumulus/ports.conf`
 - cl_license — Install a Cumulus Linux license.
 - cl_prefix_check - Check to see if a route exists.
 - cl_quagga_ospf - Configures basic OSPFv2 global parameters and OSPFv2 interface configuration.
@@ -28,7 +33,13 @@ cumulus@ansible-vm:~$
 
 For more detailed installation guide please refer to the [Cumulus Linux Knowledge Base](https://support.cumulusnetworks.com/hc/en-us/articles/204255593)
 
-###Example Playbook
+## REQUIREMENTS
+
+* Ansible 1.8 and higher. Module takes advantage of feature supported only in
+  1.8 and higher.
+
+
+###EXAMPLE PLAYBOOK
 
 Example using ``cl_license`` module
 ```
@@ -43,7 +54,7 @@ hosts
 
 # cat ansible.cfg
 [defaults]
-library=/etc/ansible/roles/cumulus.CumulusLinux/library/:/usr/share/ansible
+library=/etc/ansible/roles/cumulus.CumulusLinux/library/
 hostfile = /files/ansible_playbooks/hosts
 
 # cat site.yml
@@ -52,11 +63,11 @@ hostfile = /files/ansible_playbooks/hosts
   user: root
   tasks:
     - name: install license from http server
-      cl_license: src='http://myserver/license.txt' restart_switchd=yes
+      cl_license: src='http://myserver/license.txt'
 
 ```
 
-##Development
+##DEVELOPMENT
 
 1. Fork it.
 2. Create your feature branch (`git checkout -b my-new-feature`).
@@ -65,26 +76,24 @@ hostfile = /files/ansible_playbooks/hosts
 5. Create new Pull Request.
 
 
-###Description of Folders for this git repo
+###DESCRIPTION OF FOLDERS
 
 * tests: contains tests for each ansible module
 * library: contains ansible modules and are ready to be called by ``ansible`` or ``ansible-playbook``.
 
-###Testing
+###TESTING
+
 All modules created have associated nose test cases. Test cases can be found
 in ``tests`` directory.
 To run the tests run ``runtests.py`` in the git root directory.
 
-#### Required Packages For Tests To Run
+#### REQUIRED TEST PACKAGES
 
 * python
 * mock
  * (pip install mock)
 * nose
  * (pip install nose)
-
-
-
 
 ---
 
@@ -98,4 +107,3 @@ tools on networking gear while delivering new levels of innovation and
 ﬂexibility to the data center.
 
 For further details please see: [cumulusnetworks.com](http://www.cumulusnetworks.com)
-
