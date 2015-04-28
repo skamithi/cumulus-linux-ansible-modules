@@ -6,7 +6,7 @@ galaxy_info:
   author: Cumulus Networks
   description: Roles and modules for managing Cumulus Linux
   company: Cumulus Networks
-  min_ansible_version: 1.3
+  min_ansible_version: 1.8
   categories:
     - networking
 
