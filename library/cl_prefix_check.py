@@ -25,7 +25,7 @@ acceptable to "ip route show" command. See manpage of "ip-route" for more detail
         required: true
     state:
         description:
-            - Describes if the prefix should be present.\
+            - Describes if the prefix should be present.
         choices: ['present', 'absent']
         default: ['present']
     timeout:
@@ -44,7 +44,7 @@ acceptable to "ip route show" command. See manpage of "ip-route" for more detail
         description:
             - address of node is desired in result to prefix
         default: ""
-        
+
 notes:
     - IP Route Documentation - http://manpages.ubuntu.com/manpages/precise/man8/route.8.html\
     - Contact Cumulus Networks @ http://cumulusnetworks.com/contact/
@@ -64,14 +64,14 @@ at default setting of 1 second
     - name: Test if route is present, with a timeout of 10 seconds and poll \
 interval of 2 seconds
       cl_prefix_check: prefix=10.1.1.0/24 timeout=10 poll_interval=2
-      
+
     - name: Test if route is present, with a nexthop of 4.4.4.4 \
      will fail if no nexthop of 4.4.4.4
       cl_prefix_check: prefix=4.4.4.4 nexthop=5.5.5.5
 
     - name: Test if route is present, with no nexthop of 3.3.3.3 \
      will fail if there is a nexthop of 3.3.3.3
-      cl_prefix_check: prefix=3.3.3.3 nonexthop=6.6.6.6   
+      cl_prefix_check: prefix=3.3.3.3 nonexthop=6.6.6.6
 
 
 '''
@@ -87,7 +87,7 @@ def run_cl_cmd(module, cmd, check_rc=True):
     for a in ret:
         f.write(a)
     return ret
-    
+
 def route_is_present(result):
     if len(result) > 0:
         return True
@@ -95,13 +95,13 @@ def route_is_present(result):
 def route_is_absent(result):
     if len(result) == 0:
         return True
-        
+
 def check_hop(result,hop):
     for line in result:
         if hop in line.split():
             return True
     return False
-        
+
 def check_next_hops(module, result):
     nexthop = module.params.get('nexthop')
     nonexthop = module.params.get('nonexthop')
@@ -119,8 +119,8 @@ def check_next_hops(module, result):
         if check_hop(result,nexthop)==True and check_hop(result,nonexthop)==False:
             return True
     else:
-        return false   
-    
+        return false
+
 def loop_route_check(module):
     prefix = module.params.get('prefix')
     state = module.params.get('state')
@@ -167,7 +167,7 @@ def main():
     _msg = "Testing whether route is %s. " % (_state)
     _nexthop = module.params.get('nexthop')
     _nonexthop = module.params.get('nonexthop')
-    
+
     #checking for bad parameters
     if _nexthop == _nonexthop and _nexthop != '':
         module.fail_json(msg='nexthop and nonexthop cannot be the same')
