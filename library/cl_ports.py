@@ -57,7 +57,13 @@ def hash_existing_ports_conf(module):
     if not os.path.exists(PORTS_CONF):
         return False
 
-    existing_ports_conf = open(PORTS_CONF).readlines()
+    try:
+        existing_ports_conf = open(PORTS_CONF).readlines()
+    except IOError as error_msg:
+        _msg = "Failed to open %s: %s" % (PORTS_CONF, error_msg)
+        module.fail_json(msg=_msg)
+        return # for testing only should return on module.fail_json
+
     for _line in existing_ports_conf:
         _m0 = re.match(r'^(\d+)=(\w+)', _line)
         if _m0:

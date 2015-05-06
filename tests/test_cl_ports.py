@@ -191,3 +191,19 @@ def test_hash_existing_ports_conf_works(mock_module, mock_exists):
         mock_exists.assert_called_with('/etc/cumulus/ports.conf')
         assert_equals(instance.ports_conf_hash[1], '40G')
         assert_equals(instance.ports_conf_hash[11], '4x10G')
+
+@mock.patch('library.cl_ports.os.path.exists')
+@mock.patch('library.cl_ports.AnsibleModule')
+def test_hash_existing_ports_conf_cant_open(mock_module, mock_exists):
+    """ test putting ports.conf values into a hash """
+    # create ansiblemodule mock instance
+    instance = mock_module.return_value
+    # say that ports.conf exists
+    mock_exists.return_value = True
+    with mock.patch('__builtin__.open') as mock_open:
+        mock_open.side_effect = IOError('permission denied')
+        cl_ports.hash_existing_ports_conf(instance)
+        _msg = 'Failed to open /etc/cumulus/ports.conf: permission denied'
+        instance.fail_json.assert_called_with(msg=_msg)
+
+
