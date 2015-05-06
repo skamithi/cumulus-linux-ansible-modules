@@ -60,17 +60,18 @@ def test_basic_integration_test(mock_module,
 
 @mock.patch('library.cl_ports.os.path.exists')
 @mock.patch('library.cl_ports.shutil.copyfile')
-def test_make_copy_of_orig_ports_conf(mock_copy_file,
+@mock.patch('library.cl_ports.AnsibleModule')
+def test_make_copy_of_orig_ports_conf(mock_module, mock_copy_file,
                                       mock_exists):
     # ports.conf.orig exists.
     mock_exists.return_value = True
-    cl_ports.make_copy_of_orig_ports_conf()
+    cl_ports.make_copy_of_orig_ports_conf(mock_module)
     assert_equals(mock_copy_file.call_count, 0)
     mock_exists.assert_called_with('/etc/cumulus/ports.conf.orig')
 
     # ports.conf does not exist
     mock_exists.return_value = False
-    cl_ports.make_copy_of_orig_ports_conf()
+    cl_ports.make_copy_of_orig_ports_conf(mock_module)
     mock_copy_file.assert_called_with(
         '/etc/cumulus/ports.conf', '/etc/cumulus/ports.conf.orig')
 
@@ -205,5 +206,18 @@ def test_hash_existing_ports_conf_cant_open(mock_module, mock_exists):
         cl_ports.hash_existing_ports_conf(instance)
         _msg = 'Failed to open /etc/cumulus/ports.conf: permission denied'
         instance.fail_json.assert_called_with(msg=_msg)
+
+@mock.patch('library.cl_ports.AnsibleModule')
+@mock.patch('library.cl_ports.os.path.exists')
+@mock.patch('library.cl_ports.shutil.copyfile')
+def test_make_copy_orig_ports_conf_exception(mock_copy_file,
+                                             mock_exists,
+                                             mock_module):
+    # ports.conf does not exist
+    mock_exists.return_value = False
+    mock_copy_file.side_effect = IOError('permission denied')
+    cl_ports.make_copy_of_orig_ports_conf(mock_module)
+    _msg = 'Failed to save the original /etc/cumulus/ports.conf: permission denied'
+    mock_module.fail_json.assert_called_with(msg=_msg)
 
 
