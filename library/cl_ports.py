@@ -57,7 +57,13 @@ def hash_existing_ports_conf(module):
     if not os.path.exists(PORTS_CONF):
         return False
 
-    existing_ports_conf = open(PORTS_CONF).readlines()
+    try:
+        existing_ports_conf = open(PORTS_CONF).readlines()
+    except IOError as error_msg:
+        _msg = "Failed to open %s: %s" % (PORTS_CONF, error_msg)
+        module.fail_json(msg=_msg)
+        return # for testing only should return on module.fail_json
+
     for _line in existing_ports_conf:
         _m0 = re.match(r'^(\d+)=(\w+)', _line)
         if _m0:
@@ -106,10 +112,16 @@ Too many or two few ports configured")
     return True
 
 
-def make_copy_of_orig_ports_conf():
-    if not os.path.exists(PORTS_CONF + '.orig'):
-        shutil.copyfile(PORTS_CONF, PORTS_CONF + '.orig')
+def make_copy_of_orig_ports_conf(module):
+    if os.path.exists(PORTS_CONF + '.orig'):
+        return
 
+    try:
+        shutil.copyfile(PORTS_CONF, PORTS_CONF + '.orig')
+    except IOError as error_msg:
+        _msg = "Failed to save the original %s: %s" % (PORTS_CONF, error_msg)
+        module.fail_json(msg=_msg)
+        return  # for testing only
 
 def write_to_ports_conf(module):
     """
@@ -127,6 +139,9 @@ def write_to_ports_conf(module):
             temp.write(_str)
         temp.seek(0)
         shutil.copyfile(temp.name, PORTS_CONF)
+    except IOError as error_msg:
+        module.fail_json(
+            msg="Failed to write to %s: %s" % (PORTS_CONF, error_msg))
     finally:
         temp.close()
 
@@ -149,7 +164,7 @@ def main():
     hash_existing_ports_conf(module)
     generate_new_ports_conf_hash(module)
     if compare_new_and_old_port_conf_hash(module):
-        make_copy_of_orig_ports_conf()
+        make_copy_of_orig_ports_conf(module)
         write_to_ports_conf(module)
         _changed = True
         _msg = "/etc/cumulus/ports.conf changed"

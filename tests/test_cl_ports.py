@@ -18,6 +18,7 @@ def test_module_args(mock_module,
                      mock_write,
                      mock_copy):
     """ cl_ports - Test module argument specs"""
+    instance = mock_module.return_value
     cl_ports.main()
     mock_module.assert_called_with(
         argument_spec={'speed_10g': {'type': 'list'},
@@ -29,6 +30,7 @@ def test_module_args(mock_module,
                           'speed_10g',
                           'speed_40g']]
     )
+    mock_copy.assert_called_with(instance)
 
 
 @mock.patch('library.cl_ports.make_copy_of_orig_ports_conf')
@@ -60,17 +62,18 @@ def test_basic_integration_test(mock_module,
 
 @mock.patch('library.cl_ports.os.path.exists')
 @mock.patch('library.cl_ports.shutil.copyfile')
-def test_make_copy_of_orig_ports_conf(mock_copy_file,
+@mock.patch('library.cl_ports.AnsibleModule')
+def test_make_copy_of_orig_ports_conf(mock_module, mock_copy_file,
                                       mock_exists):
     # ports.conf.orig exists.
     mock_exists.return_value = True
-    cl_ports.make_copy_of_orig_ports_conf()
+    cl_ports.make_copy_of_orig_ports_conf(mock_module)
     assert_equals(mock_copy_file.call_count, 0)
     mock_exists.assert_called_with('/etc/cumulus/ports.conf.orig')
 
     # ports.conf does not exist
     mock_exists.return_value = False
-    cl_ports.make_copy_of_orig_ports_conf()
+    cl_ports.make_copy_of_orig_ports_conf(mock_module)
     mock_copy_file.assert_called_with(
         '/etc/cumulus/ports.conf', '/etc/cumulus/ports.conf.orig')
 
@@ -125,6 +128,16 @@ def test_write_to_ports_conf(mock_module):
     # comment this out to troubleshoot ports.conf printout
     os.unlink(test_port_conf)
     cl_ports.PORTS_CONF = old_ports_value
+
+
+@mock.patch('library.cl_ports.AnsibleModule')
+def test_write_to_ports_io_error(mock_module):
+    instance = mock_module.return_value
+    with mock.patch('__builtin__.open') as mock_open:
+        mock_open.side_effect = IOError('permission denied')
+        cl_ports.write_to_ports_conf(instance)
+        _msg = 'Failed to write to /etc/cumulus/ports.conf: permission denied'
+        instance.fail_json.assert_called_with(msg=_msg)
 
 
 @mock.patch('library.cl_ports.AnsibleModule')
@@ -191,3 +204,32 @@ def test_hash_existing_ports_conf_works(mock_module, mock_exists):
         mock_exists.assert_called_with('/etc/cumulus/ports.conf')
         assert_equals(instance.ports_conf_hash[1], '40G')
         assert_equals(instance.ports_conf_hash[11], '4x10G')
+
+@mock.patch('library.cl_ports.os.path.exists')
+@mock.patch('library.cl_ports.AnsibleModule')
+def test_hash_existing_ports_conf_cant_open(mock_module, mock_exists):
+    """ test putting ports.conf values into a hash """
+    # create ansiblemodule mock instance
+    instance = mock_module.return_value
+    # say that ports.conf exists
+    mock_exists.return_value = True
+    with mock.patch('__builtin__.open') as mock_open:
+        mock_open.side_effect = IOError('permission denied')
+        cl_ports.hash_existing_ports_conf(instance)
+        _msg = 'Failed to open /etc/cumulus/ports.conf: permission denied'
+        instance.fail_json.assert_called_with(msg=_msg)
+
+@mock.patch('library.cl_ports.AnsibleModule')
+@mock.patch('library.cl_ports.os.path.exists')
+@mock.patch('library.cl_ports.shutil.copyfile')
+def test_make_copy_orig_ports_conf_exception(mock_copy_file,
+                                             mock_exists,
+                                             mock_module):
+    # ports.conf does not exist
+    mock_exists.return_value = False
+    mock_copy_file.side_effect = IOError('permission denied')
+    cl_ports.make_copy_of_orig_ports_conf(mock_module)
+    _msg = 'Failed to save the original /etc/cumulus/ports.conf: permission denied'
+    mock_module.fail_json.assert_called_with(msg=_msg)
+
+
