@@ -18,6 +18,7 @@ def test_module_args(mock_module,
                      mock_write,
                      mock_copy):
     """ cl_ports - Test module argument specs"""
+    instance = mock_module.return_value
     cl_ports.main()
     mock_module.assert_called_with(
         argument_spec={'speed_10g': {'type': 'list'},
@@ -29,6 +30,7 @@ def test_module_args(mock_module,
                           'speed_10g',
                           'speed_40g']]
     )
+    mock_copy.assert_called_with(instance)
 
 
 @mock.patch('library.cl_ports.make_copy_of_orig_ports_conf')

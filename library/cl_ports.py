@@ -160,7 +160,7 @@ def main():
     hash_existing_ports_conf(module)
     generate_new_ports_conf_hash(module)
     if compare_new_and_old_port_conf_hash(module):
-        make_copy_of_orig_ports_conf()
+        make_copy_of_orig_ports_conf(module)
         write_to_ports_conf(module)
         _changed = True
         _msg = "/etc/cumulus/ports.conf changed"
