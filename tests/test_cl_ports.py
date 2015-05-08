@@ -131,6 +131,16 @@ def test_write_to_ports_conf(mock_module):
 
 
 @mock.patch('library.cl_ports.AnsibleModule')
+def test_write_to_ports_io_error(mock_module):
+    instance = mock_module.return_value
+    with mock.patch('__builtin__.open') as mock_open:
+        mock_open.side_effect = IOError('permission denied')
+        cl_ports.write_to_ports_conf(instance)
+        _msg = 'Failed to write to /etc/cumulus/ports.conf: permission denied'
+        instance.fail_json.assert_called_with(msg=_msg)
+
+
+@mock.patch('library.cl_ports.AnsibleModule')
 def test_compare_new_and_old_port_conf_hash_idempotent(mock_module):
     """ test comparing existing and new ports.conf config """
     instance = mock_module.return_value

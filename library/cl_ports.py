@@ -111,6 +111,7 @@ Too many or two few ports configured")
         return False
     return True
 
+
 def make_copy_of_orig_ports_conf(module):
     if os.path.exists(PORTS_CONF + '.orig'):
         return
@@ -138,6 +139,9 @@ def write_to_ports_conf(module):
             temp.write(_str)
         temp.seek(0)
         shutil.copyfile(temp.name, PORTS_CONF)
+    except IOError as error_msg:
+        module.fail_json(
+            msg="Failed to write to %s: %s" % (PORTS_CONF, error_msg))
     finally:
         temp.close()
 
