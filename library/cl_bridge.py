@@ -96,7 +96,9 @@ notify: reload networking
 cl_bridge: name=bridge ports='swp1-12' vlan_aware='yes' vids='1-100'
 notify: reload networking
 
-# configure ports using variable data structure
+# define cl_bridge once in tasks file
+# then write inteface config in variables file
+# with just the options you want.
 cl_bridge:
   name: "{{ item.key }}"
   ports: "{{ item.value.ports }}"
