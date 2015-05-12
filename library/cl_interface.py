@@ -119,26 +119,25 @@ notify: reload networking
 # define cl_interfaces once in tasks
 # then write intefaces in variables file
 # with just the options you want.
-- name: configure interfaces
-  cl_interface:
-    name: "{{ item.key }}"
-    ipv4: "{{ item.value.ipv4|default(omit) }}"
-    ipv6: "{{ item.value.ipv6|default(omit) }}"
-    alias_name: "{{ item.value.alias_name|default(omit) }}"
-    addr_method: "{{ item.value.addr_method|default(omit) }}"
-    speed: "{{ item.value.link_speed|default(omit) }}"
-    mtu: "{{ item.value.mtu|default(omit) }}"
-    clagd_enable: "{{ item.value.clagd_enable|default(omit) }}"
-    clagd_peer_ip: "{{ item.value.clagd_peer_ip|default(omit) }}"
-    clagd_sys_mac: "{{ item.value.clagd_sys_mac|default(omit) }}"
-    clagd_priority: "{{ item.value.clagd_priority|default(omit) }}"
-    vids: "{{ item.value.vids|default(omit) }}"
-    virtual_ip: "{{ item.value.virtual_ip|default(omit) }}"
-    virtual_mac: "{{ item.value.virtual_mac|default(omit) }}"
-    mstpctl_portnetwork: "{{ item.value.mstpctl_portnetwork|default('no') }}"
-    mstpctl_bpduguard: "{{ item.value.mstpctl_bpduguard|default('no') }}"
-  with_dict: cl_interfaces
-  notify: reload networking
+cl_interface:
+  name: "{{ item.key }}"
+  ipv4: "{{ item.value.ipv4|default(omit) }}"
+  ipv6: "{{ item.value.ipv6|default(omit) }}"
+  alias_name: "{{ item.value.alias_name|default(omit) }}"
+  addr_method: "{{ item.value.addr_method|default(omit) }}"
+  speed: "{{ item.value.link_speed|default(omit) }}"
+  mtu: "{{ item.value.mtu|default(omit) }}"
+  clagd_enable: "{{ item.value.clagd_enable|default(omit) }}"
+  clagd_peer_ip: "{{ item.value.clagd_peer_ip|default(omit) }}"
+  clagd_sys_mac: "{{ item.value.clagd_sys_mac|default(omit) }}"
+  clagd_priority: "{{ item.value.clagd_priority|default(omit) }}"
+  vids: "{{ item.value.vids|default(omit) }}"
+  virtual_ip: "{{ item.value.virtual_ip|default(omit) }}"
+  virtual_mac: "{{ item.value.virtual_mac|default(omit) }}"
+  mstpctl_portnetwork: "{{ item.value.mstpctl_portnetwork|default('no') }}"
+  mstpctl_bpduguard: "{{ item.value.mstpctl_bpduguard|default('no') }}"
+with_dict: cl_interfaces
+notify: reload networking
 
 
 # In vars file
