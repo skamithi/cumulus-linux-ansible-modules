@@ -116,22 +116,23 @@ notify: reload networking
 cl_bond: name=bond1 slaves="swp1s0 swp2s0" clag_id=1
 notify: reload networking
 
-# configure ports using variable data structure
+# define cl_bond once in tasks file
+# then write inteface config in variables file
+# with just the options you want.
 cl_bond:
-    name: {{ item.key }}
-    slaves: {{ item.values.slaves }}
-    clag_id: {{ item.values.clag_id|default(none)}}
-    ipv4:  {{ item.value.ipv4|default(none) }}
-    ipv6: {{ item.value.ipv6|default(none) }}
-    alias_name: {{ item.value.alias_name|default(none) }}
-    addr_method: {{ item.value.addr_method|default(none) }}
-    mtu: {{ item.value.mtu|default(none) }}
-    vids: {{ item.value.vids|default(none) }}
-    virtual_ip: {{ item.value.virtual_ip|default(none) }}
-    virtual_mac: {{ item.value.virtual_mac|default(none) }}
-    mstpctl_portnetwork: {{ item.value.mstpctl_portnetwork|default('no') }}
-    mstpctl_bpduguard: {{ item.value.mstpctl_bpduguard|default('no') }}
-
+  name: "{{ item.key }}"
+  slaves: "{{ item.value.slaves }}"
+  clag_id: "{{ item.value.clag_id|default(omit) }}"
+  ipv4:  "{{ item.value.ipv4|default(omit) }}"
+  ipv6: "{{ item.value.ipv6|default(omit) }}"
+  alias_name: "{{ item.value.alias_name|default(omit) }}"
+  addr_method: "{{ item.value.addr_method|default(omit) }}"
+  mtu: "{{ item.value.mtu|default(omit) }}"
+  vids: "{{ item.value.vids|default(omit) }}"
+  virtual_ip: "{{ item.value.virtual_ip|default(omit) }}"
+  virtual_mac: "{{ item.value.virtual_mac|default(omit) }}"
+  mstpctl_portnetwork: "{{ item.value.mstpctl_portnetwork|default('no') }}"
+  mstpctl_bpduguard: "{{ item.value.mstpctl_bpduguard|default('no') }}"
 with_dict: cl_bonds
 notify: reload networking
 
