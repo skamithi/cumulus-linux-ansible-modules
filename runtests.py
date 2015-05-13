@@ -15,6 +15,7 @@ def main():
     sys.path.append(os.path.dirname(mod_path))
     nose.run()
 
+    os.environ['ANSIBLE_LIBRARY'] = './library'
     os.environ['PAGER'] = ''
     _modulelist = glob.glob('library/cl*.py')
     for _path in _modulelist:

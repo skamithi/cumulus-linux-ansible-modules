@@ -96,21 +96,23 @@ notify: reload networking
 cl_bridge: name=bridge ports='swp1-12' vlan_aware='yes' vids='1-100'
 notify: reload networking
 
-# configure ports using variable data structure
+# define cl_bridge once in tasks file
+# then write inteface config in variables file
+# with just the options you want.
 cl_bridge:
-    name: {{ item.key }}
-    ports: {{ item.value.ports }}
-    vlan_aware: {{ item.value.vlan_aware|default() }}
-    ipv4:  {{ item.value.ipv4|default() }}
-    ipv6: {{ item.value.ipv6|default() }}
-    alias_name: {{ item.value.alias_name|default() }}
-    addr_method: {{ item.value.addr_method|default() }}
-    mtu: {{ item.value.mtu|default() }}
-    vids: {{ item.value.vids|default() }}
-    virtual_ip: {{ item.value.virtual_ip|default() }}
-    virtual_mac: {{ item.value.virtual_mac|default() }}
-    mstpctl_treeprio: {{ item.value.mstpctl_treeprio|default() }}
-with_dict: cl_bridge
+  name: "{{ item.key }}"
+  ports: "{{ item.value.ports }}"
+  vlan_aware: "{{ item.value.vlan_aware|default(omit) }}"
+  ipv4:  "{{ item.value.ipv4|default(omit) }}"
+  ipv6: "{{ item.value.ipv6|default(omit) }}"
+  alias_name: "{{ item.value.alias_name|default(omit) }}"
+  addr_method: "{{ item.value.addr_method|default(omit) }}"
+  mtu: "{{ item.value.mtu|default(omit) }}"
+  vids: "{{ item.value.vids|default(omit) }}"
+  virtual_ip: "{{ item.value.virtual_ip|default(omit) }}"
+  virtual_mac: "{{ item.value.virtual_mac|default(omit) }}"
+  mstpctl_treeprio: "{{ item.value.mstpctl_treeprio|default(omit) }}"
+with_dict: cl_bridges
 notify: reload networking
 
 # In vars file
