@@ -39,6 +39,7 @@ licenses on Cumulus Linux
      tasks:
        - name: grab cumulus facts. has licensing info
          cumulus_facts
+
        - name: install license using http url
          cl_license: src='http://10.1.1.1/license.txt'
          notify: restart switchd
