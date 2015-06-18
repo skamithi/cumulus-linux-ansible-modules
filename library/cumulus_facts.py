@@ -23,21 +23,7 @@ EXAMPLES = '''
 
 '''
 
-# handy helper for calling system calls.
-# calls AnsibleModule.run_command and prints a more appropriate message
-# exec_path - path to file to execute, with all its arguments.
-# E.g "/sbin/ip -o link show"
-# failure_msg - what message to print on failure
-def run_cmd(module, exec_path):
-    (_rc, out, _err) = module.run_command(exec_path)
-    if _rc > 0:
-        failure_msg = "Failed; %s Error: %s" % (exec_path, _err)
-        module.fail_json(msg=failure_msg)
-    else:
-        return out
-
-
-def license_facts():
+def license_facts(module):
     _data = """
 H4sICPoag1UAA2NlLWxpY2Vuc2UAzRprc9s28rt+BSJPj9KdrEg+N53xjdrJXeTUN67riZ30Q5Lh
 QCRkIaUIHgDK9uTy37uLF0FKsp22N3P+EJHAvnexDzAHz57XSj5f8PI5KzekutcrUR6Nv+vxdSWk
@@ -99,10 +85,13 @@ mqK7+2mKpS5N+8jMVr3eb28Tj9tGIgAA
     desired_fd.close()
 
     os.chmod(license_wrapper, 0755)
-    run_cmd(module, '%s -j' % license_wrapper)
 
-    license_dict = {cumulus_license_present: False}
-    for k,v in json.loads(json_output).iteritems():
+
+    license_dict = dict(cumulus_license_present=False)
+    (_rc, out, _err) = module.run_command("%s -j" % (license_wrapper))
+    if _rc == 0:
+      license_dict['cumulus_license_present'] = True
+      for k,v in json.loads(json_output).iteritems():
         key_name = "cumulus_license_%s" % (k)
         license_dict[key_name] = v
 
@@ -110,10 +99,10 @@ mqK7+2mKpS5N+8jMVr3eb28Tj9tGIgAA
 
 def main():
     module = AnsibleModule(argument_spec=dict())
-    license_dict = license_facts()
+    license_dict = license_facts(module)
     results = dict(
         msg='Collected Cumulus Linux specific facts',
-        ansible_facts=licence_dict
+        ansible_facts=license_dict
     )
     module.exit_json(**results)
 
