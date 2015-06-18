@@ -17,16 +17,10 @@ options:
             - blank
 '''
 EXAMPLES = '''
-## Get cumulus specific facts. Currently only gets `platform-detect` output
+## Get cumulus specific facts.
   - name: get cumulus specific facts
     cumulus_facts:
 
-## Run this command only on Penguin Arctica 3200XL. custom fact collected from
-## previous run of `cumulus_facts`
-  - name: setup ports.conf
-    cl_ports:
-        speed_4_by_10g: ['swp1']
-    when: productname == 'cel,smallstone_xp'
 '''
 
 def run_cl_cmd(module, cmd):
