@@ -23,11 +23,19 @@ EXAMPLES = '''
 
 '''
 
-def run_cl_cmd(module, cmd):
-    (rc, out, err) = module.run_command(cmd, check_rc=False)
-    # trim last line as it is always empty
-    ret = out.splitlines()
-    return ret
+# handy helper for calling system calls.
+# calls AnsibleModule.run_command and prints a more appropriate message
+# exec_path - path to file to execute, with all its arguments.
+# E.g "/sbin/ip -o link show"
+# failure_msg - what message to print on failure
+def run_cmd(module, exec_path):
+    (_rc, out, _err) = module.run_command(exec_path)
+    if _rc > 0:
+        failure_msg = "Failed; %s Error: %s" % (exec_path, _err)
+        module.fail_json(msg=failure_msg)
+    else:
+        return out
+
 
 def license_facts():
     _data = """
