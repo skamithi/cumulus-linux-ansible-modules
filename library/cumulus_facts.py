@@ -90,7 +90,7 @@ mqK7+2mKpS5N+8jMVr3eb28Tj9tGIgAA
     desired_fd.write(originfd.read())
     desired_fd.close()
 
-    os.chmod(path_to_license, 0755)
+    os.chmod(license_wrapper, 0755)
     run_cmd(module, '%s -j' % license_wrapper)
 
     license_dict = {cumulus_license_present: False}
