@@ -6,13 +6,11 @@
 DOCUMENTATION = '''
 ---
 module: cumulus_facts
-author: Stanley Karunditu
+author: Cumulus Networks
 short_description: Produces Cumulus Linux specific facts
 description:
-    - Produces Cumulus Linux specific facts. Currently includes 'productname' \
-which refers to the "platform-detect" output.  This module has no options\
-For more details refer to the Cumulus Linux Configuration Guide @ \
-http://docs.cumulusnetworks.com
+    - Collect facts specific to Cumulus Linux. Currently supports collecting \
+license info.
 options:
     no_options_for_this_module:
         description:
