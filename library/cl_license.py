@@ -9,9 +9,9 @@ module: cl_license
 author: Cumulus Networks
 short_description: Install Cumulus Linux license
 description:
-    - Install a Cumulus Linux license. If an existing license has expired, \
-it will be replaced with the new license. The module currently doesn't check \
-the new license expiration date. This will be done in a future release.  \
+    - Installs a Cumulus Linux license. The module reports no change of status \
+when a license is installed. If you attempt to install a different license,  \
+this will fail. To install a new license, use the "force=yes" option. \
 For more details go the Cumulus Linux License Documentation @ \
 http://docs.cumulusnetwork.com
 notes:
@@ -25,8 +25,7 @@ options:
     force:
         description:
             - force installation of the license. This does not active the new \
-license. It overwrites the existing license without checking \
-if the license has expired or not.
+license. It overwrites the existing license.
         choices: ['yes', 'no']
         default: 'no'
 '''
@@ -42,26 +41,22 @@ licenses on Cumulus Linux
 ---
    - hosts: all
      tasks:
-      - name: install license using http url
-        cl_license: src='http://10.1.1.1/license.txt'
-        notify: restart switchd
-
-   handlers:
-     - name: restart switchd
-       service: name=switchd state=restarted
-
-   - hosts: all
-     tasks:
-        - name: configure interfaces
-          template: src=interfaces.j2 dest=/etc/network/interfaces
-          notify: restart networking
+       - name: install license using http url
+         cl_license: src='http://10.1.1.1/license.txt'
+         notify: restart switchd
+       - name: Triggers switchd to be restarted right away, before play, or role is over. This is desired behaviour
+         meta: flush_handlers
+       - name: configure interfaces
+         template: src=interfaces.j2 dest=/etc/network/interfaces
+         notify: restart networking
 
      handlers:
+       - name: restart switchd
+         service: name=switchd state=restarted
        - name: restart networking
          service: name=networking state=reloaded
 
 '''
-LICENSE_PATH = '/etc/cumulus/.license.txt'
 
 
 # handy helper for calling system calls.
@@ -77,46 +72,18 @@ def run_cmd(module, exec_path):
     else:
         return out
 
-def get_todays_date():
+def license_installed(module):
     """
-    create function to wrap getting today's date so i can mock it.
+    check if the license is installed. if True, then license is installed
     """
-    return datetime.now()
-
-
-def license_is_current():
-    """
-    Check that license is current. If it is not,
-    then install the license file from ansible
-    * Assumes that license file been installed is current. Not checking this *
-    """
-    license_file = open(LICENSE_PATH).readlines()
-    for _line in license_file:
-        if re.match('expires', _line):
-            expire_date = _line.split()[0].split('=')[1]
-            # today's date in epoch
-            todays_date = get_todays_date().strftime('%s')
-            if expire_date > todays_date:
-                return True
-    return False
-
-
-def license_upto_date(module):
     if module.params.get('force') is True:
-        return
-    if os.path.exists(LICENSE_PATH) and license_is_current():
-        module.exit_json(changed=False,
-                         msg="license is installed and has not expired")
-
-
-def check_license_url(module, license_url):
-    parsed_url = urlparse(license_url)
-    if parsed_url.scheme == 'http' and len(parsed_url.path) > 0:
-        return True
-    if len(parsed_url.scheme) == 0 and len(parsed_url.path) > 0:
-        return True
-    module.fail_json(msg="License URL. Wrong Format %s" % (license_url))
-    return False
+        return False
+    try:
+        return cumulus_license_present
+    except NameError:
+        _err_msg = "Add the 'cumulus_facts' before running cl-license." + \
+                " Check the cl_license documentation for an example"
+        module.fail_json(msg=_err_msg)
 
 
 def main():
@@ -128,30 +95,20 @@ def main():
     )
 
 
+    if not license_installed(module):
+        run_cmd(module, '/tmp/ce-lic-wrapper')
+        module.changed = True
+        module.msg = "License installed"
+    else:
+        module.changed = False
+        module.msg = "License exists"
 
-    license_url = module.params.get('src')
-
-    license_upto_date(module)
-
-    cl_license_path = '/usr/cumulus/bin/cl-license'
-    _changed = False
-    _msg = "License installed and not expired"
-
-    check_license_url(module, license_url)
-
-    cl_lic_cmd = ('%s -i %s') % (cl_license_path, license_url)
-    run_cmd(module, cl_lic_cmd)
-    _changed = True
-    _msg = 'license updated/installed. remember to restart switchd'
-    module.exit_json(changed=_changed, msg=_msg)
+    module.exit_json(changed=module.changed, msg=module.msg)
 
 
 # import module snippets
 from ansible.module_utils.basic import *
 # from ansible.module_utils.urls import *
-import time
-from datetime import datetime
-from urlparse import urlparse
 
 if __name__ == '__main__':
     main()
