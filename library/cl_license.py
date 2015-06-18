@@ -72,7 +72,7 @@ def main():
     _url = '/tmp/ce-lic-wrapper -e -i %s' % module.params.get('src')
     (_rc, out, _err) = module.run_command(_url)
     if _rc > 0:
-        module.fail_json(msg=out)
+        module.fail_json(msg=_err)
     module.msg = "License installed"
     module.exit_json(changed=module.changed, msg=module.msg)
 
