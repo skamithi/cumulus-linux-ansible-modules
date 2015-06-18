@@ -50,8 +50,10 @@ def test_license_is_installed(mock_ansible_module):
 def test_license_not_installed(mock_ansible_module, mock_run_cmd):
     cl_license.cumulus_license_present = False
     instance = mock_ansible_module.return_value
+    instance.params = {'src': 'blah.lic'}
     cl_license.main()
-    mock_run_cmd.assert_called_with(instance, '/tmp/ce-lic-wrapper')
+    mock_run_cmd.assert_called_with(instance,
+            '/tmp/ce-lic-wrapper -e -i blah.lic')
     instance.exit_json.assert_called_with(msg='License installed', changed=True)
 
 

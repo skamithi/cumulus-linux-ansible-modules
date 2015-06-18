@@ -96,7 +96,7 @@ def main():
 
 
     if not license_installed(module):
-        run_cmd(module, '/tmp/ce-lic-wrapper')
+        run_cmd(module, '/tmp/ce-lic-wrapper -e -i %s' % module.params.get('src'))
         module.changed = True
         module.msg = "License installed"
     else:
