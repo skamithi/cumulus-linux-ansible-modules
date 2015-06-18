@@ -110,9 +110,9 @@ mqK7+2mKpS5N+8jMVr3eb28Tj9tGIgAA
 
 def main():
     module = AnsibleModule(argument_spec=dict())
+    license_dict = license_facts()
     results = dict(
         msg='Collected Cumulus Linux specific facts',
-        license_dict = license_facts()
         ansible_facts=licence_dict
     )
     module.exit_json(**results)
