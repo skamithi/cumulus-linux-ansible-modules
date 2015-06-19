@@ -17,7 +17,7 @@ def main():
 
     os.environ['ANSIBLE_LIBRARY'] = './library'
     os.environ['PAGER'] = ''
-    _modulelist = glob.glob('library/cl*.py')
+    _modulelist = glob.glob('library/c*.py')
     for _path in _modulelist:
         print('Checking documentation for %s' % (_path))
         subprocess.call(['ansible-doc', os.path.basename(_path)])
