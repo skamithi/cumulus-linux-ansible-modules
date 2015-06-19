@@ -33,7 +33,10 @@ options:
         description:
             - force installation of a license. Typically not needed. \
 It is recommended to manually run this \
-command via the ansible command. A reload of switchd is not required.
+command via the ansible command. A reload of switchd is not required. Running \
+the force option in a playbook will break the idempotent state machine of the module and \
+cause the switchd notification to kick in all the time, the module executes \
+causing a disruption.
 
 '''
 EXAMPLES = '''
