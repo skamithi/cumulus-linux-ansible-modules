@@ -87,12 +87,18 @@ def install_license(module):
 def main():
     module = AnsibleModule(
         argument_spec=dict(
-            src=dict(required=True, type='str')
+            src=dict(required=True, type='str'),
+            force=dict(type='bool', choices=BOOLEANS,
+                default=False)
         ),
     )
 
     # check if license is installed
-    (_rc, out, _err) = module.run_command(CL_LICENSE_PATH)
+    # if force is enabled then set return code to nonzero
+    if module.params.get('force') is True:
+        _rc = 10
+    else:
+        (_rc, out, _err) = module.run_command(CL_LICENSE_PATH)
     if _rc == 0:
         module.msg = "No change. License already installed"
         module.changed = False
