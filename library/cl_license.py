@@ -12,13 +12,14 @@ description:
     - Installs a Cumulus Linux license. The module reports no change of status \
 when a license is installed. \
 For more details go the Cumulus Linux License Documentation @ \
-http://docs.cumulusnetwork.com
+http://docs.cumulusnetwork.com and the Licensing KB Site @ \
+https://support.cumulusnetworks.com/hc/en-us/sections/200507688
 notes:
     - to activate a license for the FIRST time, the switchd service must be restarted. \
 This action is disruptive. The license renewal process occurs via the \
-Cumulus Networks Customer Portal - http://customers.cumulusnetworks.com
-    - a non-EULA license is required for automation. \
-Manually install the license \
+Cumulus Networks Customer Portal - http://customers.cumulusnetworks.com.
+    - A non-EULA license is REQUIRED for automation. \
+Manually install the license on a test switch, \
 using the command "cl-license -i <license_file> " to confirm the license is a Non-EULA license.
 
 See EXAMPLES, for the proper way to issue this notify action. \
@@ -38,11 +39,6 @@ command via the ansible command. A reload of switchd is not required.
 EXAMPLES = '''
 Example playbook using the cl_license module to manage \
 licenses on Cumulus Linux
-
-## Install a license. Note that the license install task is placed in a separate "hosts" block.
-## This is to ensure that switchd restarts before configuring the interfaces. You could also
-## perform this task using "register" variables, as shown in  http://bit.ly/1EpQQzd. But this
-## can get cumbersome.
 
 ---
    - hosts: all
