@@ -14,16 +14,26 @@ when a license is installed. \
 For more details go the Cumulus Linux License Documentation @ \
 http://docs.cumulusnetwork.com
 notes:
-    - to activate a license, the switchd service must be restarted. \
-This action is disruptive. See EXAMPLES, for the proper way to issue this notify action.
+    - to activate a license for the FIRST time, the switchd service must be restarted. \
+This action is disruptive. The license renewal process occurs via the \
+Cumulus Networks Customer Portal - http://customers.cumulusnetworks.com
+    - a non-EULA license is required for automation. \
+Manually install the license \
+using the command "cl-license -i <license_file> " to confirm the license is a Non-EULA license.
+
+See EXAMPLES, for the proper way to issue this notify action. \
+References: \
+https://support.cumulusnetworks.com/hc/en-us/sections/200507688
 options:
     src:
         description:
             - full path to the license. Can be local path or http url
-        required: true
-license. It overwrites the existing license.
-        choices: ['yes', 'no']
-        default: 'no'
+    force:
+        description:
+            - force installation of a license. Typically not needed. \
+It is recommended to manually run this \
+command via the ansible command. A reload of switchd is not required.
+
 '''
 EXAMPLES = '''
 Example playbook using the cl_license module to manage \
@@ -37,17 +47,13 @@ licenses on Cumulus Linux
 ---
    - hosts: all
      tasks:
-       - name: grab cumulus facts. has licensing info
-         cumulus_facts
-
        - name: install license using http url
          cl_license: src='http://10.1.1.1/license.txt'
          notify: restart switchd
-         when: cumulus_license_present == False
 
-       - name: Triggers switchd to be restarted right away, before play, or role is over. This is desired behaviour
+       - name: Triggers switchd to be restarted right away, \
+before play, or role is over. This is desired behaviour
          meta: flush_handlers
-         when: cumulus_license_present == False
 
        - name: configure interfaces
          template: src=interfaces.j2 dest=/etc/network/interfaces
@@ -59,7 +65,23 @@ licenses on Cumulus Linux
        - name: restart networking
          service: name=networking state=reloaded
 
+----
+
+# Force all switches to accept a new license. Typically not needed
+ansible -m cl_license -a "src='http://10.1.1.1/new_lic' force=yes"  -u root all
+
+----
+
 '''
+
+CL_LICENSE_PATH='/usr/cumulus/bin/cl-license'
+
+def install_license(module):
+    # license is not installed, install it
+        _url = module.params.get('src')
+        (_rc, out, _err) = module.run_command("%s -i %s" % (CL_LICENSE_PATH, _url))
+        if _rc > 0:
+            module.fail_json(msg=_err)
 
 
 def main():
@@ -69,11 +91,15 @@ def main():
         ),
     )
 
-    _url = '/tmp/ce-lic-wrapper -e -i %s' % module.params.get('src')
-    (_rc, out, _err) = module.run_command(_url)
-    if _rc > 0:
-        module.fail_json(msg=_err)
-    module.msg = "License installed"
+    # check if license is installed
+    (_rc, out, _err) = module.run_command(CL_LICENSE_PATH)
+    if _rc == 0:
+        module.msg = "No change. License already installed"
+        module.changed = False
+    else:
+        install_license(module)
+        module.msg = "License installation completed"
+        module.changed = True
     module.exit_json(changed=module.changed, msg=module.msg)
 
 
