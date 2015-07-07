@@ -43,7 +43,9 @@ For more detailed installation guide please refer to the [Cumulus Linux Knowledg
 [OSPF Unnumbered topologies automated using Ansible](https://github.com/CumulusNetworks/example-ospfunnum-ansible)
 
 
-##DEVELOPMENT
+## DEVELOPMENT
+
+###CONTRIBUTING
 
 1. Fork it.
 2. Create your feature branch (`git checkout -b my-new-feature`).
@@ -57,6 +59,13 @@ For more detailed installation guide please refer to the [Cumulus Linux Knowledg
 All modules created have associated nose test cases. Test cases can be found in ``tests`` directory.
 To run the tests execute the ``runtests.py`` script while in the root of this Git repository.  Before running a test, check that the python Mock and Nose packages are installed.
 
+
+## LICENSE AND AUTHORS
+Author:: Cumulus Networks Inc.
+
+Copyright:: 2015 Cumulus Networks Inc.
+
+Licensed under the GNU General Public License, Version 2.0
 ---
 
 ![Cumulus icon](http://cumulusnetworks.com/static/cumulus/img/logo_2014.png)
