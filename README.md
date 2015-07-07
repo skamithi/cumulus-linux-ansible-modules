@@ -65,7 +65,6 @@ Author:: Cumulus Networks Inc.
 
 Copyright:: 2015 Cumulus Networks Inc.
 
-Licensed under the GNU General Public License, Version 2.0
 ---
 
 ![Cumulus icon](http://cumulusnetworks.com/static/cumulus/img/logo_2014.png)
