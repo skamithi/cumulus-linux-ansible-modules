@@ -35,10 +35,10 @@ For more detailed installation guide please refer to the [Cumulus Linux Knowledg
 
 ## REQUIREMENTS
 
-* Ansible 1.8 and higher. The modules require features supported in 1.8 and higher.
+Ansible 1.8 and higher. The modules require features supported in 1.8 and higher.
 
 
-###EXAMPLE PLAYBOOKS
+##EXAMPLE PLAYBOOKS
 
 [OSPF Unnumbered topologies automated using Ansible](https://github.com/CumulusNetworks/example-ospfunnum-ansible)
 
