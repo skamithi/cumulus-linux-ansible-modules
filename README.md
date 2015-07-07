@@ -1,25 +1,25 @@
+This is the top level Git repository for Cumulus Linux Ansible Modules
 
-##ABOUT
+The following modules can be found within the [library](library) folder.
 
-Cumulus Linux is Linux so Ansible works right out of the box.  However Cumulus Networks has created several modules to reduce complexity of Ansible playbooks and reduce need for jinja templating.  In addition to github the Cumulus Networks Ansible Library is hosted on the Ansible Galaxy website under the role [CumulusLinux](https://galaxy.ansible.com/list#/roles/1875).
+- [cl_img_install](library/cl_img_install.py) — Install a different version of Cumulus Linux in the inactive slot.
+- [cl_interface](library/cl_interface.py)  — Configures a front panel, bridge or bond interface on a Cumulus Linux switch.
+- [cl_bond](library/cl_bond.py)  - Configures bond interface
+- [cl_bridge](library/cl_bridge.py)  - Configures bridge interface
+- [cl_interface_policy](library/cl_img_install.py)  - Configures Interface enforcement policy
+- [cl_ports](library/cl_ports.py)  - Configure Switch Port Attributes, i.e. Breakout Ports defined in `/etc/cumulus/ports.conf`
+- [cl_license](library/cl_license.py)  — Install a Cumulus Linux license.
+- [cl_quagga_ospf](library/cl_quagga_ospf.py)  - Configures basic OSPFv2 global parameters and OSPFv2 interface configuration.
+- [cl_quagga_protocol](library/cl_quagga_protocol.py)  - Enable Quagga services available on Cumulus Linux.
 
-
-## OVERVIEW OF MODULES
-- cl_img_install — Install a different version of Cumulus Linux in the inactive slot.
-- cl_interface — Configures a front panel, bridge or bond interface on a Cumulus Linux switch.
-- cl_bond - Configures bond interface
-- cl_bridge - Configures bridge interface
-- cl_interface_policy - Configures Interface enforcement policy
-- cl_ports - Configure Switch Port Attributes defined in
-  `/etc/cumulus/ports.conf`
-- cl_license — Install a Cumulus Linux license.
-- cl_prefix_check - Check to see if a route exists.
-- cl_quagga_ospf - Configures basic OSPFv2 global parameters and OSPFv2 interface configuration.
-- cl_quagga_protocol - Enable Quagga services available on Cumulus Linux.
+Documentation for each of the modules, along with examples, is included in each module as Python docstrings.
 
 ## INSTALLATION
-To download the CumulusLinux role to the Ansible host, execute the ansible-galaxy install command, and specify **cumulus.CumulusLinux**.
+A Cumulus Linux switch can be provisioned and operated, using Ansible, with no extra plugins. Cumulus Linux, by default, has SSH enabled with a BASH login.
 
+Cumulus Networks Ansible Library is hosted on the Ansible Galaxy website under the role [CumulusLinux](https://galaxy.ansible.com/list#/roles/1875).
+
+To download the CumulusLinux role to the Ansible host, execute the ansible-galaxy install command, and specify **cumulus.CumulusLinux**.
 
 ```
 cumulus@ansible-vm:~$ sudo ansible-galaxy install cumulus.CumulusLinux
@@ -35,39 +35,17 @@ For more detailed installation guide please refer to the [Cumulus Linux Knowledg
 
 ## REQUIREMENTS
 
-* Ansible 1.8 and higher. Module takes advantage of feature supported only in
-  1.8 and higher.
+Ansible 1.8 and higher. The modules require features supported in 1.8 and higher.
 
 
-###EXAMPLE PLAYBOOK
+##EXAMPLE PLAYBOOKS
 
-Example using ``cl_license`` module
-```
-#cd ~/playbook
+[OSPF Unnumbered topologies automated using Ansible](https://github.com/CumulusNetworks/example-ospfunnum-ansible)
 
-# ls
 
-site.yml
-roles
-ansible.cfg
-hosts
+## DEVELOPMENT
 
-# cat ansible.cfg
-[defaults]
-library=/etc/ansible/roles/cumulus.CumulusLinux/library/
-hostfile = /files/ansible_playbooks/hosts
-
-# cat site.yml
----
-- hosts: all
-  user: root
-  tasks:
-    - name: install license from http server
-      cl_license: src='http://myserver/license.txt'
-
-```
-
-##DEVELOPMENT
+###CONTRIBUTING
 
 1. Fork it.
 2. Create your feature branch (`git checkout -b my-new-feature`).
@@ -76,24 +54,16 @@ hostfile = /files/ansible_playbooks/hosts
 5. Create new Pull Request.
 
 
-###DESCRIPTION OF FOLDERS
-
-* tests: contains tests for each ansible module
-* library: contains ansible modules and are ready to be called by ``ansible`` or ``ansible-playbook``.
-
 ###TESTING
 
-All modules created have associated nose test cases. Test cases can be found
-in ``tests`` directory.
-To run the tests run ``runtests.py`` in the git root directory.
+All modules created have associated nose test cases. Test cases can be found in ``tests`` directory.
+To run the tests execute the ``runtests.py`` script while in the root of this Git repository.  Before running a test, check that the python Mock and Nose packages are installed.
 
-#### REQUIRED TEST PACKAGES
 
-* python
-* mock
- * (pip install mock)
-* nose
- * (pip install nose)
+## LICENSE AND AUTHORS
+Author:: Cumulus Networks Inc.
+
+Copyright:: 2015 Cumulus Networks Inc.
 
 ---
 
@@ -107,3 +77,5 @@ tools on networking gear while delivering new levels of innovation and
 ﬂexibility to the data center.
 
 For further details please see: [cumulusnetworks.com](http://www.cumulusnetworks.com)
+
+This project is licensed under the GNU General Public License, Version 2.0
