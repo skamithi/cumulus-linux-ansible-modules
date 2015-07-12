@@ -6,7 +6,7 @@ The following modules can be found within the [library](library) folder.
 - [cl_interface](library/cl_interface.py)  — Configures a front panel, bridge or bond interface on a Cumulus Linux switch.
 - [cl_bond](library/cl_bond.py)  - Configures bond interface
 - [cl_bridge](library/cl_bridge.py)  - Configures bridge interface
-- [cl_interface_policy](library/cl_img_install.py)  - Configures Interface enforcement policy
+- [cl_interface_policy](library/cl_interface_policy.py)  - Configures Interface enforcement policy
 - [cl_ports](library/cl_ports.py)  - Configure Switch Port Attributes, i.e. Breakout Ports defined in `/etc/cumulus/ports.conf`
 - [cl_license](library/cl_license.py)  — Install a Cumulus Linux license.
 - [cl_quagga_ospf](library/cl_quagga_ospf.py)  - Configures basic OSPFv2 global parameters and OSPFv2 interface configuration.
