@@ -1,7 +1,7 @@
 import mock
 from mock import MagicMock
 from nose.tools import set_trace
-from dev_modules.cl_quagga_ospf import check_dsl_dependencies, main, \
+from library.cl_quagga_ospf import check_dsl_dependencies, main, \
     has_interface_config, get_running_config, update_router_id, \
     add_global_ospf_config, update_reference_bandwidth, \
     get_interface_addr_config, check_ip_addr_show, enable_int_defaults, \
@@ -37,8 +37,8 @@ def mod_args_generator(values, *args):
     return mod_args
 
 
-@mock.patch('dev_modules.cl_quagga_ospf.run_cl_cmd')
-@mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
+@mock.patch('library.cl_quagga_ospf.run_cl_cmd')
+@mock.patch('library.cl_quagga_ospf.AnsibleModule')
 def test_enable_or_disable_ospf_on_int(mock_module,
                                        mock_run_cl_cmd):
     """
@@ -95,8 +95,8 @@ def test_enable_or_disable_ospf_on_int(mock_module,
                                           'Quagga config. Check that swp10 is active in kernel')
 
 
-@mock.patch('dev_modules.cl_quagga_ospf.run_cl_cmd')
-@mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
+@mock.patch('library.cl_quagga_ospf.run_cl_cmd')
+@mock.patch('library.cl_quagga_ospf.AnsibleModule')
 def test_update_p2p(mock_module, mock_run_cl_cmd):
     """
     cl_quagga_ospf - test updating p2p status of ospf int
@@ -157,8 +157,8 @@ def test_update_p2p(mock_module, mock_run_cl_cmd):
     assert_equals(instance.has_changed, False)
 
 
-@mock.patch('dev_modules.cl_quagga_ospf.run_cl_cmd')
-@mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
+@mock.patch('library.cl_quagga_ospf.run_cl_cmd')
+@mock.patch('library.cl_quagga_ospf.AnsibleModule')
 def test_update_passive(mock_module, mock_run_cl_cmd):
     """
     cl_quagga_ospf - test updating ospfv2 passive status
@@ -218,8 +218,8 @@ def test_update_passive(mock_module, mock_run_cl_cmd):
     assert_equals(instance.has_changed, False)
 
 
-@mock.patch('dev_modules.cl_quagga_ospf.run_cl_cmd')
-@mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
+@mock.patch('library.cl_quagga_ospf.run_cl_cmd')
+@mock.patch('library.cl_quagga_ospf.AnsibleModule')
 def test_update_cost(mock_module, mock_run_cl_cmd):
     """
     cl_quagga_ospf - test updating ospfv2 cost status
@@ -278,8 +278,8 @@ def test_update_cost(mock_module, mock_run_cl_cmd):
     assert_equals(instance.has_changed, False)
 
 
-@mock.patch('dev_modules.cl_quagga_ospf.run_cl_cmd')
-@mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
+@mock.patch('library.cl_quagga_ospf.run_cl_cmd')
+@mock.patch('library.cl_quagga_ospf.AnsibleModule')
 def test_saveconfig(mock_module,
                     mock_run_cl_cmd):
     """
@@ -313,8 +313,8 @@ def test_saveconfig(mock_module,
     assert_equals(instance.exit_msg, '')
 
 
-@mock.patch('dev_modules.cl_quagga_ospf.run_cl_cmd')
-@mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
+@mock.patch('library.cl_quagga_ospf.run_cl_cmd')
+@mock.patch('library.cl_quagga_ospf.AnsibleModule')
 def test_check_ip_addr_show(mock_module,
                             mock_run_cl_cmd):
     """
@@ -333,8 +333,8 @@ def test_check_ip_addr_show(mock_module,
     assert_equals(check_ip_addr_show(instance), False)
 
 
-@mock.patch('dev_modules.cl_quagga_ospf.run_cl_cmd')
-@mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
+@mock.patch('library.cl_quagga_ospf.run_cl_cmd')
+@mock.patch('library.cl_quagga_ospf.AnsibleModule')
 def test_get_interface_address_config(mock_module,
                                       mock_run_cl_cmd):
     """
@@ -350,11 +350,11 @@ def test_get_interface_address_config(mock_module,
     assert_equals(get_interface_addr_config(instance), True)
 
 
-@mock.patch('dev_modules.cl_quagga_ospf.config_ospf_interface_config')
-@mock.patch('dev_modules.cl_quagga_ospf.add_global_ospf_config')
-@mock.patch('dev_modules.cl_quagga_ospf.has_interface_config')
-@mock.patch('dev_modules.cl_quagga_ospf.check_dsl_dependencies')
-@mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
+@mock.patch('library.cl_quagga_ospf.config_ospf_interface_config')
+@mock.patch('library.cl_quagga_ospf.add_global_ospf_config')
+@mock.patch('library.cl_quagga_ospf.has_interface_config')
+@mock.patch('library.cl_quagga_ospf.check_dsl_dependencies')
+@mock.patch('library.cl_quagga_ospf.AnsibleModule')
 def test_check_mod_args(mock_module,
                         mock_check_dsl_dependencies,
                         mock_has_interface_config,
@@ -400,8 +400,8 @@ def test_check_mod_args(mock_module,
                             'interface', 'swp1'))
     instance.exit_json.assert_called_with(msg='no change', changed=False)
 
-@mock.patch('dev_modules.cl_quagga_ospf.run_cl_cmd')
-@mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
+@mock.patch('library.cl_quagga_ospf.run_cl_cmd')
+@mock.patch('library.cl_quagga_ospf.AnsibleModule')
 def test_get_running_config(mock_module,
                             mock_run_cl_cmd):
     """
@@ -424,9 +424,9 @@ def test_get_running_config(mock_module,
     mock_run_cl_cmd.assert_called_with(instance,
                                        '/usr/bin/vtysh -c "show run"')
 
-@mock.patch('dev_modules.cl_quagga_ospf.run_cl_cmd')
-@mock.patch('dev_modules.cl_quagga_ospf.get_config_line')
-@mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
+@mock.patch('library.cl_quagga_ospf.run_cl_cmd')
+@mock.patch('library.cl_quagga_ospf.get_config_line')
+@mock.patch('library.cl_quagga_ospf.AnsibleModule')
 def test_update_router_id(mock_module,
                           mock_get_config_line,
                           mock_run_cl_cmd):
@@ -461,9 +461,9 @@ def test_update_router_id(mock_module,
     assert_equals(instance.has_changed, False)
 
 
-@mock.patch('dev_modules.cl_quagga_ospf.run_cl_cmd')
-@mock.patch('dev_modules.cl_quagga_ospf.get_config_line')
-@mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
+@mock.patch('library.cl_quagga_ospf.run_cl_cmd')
+@mock.patch('library.cl_quagga_ospf.get_config_line')
+@mock.patch('library.cl_quagga_ospf.AnsibleModule')
 def test_update_reference_bandwidth(mock_module,
                                     mock_get_config_line,
                                     mock_run_cl_cmd):
@@ -498,14 +498,14 @@ def test_update_reference_bandwidth(mock_module,
     assert_equals(instance.has_changed, False)
 
 
-@mock.patch('dev_modules.cl_quagga_ospf.enable_int_defaults')
-@mock.patch('dev_modules.cl_quagga_ospf.get_running_config')
-@mock.patch('dev_modules.cl_quagga_ospf.get_interface_addr_config')
-@mock.patch('dev_modules.cl_quagga_ospf.enable_or_disable_ospf_on_int')
-@mock.patch('dev_modules.cl_quagga_ospf.update_point2point')
-@mock.patch('dev_modules.cl_quagga_ospf.update_cost')
-@mock.patch('dev_modules.cl_quagga_ospf.update_passive')
-@mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
+@mock.patch('library.cl_quagga_ospf.enable_int_defaults')
+@mock.patch('library.cl_quagga_ospf.get_running_config')
+@mock.patch('library.cl_quagga_ospf.get_interface_addr_config')
+@mock.patch('library.cl_quagga_ospf.enable_or_disable_ospf_on_int')
+@mock.patch('library.cl_quagga_ospf.update_point2point')
+@mock.patch('library.cl_quagga_ospf.update_cost')
+@mock.patch('library.cl_quagga_ospf.update_passive')
+@mock.patch('library.cl_quagga_ospf.AnsibleModule')
 def test_config_ospf_interface_config(mock_module,
                                       mock_update_passive,
                                       mock_update_cost,
@@ -552,7 +552,7 @@ def test_config_ospf_interface_config(mock_module,
     assert_equals(manager.method_calls, expected_calls)
 
 
-@mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
+@mock.patch('library.cl_quagga_ospf.AnsibleModule')
 def test_enable_int_defaults(mock_module):
     instance = mock_module.return_value
     # state param is None. enable_int_defaults should set it to 'present'
@@ -572,10 +572,10 @@ def test_enable_int_defaults(mock_module):
                   [mock.call('area', '0.0.0.0')])
 
 
-@mock.patch('dev_modules.cl_quagga_ospf.update_reference_bandwidth')
-@mock.patch('dev_modules.cl_quagga_ospf.get_running_config')
-@mock.patch('dev_modules.cl_quagga_ospf.update_router_id')
-@mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
+@mock.patch('library.cl_quagga_ospf.update_reference_bandwidth')
+@mock.patch('library.cl_quagga_ospf.get_running_config')
+@mock.patch('library.cl_quagga_ospf.update_router_id')
+@mock.patch('library.cl_quagga_ospf.AnsibleModule')
 def test_add_global_ospf_config(mock_module,
                                 mock_update_router_id,
                                 mock_get_running_config,
@@ -599,8 +599,8 @@ def test_add_global_ospf_config(mock_module,
     # change
     assert_equals(instance.exit_json.call_count, 1)
 
-@mock.patch('dev_modules.cl_quagga_ospf.os.path.exists')
-@mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
+@mock.patch('library.cl_quagga_ospf.os.path.exists')
+@mock.patch('library.cl_quagga_ospf.AnsibleModule')
 def test_check_if_ospf_is_running(mock_module,
                                   mock_path_exists):
     # if ospf is running
@@ -617,7 +617,7 @@ def test_check_if_ospf_is_running(mock_module,
 
 
 
-@mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
+@mock.patch('library.cl_quagga_ospf.AnsibleModule')
 def test_has_int_config(mock_module):
     """
     cl_quagga_ospf - test has interface config
@@ -631,7 +631,7 @@ def test_has_int_config(mock_module):
     assert_equals(has_interface_config(instance), False)
 
 
-@mock.patch('dev_modules.cl_quagga_ospf.AnsibleModule')
+@mock.patch('library.cl_quagga_ospf.AnsibleModule')
 def test_check_dsl_dependencies(mock_module):
     """
     cl_quagga_ospf - check dsl dependencies

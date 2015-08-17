@@ -1,0 +1,12 @@
+[
+    {
+        "auto": true,
+        "config": {
+            "address-virtual": "00:00:5e:98:05:00 10.152.5.1/24",
+            "address": "10.152.5.10/24"
+        },
+        "addr_method": null,
+        "name": "vlan.5",
+        "addr_family": null
+    }
+]

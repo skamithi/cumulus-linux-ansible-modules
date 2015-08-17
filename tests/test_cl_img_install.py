@@ -1,6 +1,6 @@
 import mock
 from nose.tools import set_trace
-from dev_modules.cl_img_install import install_img, \
+from library.cl_img_install import install_img, \
     check_url, switch_slot, get_active_slot, get_primary_slot_num, \
     determine_sw_version, check_mnt_root_lsb_release, check_fw_print_env, get_slot_version, \
     check_sw_version, get_slot_info, main
@@ -26,7 +26,7 @@ def mod_args_generator(values, *args):
     return mod_args
 
 
-@mock.patch('dev_modules.cl_img_install.AnsibleModule')
+@mock.patch('library.cl_img_install.AnsibleModule')
 def test_determine_sw_version(mock_module):
     instance = mock_module.return_value
     values = arg_values.copy()
@@ -48,7 +48,7 @@ def test_determine_sw_version(mock_module):
     assert_equals(instance.sw_version, '2.2.x')
 
 
-@mock.patch('dev_modules.cl_img_install.AnsibleModule')
+@mock.patch('library.cl_img_install.AnsibleModule')
 def test_get_active_slot(mock_module):
     """
     Test getting active slot information
@@ -61,9 +61,9 @@ def test_get_active_slot(mock_module):
         mock_open.assert_called_with('/proc/cmdline')
 
 
-@mock.patch('dev_modules.cl_img_install.platform.machine')
-@mock.patch('dev_modules.cl_img_install.run_cl_cmd')
-@mock.patch('dev_modules.cl_img_install.AnsibleModule')
+@mock.patch('library.cl_img_install.platform.machine')
+@mock.patch('library.cl_img_install.run_cl_cmd')
+@mock.patch('library.cl_img_install.AnsibleModule')
 def test_getting_primary_slot_num(mock_module, mock_run_cmd, mock_platform):
     """
     Test getting primary slot number
@@ -115,8 +115,8 @@ def test_check_mnt_root_lsb_release():
 
 
 @mock.patch('platform.machine')
-@mock.patch('dev_modules.cl_img_install.run_cl_cmd')
-@mock.patch('dev_modules.cl_img_install.AnsibleModule')
+@mock.patch('library.cl_img_install.run_cl_cmd')
+@mock.patch('library.cl_img_install.AnsibleModule')
 def test_check_fw_print_env_ppc(mock_module, mock_run_cmd, mock_platform):
     # check checking fw print on ppc
     mock_platform.return_value = 'ppc'
@@ -142,9 +142,9 @@ def test_check_fw_print_env_ppc(mock_module, mock_run_cmd, mock_platform):
 
 
 
-@mock.patch('dev_modules.cl_img_install.AnsibleModule')
-@mock.patch('dev_modules.cl_img_install.check_mnt_root_lsb_release')
-@mock.patch('dev_modules.cl_img_install.check_fw_print_env')
+@mock.patch('library.cl_img_install.AnsibleModule')
+@mock.patch('library.cl_img_install.check_mnt_root_lsb_release')
+@mock.patch('library.cl_img_install.check_fw_print_env')
 def test_get_slot_version(mock_from_onie,
                           mock_from_etc,
                           mock_module):
@@ -177,10 +177,10 @@ def slotvers(module, arg):
     return values[arg]
 
 
-@mock.patch('dev_modules.cl_img_install.get_primary_slot_num')
-@mock.patch('dev_modules.cl_img_install.get_active_slot')
-@mock.patch('dev_modules.cl_img_install.get_slot_version')
-@mock.patch('dev_modules.cl_img_install.AnsibleModule')
+@mock.patch('library.cl_img_install.get_primary_slot_num')
+@mock.patch('library.cl_img_install.get_active_slot')
+@mock.patch('library.cl_img_install.get_slot_version')
+@mock.patch('library.cl_img_install.AnsibleModule')
 def test_get_slot_info(mock_module,
                        mock_get_slot_ver,
                        mock_active_ver,
@@ -196,9 +196,9 @@ def test_get_slot_info(mock_module,
     assert_equals(get_slot_info(instance), result_slot_values)
 
 
-@mock.patch('dev_modules.cl_img_install.switch_slot')
-@mock.patch('dev_modules.cl_img_install.get_slot_info')
-@mock.patch('dev_modules.cl_img_install.AnsibleModule')
+@mock.patch('library.cl_img_install.switch_slot')
+@mock.patch('library.cl_img_install.get_slot_info')
+@mock.patch('library.cl_img_install.AnsibleModule')
 def test_check_sw_version(mock_module, mock_get_slot_info, mock_switch_slot):
     instance = mock_module.return_value
     # switch_slots = yes , version found in alternate slots and is primary
@@ -279,11 +279,11 @@ def test_check_sw_version(mock_module, mock_get_slot_info, mock_switch_slot):
         'Next reboot, switch will load 2.0.3.', changed=False)
 
 
-@mock.patch('dev_modules.cl_img_install.install_img')
-@mock.patch('dev_modules.cl_img_install.check_url')
-@mock.patch('dev_modules.cl_img_install.check_sw_version')
-@mock.patch('dev_modules.cl_img_install.determine_sw_version')
-@mock.patch('dev_modules.cl_img_install.AnsibleModule')
+@mock.patch('library.cl_img_install.install_img')
+@mock.patch('library.cl_img_install.check_url')
+@mock.patch('library.cl_img_install.check_sw_version')
+@mock.patch('library.cl_img_install.determine_sw_version')
+@mock.patch('library.cl_img_install.AnsibleModule')
 def test_module_args(mock_module,
                      mock_det_ver,
                      mock_check_ver,
@@ -304,7 +304,7 @@ def test_module_args(mock_module,
                                        'off', '0', 'false', 0]}})
 
 
-@mock.patch('dev_modules.cl_img_install.AnsibleModule')
+@mock.patch('library.cl_img_install.AnsibleModule')
 def test_check_url(mock_module):
     """
     Test to see that image install url is properly defined
@@ -325,10 +325,10 @@ def test_check_url(mock_module):
         msg=_msg)
 
 
-@mock.patch('dev_modules.cl_img_install.switch_slot')
-@mock.patch('dev_modules.cl_img_install.get_slot_info')
-@mock.patch('dev_modules.cl_img_install.run_cl_cmd')
-@mock.patch('dev_modules.cl_img_install.AnsibleModule')
+@mock.patch('library.cl_img_install.switch_slot')
+@mock.patch('library.cl_img_install.get_slot_info')
+@mock.patch('library.cl_img_install.run_cl_cmd')
+@mock.patch('library.cl_img_install.AnsibleModule')
 def test_img_install(mock_module, mock_run_cl_cmd,
                      mock_get_slot_info, mock_switch_slot):
     """
@@ -358,8 +358,8 @@ def test_img_install(mock_module, mock_run_cl_cmd,
     assert_equals(mock_switch_slot.call_count, 1)
 
 
-@mock.patch('dev_modules.cl_img_install.run_cl_cmd')
-@mock.patch('dev_modules.cl_img_install.AnsibleModule')
+@mock.patch('library.cl_img_install.run_cl_cmd')
+@mock.patch('library.cl_img_install.AnsibleModule')
 def test_switch_slot(mock_module, mock_run_cl_cmd):
     """
     Test switching slots

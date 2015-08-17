@@ -1,6 +1,6 @@
 import mock
 from nose.tools import set_trace
-from dev_modules.cl_prefix_check import main, loop_route_check
+from library.cl_prefix_check import main, loop_route_check
 from asserts import assert_equals
 
 
@@ -23,8 +23,8 @@ def mod_args_generator(values, *args):
     return mod_args
 
 
-@mock.patch('dev_modules.cl_prefix_check.loop_route_check')
-@mock.patch('dev_modules.cl_prefix_check.AnsibleModule')
+@mock.patch('library.cl_prefix_check.loop_route_check')
+@mock.patch('library.cl_prefix_check.AnsibleModule')
 def test_module_args(mock_module,
                      mock_loop_route_check):
     """
@@ -46,8 +46,8 @@ def test_module_args(mock_module,
                        })
 
 
-@mock.patch('dev_modules.cl_prefix_check.loop_route_check')
-@mock.patch('dev_modules.cl_prefix_check.AnsibleModule')
+@mock.patch('library.cl_prefix_check.loop_route_check')
+@mock.patch('library.cl_prefix_check.AnsibleModule')
 def test_printing_module_exit_msg_loop_passed(mock_module,
                                               mock_loop_route_check):
     """
@@ -92,8 +92,8 @@ def mock_loop_check_arg_absent(arg):
     return values[arg]
 
 
-@mock.patch('dev_modules.cl_prefix_check.run_cl_cmd')
-@mock.patch('dev_modules.cl_prefix_check.AnsibleModule')
+@mock.patch('library.cl_prefix_check.run_cl_cmd')
+@mock.patch('library.cl_prefix_check.AnsibleModule')
 def test_loop_route_check_state_present(mock_module,
                                         mock_run_cl_cmd):
     """
@@ -108,8 +108,8 @@ def test_loop_route_check_state_present(mock_module,
     assert_equals(loop_route_check(instance), True)
 
 
-@mock.patch('dev_modules.cl_prefix_check.run_cl_cmd')
-@mock.patch('dev_modules.cl_prefix_check.AnsibleModule')
+@mock.patch('library.cl_prefix_check.run_cl_cmd')
+@mock.patch('library.cl_prefix_check.AnsibleModule')
 def test_loop_route_check_state_absent(mock_module,
                                        mock_run_cl_cmd):
     """
@@ -124,9 +124,9 @@ def test_loop_route_check_state_absent(mock_module,
     assert_equals(loop_route_check(instance), True)
 
 
-@mock.patch('dev_modules.cl_prefix_check.time.sleep')
-@mock.patch('dev_modules.cl_prefix_check.run_cl_cmd')
-@mock.patch('dev_modules.cl_prefix_check.AnsibleModule')
+@mock.patch('library.cl_prefix_check.time.sleep')
+@mock.patch('library.cl_prefix_check.run_cl_cmd')
+@mock.patch('library.cl_prefix_check.AnsibleModule')
 def test_loop_route_check_state_absent_route_present(mock_module,
                                                      mock_run_cl_cmd,
                                                      mock_sleep):
@@ -145,9 +145,9 @@ def test_loop_route_check_state_absent_route_present(mock_module,
                                        '/sbin/ip route show 10.1.1.1/24')
 
 
-@mock.patch('dev_modules.cl_prefix_check.time.sleep')
-@mock.patch('dev_modules.cl_prefix_check.run_cl_cmd')
-@mock.patch('dev_modules.cl_prefix_check.AnsibleModule')
+@mock.patch('library.cl_prefix_check.time.sleep')
+@mock.patch('library.cl_prefix_check.run_cl_cmd')
+@mock.patch('library.cl_prefix_check.AnsibleModule')
 def test_loop_route_check_state_present_route_failed(mock_module,
                                                      mock_run_cl_cmd,
                                                      mock_sleep):

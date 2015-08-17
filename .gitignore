@@ -1,4 +1,8 @@
+library/__init__.py
 *.swp
+ansible.cfg
+site.yml
+ansible.hosts
 *.ropeproject
 *MANIFEST
 *deb_dist
@@ -8,3 +12,7 @@
 *.swo
 *.txt
 /.temp_mods
+tests/write_to_ports_conf
+Session.vim
+ansible.cfg
+ansible.hosts

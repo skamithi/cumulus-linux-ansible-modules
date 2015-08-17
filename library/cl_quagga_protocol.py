@@ -6,14 +6,17 @@
 DOCUMENTATION = '''
 ---
 module: cl_quagga_protocol
-author: Stanley Karunditu
+author: Cumulus Networks
 short_description: Enable routing protocol services via Quagga
 description:
     - Enable Quagga services available on Cumulus Linux. \
 This includes OSPF v2/v3 and BGP. Quagga services are defined in the \
 /etc/quagga/daemons file. This module creates a file that will only enable \
 OSPF or BGP routing protocols, because this is what Cumulus Linux currently \
-supports. Using Ansible Templates you any supported or unsupported quagga \
+supports. Zebra is automatically enabled when a supported routing \
+protocol is listed. If all routing protocols are disabled, this module \
+will disable zebra as well. \
+Using Ansible Templates you can run any supported or unsupported quagga \
 routing protocol. For more details go to the Quagga Documentation located at \
 http://cumulusnetworks.com/docs/2.2 and \
 http://www.nongnu.org/quagga/docs.html
@@ -21,7 +24,7 @@ options:
     name:
         description:
             - name of the protocol to update
-        choices: ['zebra', 'ospfd', 'ospf6d', 'bgpd']
+        choices: ['ospfd', 'ospf6d', 'bgpd']
         required: true
     state:
         description:

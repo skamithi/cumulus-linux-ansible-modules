@@ -8,6 +8,11 @@ __all__ = ['assert_instance_of', 'assert_not_instance_of',
            'assert_list_same', 'assert_contains',
            'assert_match', 'assert_not_match'] + tools.__all__
 
+def mod_args_generator(values, *args):
+    def mod_args(args):
+        return values[args]
+    return mod_args
+
 def assert_instance_of(expected, actual, msg=None):
     """Verify that object is an instance of expected """
     assert isinstance(actual, expected), msg
@@ -15,7 +20,7 @@ def assert_instance_of(expected, actual, msg=None):
 def assert_not_instance_of(expected, actual, msg=None):
     """Verify that object is not an instance of expected """
     assert not isinstance(actual, expected, msg)
-    
+
 def assert_none(actual, msg=None):
     """verify that item is None"""
     assert_equal(None, actual, msg)
